@@ -23,14 +23,19 @@ int main(__unused int argc, __unused  char *argv[])
     uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
     size_t bpr = nx * 3 * sizeof(*img);
 
+    v3f bl = { -2.0f, -1.0f, -1.0f };
+    v3f horizontal = { 4.0f, 0.0f, 0.0f };
+    v3f vertical  = { 0.0f, 2.0f, 0.0f };
+    v3f org = { 0.0f, 0.0f, 0.0f };
+
     for (size_t i = 0; i < ny; i++) {
             uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
             for (size_t j = 0; j < nx; j++) {
-                v3f c = {
-                    (float)j / (float)nx,
-                    (float)i / (float)ny,
-                    0.2f
-                };
+                float u = (float)j / (float)nx;
+                float v = (float)(ny - i) / (float)ny;
+                ray r = ray(org, v3f_add(v3f_add(bl, v3f_muls(u, horizontal)),
+                                         v3f_muls(v, vertical)));
+                v3f c = color(r);
 
                 dp[0] = (int32_t)(255.99 * c.x);
                 dp[1] = (int32_t)(255.99 * c.y);
