@@ -2,17 +2,15 @@
 #define HITABLELIST_H
 
 #include "hitable.hpp"
-#include <stddef.h>
+#include "sptr.hpp"
+
+struct hitable_list;
 
 struct hitable_list : hitable {
-    hitable_list(size_t count, hitable **l);
-    virtual ~hitable_list() { }
 
-    virtual bool hit(const ray &r, float min, float max, hit_record &rec) const;
+    static sptr<hitable_list> create(size_t count, sptr<hitable> *l);
 
-private:
-    hitable **m_list;
-    size_t    m_count;
+    virtual bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
 };
 
 #endif

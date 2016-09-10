@@ -2,17 +2,17 @@
 #define SPHERE_H
 
 #include "hitable.hpp"
+#include "sptr.hpp"
+
+struct sphere;
 
 struct sphere : hitable {
-    sphere() { }
-    sphere(v3f c, float r) : m_center(c), m_radius(r) { }
 
-    virtual ~sphere() { }
+    static sptr<sphere> create(const v3f &center, float radius);
 
-    bool hit(const ray &r, float min, float max, hit_record &rec) const;
-
-    v3f   m_center;
-    float m_radius;
+    virtual bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
+    virtual v3f   center() const = 0;
+    virtual float radius() const = 0;
 };
 
 #endif

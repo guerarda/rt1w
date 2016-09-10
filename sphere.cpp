@@ -1,11 +1,25 @@
 #include "sphere.hpp"
 #include <math.h>
 
-bool sphere::hit(const ray &r, float min, float max, hit_record &rec) const
+struct _sphere : sphere {
+
+    _sphere(const v3f &c, float r) : m_center(c) , m_radius(r) { }
+    virtual ~_sphere() { }
+
+    bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
+
+    v3f   center() const { return m_center; }
+    float radius() const { return m_radius; }
+
+    v3f   m_center;
+    float m_radius;
+};
+
+bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
-    v3f oc = v3f_sub(r.m_org, m_center);
-    float a = v3f_dot(r.m_dir, r.m_dir);
-    float b = 2 * v3f_dot(r.m_dir, oc);
+    v3f oc = v3f_sub(r->origin(), m_center);
+    float a = v3f_dot(r->direction(), r->direction());
+    float b = 2 * v3f_dot(r->direction(), oc);
     float c = v3f_dot(oc, oc) - m_radius * m_radius;
     float delta = b * b - 4 * a * c;
 
@@ -16,11 +30,18 @@ bool sphere::hit(const ray &r, float min, float max, hit_record &rec) const
         }
         if (t > min && t < max) {
             rec.t = t;
-            rec.p = r.point_at_param(t);
+            rec.p = r->point_at_param(t);
             rec.normal = v3f_sub(rec.p, m_center);
 
             return true;
         }
     }
     return false;
+}
+
+#pragma mark - Static constructors
+
+sptr<sphere> sphere::create(const v3f &c, float r)
+{
+    return std::make_shared<_sphere>(c, r);
 }

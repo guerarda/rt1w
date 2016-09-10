@@ -2,15 +2,14 @@
 #define RAY_H
 
 #include "vec.hpp"
+#include "sptr.hpp"
 
 struct ray {
-        ray(const v3f &org, const v3f dir) : m_org(org), m_dir(dir) { }
+    static sptr<ray> create(const v3f &org, const v3f &dir);
 
-    v3f point_at_param(float t) const;
-
-
-    v3f m_org;
-    v3f m_dir;
+    virtual v3f origin() const = 0;
+    virtual v3f direction() const = 0;
+    virtual v3f point_at_param(float t) const = 0;
 };
 
 #endif
