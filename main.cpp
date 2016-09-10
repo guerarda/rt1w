@@ -46,8 +46,8 @@ int main(__unused int argc, __unused  char *argv[])
             for (size_t j = 0; j < nx; j++) {
                 float u = (float)j / (float)nx;
                 float v = (float)(ny - i) / (float)ny;
-                ray r = ray(org, v3f_add(v3f_add(bl, v3f_muls(u, horizontal)),
-                                         v3f_muls(v, vertical)));
+                ray r = ray(org, v3f_add(v3f_add(bl, v3f_smul(u, horizontal)),
+                                         v3f_smul(v, vertical)));
                 v3f c = color(r);
 
                 dp[0] = (int32_t)(255.99 * c.x);

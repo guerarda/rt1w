@@ -39,13 +39,13 @@ float v3f_dot(const v3f &va, const v3f &vb)
 
 v3f v3f_lerp(float t, const v3f &va, const v3f &vb)
 {
-    v3f v = v3f_muls(1.0f - t, va);
-    v3f u = v3f_muls(t, vb);
+    v3f v = v3f_smul(1.0f - t, va);
+    v3f u = v3f_smul(t, vb);
 
     return v3f_add(v, u);
 }
 
-v3f v3f_muls(float s, const v3f &v)
+v3f v3f_smul(float s, const v3f &v)
 {
     v3f u = {
         s * v.x,
@@ -55,12 +55,12 @@ v3f v3f_muls(float s, const v3f &v)
     return u;
 }
 
-float v3f_norm(const v3f &v)
+float v3f_norm_sq(const v3f &v)
 {
     return v.x * v.x + v.y * v.y + v.z* v.z;
 }
 
-float v3f_norm_sq(const v3f &v)
+float v3f_norm(const v3f &v)
 {
     return sqrtf(v.x * v.x + v.y * v.y + v.z* v.z);
 }
