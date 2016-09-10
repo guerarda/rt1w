@@ -12,21 +12,21 @@ LDFLAGS = $(LIBRARIES)
 TARGET = build/rt1w
 MAIN = main.c
 CSOURCES =
-CXXSOURCES = vec.cpp ray.cpp
+CXXSOURCES = vec.cpp ray.cpp sphere.cpp
 OBJECTS = $(CSOURCES:.c=.o) $(CXXSOURCES:.cpp=.o) $(MAIN:.c=.o)
 
 all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -o $(TARGET) $(OBJECTS) $(LDFLAGS)
+	$(CXX) $(CFLAGS) $(WFLAGS) $(INCLUDES) -o $(TARGET) $(OBJECTS) $(LDFLAGS)
 
 clean:
 	rm -f $(OBJECTS)
 
 %.o: %.c
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -c -o $@ $<
+	$(CC) $(CFLAGS) $(WFLAGS) $(INCLUDES) -c -o $@ $<
 
 %o.: %.cpp
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(INCLUDES) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) $(WFLAGS) $(INCLUDES) -c -o $@ $<
 
 .PHONY: clean
