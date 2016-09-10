@@ -12,6 +12,16 @@ v3f v3f_add(const v3f &va, const v3f &vb)
     return v;
 }
 
+v3f v3f_sub(const v3f &va, const v3f &vb)
+{
+    v3f v = {
+        va.x - vb.x,
+        va.y - vb.y,
+        va.z - vb.z
+    };
+    return v;
+}
+
 v3f v3f_cross(const v3f &va, const v3f &vb)
 {
     v3f v = {

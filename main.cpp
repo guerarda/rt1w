@@ -7,8 +7,21 @@
 #include "vec.hpp"
 #include "ray.hpp"
 
+bool hit_sphere(const v3f &center, float r, const ray &ray)
+{
+    v3f oc = v3f_sub(ray.m_org, center);
+    float a = v3f_dot(ray.m_dir, ray.m_dir);
+    float b = 2 * v3f_dot(ray.m_dir, oc);
+    float c = v3f_dot(oc, oc) - r * r;
+
+    return b * b - 4 * a * c > 0;
+}
+
 v3f color(const ray &ray)
 {
+    if (hit_sphere(v3f{0.0, 0.0, -1.0}, 0.5, ray)) {
+        return v3f{ 1.0, 0.0, 0.0 };
+    }
     v3f udir = v3f_normalize(ray.m_dir);
     float t = 0.5f * (udir.y + 1.0f);
     v3f white = { 1.0f, 1.0f, 1.0f };
@@ -18,8 +31,8 @@ v3f color(const ray &ray)
 
 int main(__unused int argc, __unused  char *argv[])
 {
-    size_t nx = 200;
-    size_t ny = 100;
+    size_t nx = 800;
+    size_t ny = 400;
     uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
     size_t bpr = nx * 3 * sizeof(*img);
 

@@ -16,6 +16,7 @@ __END_DECLS
 #if defined(__cplusplus)
 
 v3f   v3f_add(const v3f &va, const v3f &vb);
+v3f   v3f_sub(const v3f &va, const v3f &vb);
 v3f   v3f_cross(const v3f &va, const v3f &vb);
 float v3f_dot(const v3f &va, const v3f &vb);
 v3f   v3f_lerp(float t, const v3f &va, const v3f &vb);
