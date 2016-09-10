@@ -4,7 +4,7 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
-#include "vec.h"
+#include "vec.hpp"
 #include "ray.hpp"
 
 v3f color(const ray &ray)
@@ -26,16 +26,20 @@ int main(__unused int argc, __unused  char *argv[])
     for (size_t i = 0; i < ny; i++) {
             uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
             for (size_t j = 0; j < nx; j++) {
-                float r = (float)j / (float)nx;
-                float g = (float)i / (float)ny;
-                float b = 0.2f;
+                v3f c = {
+                    (float)j / (float)nx,
+                    (float)i / (float)ny,
+                    0.2f
+                };
 
-                dp[0] = (int32_t)(255.99 * r);
-                dp[1] = (int32_t)(255.99 * g);
-                dp[2] = (int32_t)(255.99 * b);
+                dp[0] = (int32_t)(255.99 * c.x);
+                dp[1] = (int32_t)(255.99 * c.y);
+                dp[2] = (int32_t)(255.99 * c.z);
                 dp += 3;
         }
     }
     stbi_write_png("rt1w.png", nx, ny, 3, img, bpr);
     free(img);
+
+    return 0;
 }
