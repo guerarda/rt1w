@@ -8,6 +8,7 @@
 #include "ray.hpp"
 #include "sphere.hpp"
 #include "hitablelist.hpp"
+#include "camera.hpp"
 
 v3f color(const sptr<ray> &ray, const sptr<hitable> &world)
 {
@@ -40,6 +41,8 @@ int main(__unused int argc, __unused  char *argv[])
     v3f vertical  = { 0.0f, 2.0f, 0.0f };
     v3f org = { 0.0f, 0.0f, 0.0f };
 
+    sptr<camera> camera = camera::create(bl, horizontal, vertical, org);
+
     sptr<hitable> list[2];
     list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f);
     list[1] = sphere::create({ 0.0f, -100.5f, -1.0f }, 100.0f);
@@ -53,10 +56,8 @@ int main(__unused int argc, __unused  char *argv[])
             for (size_t j = 0; j < nx; j++) {
                 float u = (float)j / (float)nx;
                 float v = (float)(ny - i) / (float)ny;
-                v3f dir = v3f_add(v3f_add(bl, v3f_smul(u, horizontal)),
-                                          v3f_smul(v, vertical));
-                sptr<ray> r = ray::create(org, dir);
 
+                sptr<ray> r = camera->make_ray(u, v);
 
                 v3f c = color(r, world);
 
