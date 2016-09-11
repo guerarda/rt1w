@@ -80,15 +80,15 @@ int main(int argc, char *argv[])
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     sptr<material> soil = lambertian::create({ 0.8f, 0.8f, 0.0f });
-    sptr<material> mat = lambertian::create({ 0.8f, 0.3f, 0.3f });
-    sptr<material> metal1 = metal::create({ 0.8f, 0.6f, 0.2f }, 0.3f);
-    sptr<material> metal2 = metal::create({ 0.8f, 0.8f, 0.8f }, 1.0f);
+    sptr<material> mat = lambertian::create({ 0.1f, 0.2f, 0.5f });
+    sptr<material> metal = metal::create({ 0.8f, 0.6f, 0.2f }, 0.3f);
+    sptr<material> glass = dielectric::create(1.5f);
 
     sptr<hitable> list[4];
     list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f, mat);
     list[1] = sphere::create({ 0.0f, -100.5f, -1.0f }, 100.0f, soil);
-    list[2] = sphere::create({ 1.0f, 0.0f, -1.0f }, 0.5f, metal1);
-    list[3] = sphere::create({ -1.0f, 0.0f, -1.0f }, 0.5f, metal2);
+    list[2] = sphere::create({ 1.0f, 0.0f, -1.0f }, 0.5f, metal);
+    list[3] = sphere::create({ -1.0f, 0.0f, -1.0f }, 0.5f, glass);
 
     sptr<hitable_list> world = hitable_list::create(4, list);
 
