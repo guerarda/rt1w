@@ -8,7 +8,7 @@ struct sphere;
 
 struct sphere : hitable {
 
-    static sptr<sphere> create(const v3f &center, float radius);
+    static sptr<sphere> create(const v3f &center, float radius, const sptr<material> &mat);
 
     virtual bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
     virtual v3f   center() const = 0;

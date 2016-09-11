@@ -55,6 +55,16 @@ v3f v3f_smul(float s, const v3f &v)
     return u;
 }
 
+v3f v3f_vmul(const v3f &va, const v3f &vb)
+{
+    v3f v = {
+        va.x * vb.x,
+        va.y * vb.y,
+        va.z * vb.z
+    };
+    return v;
+}
+
 float v3f_norm_sq(const v3f &v)
 {
     return v.x * v.x + v.y * v.y + v.z* v.z;

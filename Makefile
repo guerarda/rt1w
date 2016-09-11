@@ -12,7 +12,7 @@ LDFLAGS = $(LIBRARIES)
 TARGET = build/rt1w
 MAIN = main.c
 CSOURCES =
-CXXSOURCES = vec.cpp ray.cpp sphere.cpp hitablelist.cpp camera.cpp
+CXXSOURCES = vec.cpp ray.cpp sphere.cpp hitablelist.cpp camera.cpp material.cpp
 OBJECTS = $(CSOURCES:.c=.o) $(CXXSOURCES:.cpp=.o) $(MAIN:.c=.o)
 
 all: $(TARGET)

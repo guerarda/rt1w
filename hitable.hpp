@@ -3,10 +3,13 @@
 
 #include "ray.hpp"
 
+struct material;
+
 struct hit_record {
     float t;
     v3f   p;
     v3f   normal;
+    sptr<material> mat;
 };
 
  struct hitable {

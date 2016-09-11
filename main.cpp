@@ -10,41 +10,32 @@
 #include "sphere.hpp"
 #include "hitablelist.hpp"
 #include "camera.hpp"
+#include "material.hpp"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+#define MAX_RECURSION_DEPTH 50
 
 static void print_info_str()
 {
     fprintf(stderr, "Usage: rt1f output_path ray_count\n");
 }
 
-v3f random_sphere_point()
-{
-    static std::random_device rd;
-    static std::mt19937 mt(rd());
-    static std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-    v3f p;
-
-    do {
-        p.x = dist(mt);
-        p.y = dist(mt);
-        p.z = dist(mt);
-    } while (v3f_norm_sq(p) > 1.0f);
-
-    return p;
-}
-
-v3f color(const sptr<ray> &r, const sptr<hitable> &world)
+v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
 {
     hit_record rec;
 
     if (world->hit(r, FLT_MIN, FLT_MAX, rec)) {
-        v3f target = v3f_add(v3f_add(rec.p, rec.normal),
-                             random_sphere_point());
+        v3f attenuation;
+        sptr<ray> scattered;
 
-        sptr<ray> nray = ray::create(rec.p, v3f_sub(target, rec.p));
-        return v3f_smul(0.5f, color(nray, world));
+        if (depth < MAX_RECURSION_DEPTH
+            && rec.mat->scatter(r, rec, attenuation, scattered)) {
+            return v3f_vmul(attenuation, color(scattered, world, depth + 1));
+        } else {
+            return { 0.0f, 0.f, 0.0f };
+        }
     } else {
         v3f udir = v3f_normalize(r->direction());
         v3f white = { 1.0f, 1.0f, 1.0f };
@@ -53,7 +44,6 @@ v3f color(const sptr<ray> &r, const sptr<hitable> &world)
         float t = 0.5f * (udir.y + 1.0f);
         return v3f_lerp(t, white, blue);
     }
-
 }
 
 int main(int argc, char *argv[])
@@ -89,13 +79,14 @@ int main(int argc, char *argv[])
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
+    sptr<material> soil = lambertian::create({ 0.8f, 0.8f, 0.8f });
+    sptr<material> mat = lambertian::create({ 0.8f, 0.3f, 0.3f });
+
     sptr<hitable> list[2];
-    list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f);
-    list[1] = sphere::create({ 0.0f, -100.5f, -1.0f }, 100.0f);
+    list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f, mat);
+    list[1] = sphere::create({ 0.0f, -100.5f, -1.0f }, 100.0f, soil);
 
     sptr<hitable_list> world = hitable_list::create(2, list);
-
-    sptr<sphere> sphere = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f);
 
     for (size_t i = 0; i < ny; i++) {
             uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
@@ -108,9 +99,11 @@ int main(int argc, char *argv[])
                     float v = (float)(ny - (i - dist(mt))) / (float)ny;
                     sptr<ray> r = camera->make_ray(u, v);
 
-                    c = v3f_add(c, color(r, world));
+                    c = v3f_add(c, color(r, world, 0));
                 }
                 c = v3f_smul(1.0f / ns, c);
+
+                /* Approx Gamma correction */
                 c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
 
                 dp[0] = (int32_t)(255.99 * c.x);

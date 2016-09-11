@@ -1,9 +1,10 @@
 #include "sphere.hpp"
 #include <math.h>
+#include "material.hpp"
 
 struct _sphere : sphere {
 
-    _sphere(const v3f &c, float r) : m_center(c) , m_radius(r) { }
+    _sphere(const v3f &c, float r, const sptr<material> &m);
     virtual ~_sphere() { }
 
     bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
@@ -13,7 +14,15 @@ struct _sphere : sphere {
 
     v3f   m_center;
     float m_radius;
+    sptr<material> m_material;
 };
+
+_sphere::_sphere(const v3f &c, float r, const sptr<material> &m)
+{
+    m_center = c;
+    m_radius = r;
+    m_material = m;
+}
 
 bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
@@ -32,7 +41,7 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
             rec.t = t;
             rec.p = r->point_at_param(t);
             rec.normal = v3f_sub(rec.p, m_center);
-
+            rec.mat = m_material;
             return true;
         }
     }
@@ -41,7 +50,7 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
 
 #pragma mark - Static constructors
 
-sptr<sphere> sphere::create(const v3f &c, float r)
+sptr<sphere> sphere::create(const v3f &c, float r, const sptr<material> &m)
 {
-    return std::make_shared<_sphere>(c, r);
+    return std::make_shared<_sphere>(c, r, m);
 }
