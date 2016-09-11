@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <random>
+#include <float.h>
 
 #include "vec.hpp"
 #include "ray.hpp"
@@ -17,23 +18,42 @@ static void print_info_str()
 {
     fprintf(stderr, "Usage: rt1f output_path ray_count\n");
 }
-v3f color(const sptr<ray> &ray, const sptr<hitable> &world)
+
+v3f random_sphere_point()
+{
+    static std::random_device rd;
+    static std::mt19937 mt(rd());
+    static std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
+    v3f p;
+
+    do {
+        p.x = dist(mt);
+        p.y = dist(mt);
+        p.z = dist(mt);
+    } while (v3f_norm_sq(p) > 1.0f);
+
+    return p;
+}
+
+v3f color(const sptr<ray> &r, const sptr<hitable> &world)
 {
     hit_record rec;
 
-    if (world->hit(ray, 0.0f, MAXFLOAT, rec)) {
-        v3f N = v3f_normalize(rec.normal);
-        N.x += 1.0f;
-        N.y += 1.0f;
-        N.z += 1.0f;
-        return v3f_smul(0.5f, N);
-    }
-    v3f udir = v3f_normalize(ray->direction());
-    v3f white = { 1.0f, 1.0f, 1.0f };
-    v3f blue = { 0.5f, 0.7f, 1.0f };
+    if (world->hit(r, FLT_MIN, FLT_MAX, rec)) {
+        v3f target = v3f_add(v3f_add(rec.p, rec.normal),
+                             random_sphere_point());
 
-    float t = 0.5f * (udir.y + 1.0f);
-    return v3f_lerp(t, white, blue);
+        sptr<ray> nray = ray::create(rec.p, v3f_sub(target, rec.p));
+        return v3f_smul(0.5f, color(nray, world));
+    } else {
+        v3f udir = v3f_normalize(r->direction());
+        v3f white = { 1.0f, 1.0f, 1.0f };
+        v3f blue = { 0.5f, 0.7f, 1.0f };
+
+        float t = 0.5f * (udir.y + 1.0f);
+        return v3f_lerp(t, white, blue);
+    }
+
 }
 
 int main(int argc, char *argv[])
@@ -91,6 +111,7 @@ int main(int argc, char *argv[])
                     c = v3f_add(c, color(r, world));
                 }
                 c = v3f_smul(1.0f / ns, c);
+                c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
 
                 dp[0] = (int32_t)(255.99 * c.x);
                 dp[1] = (int32_t)(255.99 * c.y);
