@@ -61,7 +61,7 @@ bool _lambertian::scatter(__unused const sptr<ray> &r_in,
                           v3f &attenuation,
                           sptr<ray> &scattered) const
 {
-    v3f target = v3f_add(v3f_add(rec.p, v3f_normalize(rec.normal)),
+    v3f target = v3f_add(v3f_add(rec.p, rec.normal),
                          random_sphere_point());
     scattered = ray::create(rec.p, v3f_sub(target, rec.p));
     attenuation = m_albedo;
@@ -95,7 +95,7 @@ bool _metal::scatter(const sptr<ray> &r_in,
                      v3f &attenuation,
                      sptr<ray> &scattered) const
 {
-    v3f reflected = v3f_reflect(r_in->direction(), v3f_normalize(rec.normal));
+    v3f reflected = v3f_reflect(r_in->direction(), rec.normal);
     v3f fuzz = v3f_smul(m_fuzz, random_sphere_point());
     scattered = ray::create(rec.p, v3f_add(fuzz, reflected));
     attenuation = m_albedo;
@@ -127,18 +127,17 @@ bool _dielectric::scatter(const sptr<ray> &r_in,
     float p_reflected;
     v3f norm_out;
     v3f refracted;
-    v3f normal = v3f_normalize(rec.normal);
     v3f rdir = r_in->direction();
 
     attenuation = { 1.0f, 1.0f, 1.0f };
-    if (v3f_dot(r_in->direction(), normal) > 0.0f) {
-        norm_out = v3f_smul(-1.0f, normal);
+    if (v3f_dot(r_in->direction(), rec.normal) > 0.0f) {
+        norm_out = v3f_smul(-1.0f, rec.normal);
         ni_over_nt = m_ref_idx;
-        cosine = m_ref_idx * v3f_dot(rdir, normal) / v3f_norm(rdir);
+        cosine = m_ref_idx * v3f_dot(rdir, rec.normal) / v3f_norm(rdir);
     } else {
-        norm_out = normal;
+        norm_out = rec.normal;
         ni_over_nt = 1.0f / m_ref_idx;
-        cosine = - v3f_dot(rdir, normal) / v3f_norm(rdir);
+        cosine = - v3f_dot(rdir, rec.normal) / v3f_norm(rdir);
     }
     if (refract(r_in->direction(), norm_out, ni_over_nt, refracted)) {
         p_reflected = schlick(cosine, m_ref_idx);
@@ -147,7 +146,7 @@ bool _dielectric::scatter(const sptr<ray> &r_in,
     }
     static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     if (dist(__prng) < p_reflected) {
-        v3f reflected = v3f_reflect(rdir, normal);
+        v3f reflected = v3f_reflect(rdir, rec.normal);
         scattered = ray::create(rec.p, reflected);
     } else {
         scattered = ray::create(rec.p, refracted);

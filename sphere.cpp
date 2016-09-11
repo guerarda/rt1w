@@ -40,7 +40,7 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
         if (t > min && t < max) {
             rec.t = t;
             rec.p = r->point_at_param(t);
-            rec.normal = v3f_sub(rec.p, m_center);
+            rec.normal = v3f_normalize(v3f_sub(rec.p, m_center));
             rec.mat = m_material;
             return true;
         }
