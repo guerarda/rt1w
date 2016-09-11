@@ -22,14 +22,14 @@ struct lambertian : material {
                          sptr<ray> &scattered) const = 0;
 };
 
-// struct metal : material {
+struct metal : material {
 
-//     static sptr<metal> create(const v3f &albedo);
+    static sptr<metal> create(const v3f &albedo, float fuzz);
 
-//     virtual bool scatter(const sptr<ray> &r_in,
-//                          const hit_record &rec,
-//                          const v3f &attenuation,
-//                          sptr<ray> &scattered) const = 0;
-// };
+    virtual bool scatter(const sptr<ray> &r_in,
+                         const hit_record &rec,
+                         v3f &attenuation,
+                         sptr<ray> &scattered) const = 0;
+};
 
 #endif

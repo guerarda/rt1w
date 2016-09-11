@@ -85,3 +85,8 @@ v3f v3f_normalize(const v3f &v)
     };
     return u;
 }
+
+v3f v3f_reflect(const v3f &v, const v3f &n)
+{
+    return v3f_sub(v, v3f_smul(2.0f * v3f_dot(v, n), n));
+}

@@ -26,7 +26,7 @@ v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
 {
     hit_record rec;
 
-    if (world->hit(r, FLT_MIN, FLT_MAX, rec)) {
+    if (world->hit(r, 0.00001f, FLT_MAX, rec)) {
         v3f attenuation;
         sptr<ray> scattered;
 
@@ -34,7 +34,7 @@ v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
             && rec.mat->scatter(r, rec, attenuation, scattered)) {
             return v3f_vmul(attenuation, color(scattered, world, depth + 1));
         } else {
-            return { 0.0f, 0.f, 0.0f };
+            return { 0.0f, 0.0f, 0.0f };
         }
     } else {
         v3f udir = v3f_normalize(r->direction());
@@ -79,22 +79,26 @@ int main(int argc, char *argv[])
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    sptr<material> soil = lambertian::create({ 0.8f, 0.8f, 0.8f });
+    sptr<material> soil = lambertian::create({ 0.8f, 0.8f, 0.0f });
     sptr<material> mat = lambertian::create({ 0.8f, 0.3f, 0.3f });
+    sptr<material> metal1 = metal::create({ 0.8f, 0.6f, 0.2f }, 0.3f);
+    sptr<material> metal2 = metal::create({ 0.8f, 0.8f, 0.8f }, 1.0f);
 
-    sptr<hitable> list[2];
+    sptr<hitable> list[4];
     list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f, mat);
     list[1] = sphere::create({ 0.0f, -100.5f, -1.0f }, 100.0f, soil);
+    list[2] = sphere::create({ 1.0f, 0.0f, -1.0f }, 0.5f, metal1);
+    list[3] = sphere::create({ -1.0f, 0.0f, -1.0f }, 0.5f, metal2);
 
-    sptr<hitable_list> world = hitable_list::create(2, list);
+    sptr<hitable_list> world = hitable_list::create(4, list);
 
     for (size_t i = 0; i < ny; i++) {
             uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
-            for (size_t j = 0; j < nx; j++) {
 
+            for (size_t j = 0; j < nx; j++) {
                 v3f c = { 0.0f, 0.0f, 0.0f };
 
-                for (size_t k= 0; k < ns; k++) {
+                for (size_t k = 0; k < ns; k++) {
                     float u = (float)(j + dist(mt)) / (float)nx;
                     float v = (float)(ny - (i - dist(mt))) / (float)ny;
                     sptr<ray> r = camera->make_ray(u, v);
