@@ -1,5 +1,7 @@
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 #include <random>
 
 #include "vec.hpp"
@@ -11,6 +13,10 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+static void print_info_str()
+{
+    fprintf(stderr, "Usage: rt1f output_path ray_count\n");
+}
 v3f color(const sptr<ray> &ray, const sptr<hitable> &world)
 {
     hit_record rec;
@@ -30,11 +36,26 @@ v3f color(const sptr<ray> &ray, const sptr<hitable> &world)
     return v3f_lerp(t, white, blue);
 }
 
-int main(__unused int argc, __unused  char *argv[])
+int main(int argc, char *argv[])
 {
+    const char *arg1 = nullptr;
+    int arg2 = 0;
+
+    if (argc == 1) {
+        arg1 = "rt1w.png";
+        arg2 = 1;
+    }
+    else if (argc == 3) {
+        arg1 = argv[1];
+        arg2 = atoi(argv[2]);
+    } else {
+        print_info_str();
+        return 0;
+    }
+
     size_t nx = 800;
     size_t ny = 400;
-    size_t ns = 1;
+    size_t ns = arg2;
     uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
     size_t bpr = nx * 3 * sizeof(*img);
 
@@ -77,7 +98,7 @@ int main(__unused int argc, __unused  char *argv[])
                 dp += 3;
         }
     }
-    stbi_write_png("rt1w.png", nx, ny, 3, img, bpr);
+    stbi_write_png(arg1, nx, ny, 3, img, bpr);
     free(img);
 
     return 0;
