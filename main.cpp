@@ -1,14 +1,15 @@
 #include <stdlib.h>
 #include <stdint.h>
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include <random>
 
 #include "vec.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
 #include "hitablelist.hpp"
 #include "camera.hpp"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
 
 v3f color(const sptr<ray> &ray, const sptr<hitable> &world)
 {
@@ -33,6 +34,7 @@ int main(__unused int argc, __unused  char *argv[])
 {
     size_t nx = 800;
     size_t ny = 400;
+    size_t ns = 1;
     uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
     size_t bpr = nx * 3 * sizeof(*img);
 
@@ -42,6 +44,9 @@ int main(__unused int argc, __unused  char *argv[])
     v3f org = { 0.0f, 0.0f, 0.0f };
 
     sptr<camera> camera = camera::create(bl, horizontal, vertical, org);
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     sptr<hitable> list[2];
     list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f);
@@ -54,12 +59,17 @@ int main(__unused int argc, __unused  char *argv[])
     for (size_t i = 0; i < ny; i++) {
             uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
             for (size_t j = 0; j < nx; j++) {
-                float u = (float)j / (float)nx;
-                float v = (float)(ny - i) / (float)ny;
 
-                sptr<ray> r = camera->make_ray(u, v);
+                v3f c = { 0.0f, 0.0f, 0.0f };
 
-                v3f c = color(r, world);
+                for (size_t k= 0; k < ns; k++) {
+                    float u = (float)(j + dist(mt)) / (float)nx;
+                    float v = (float)(ny - (i - dist(mt))) / (float)ny;
+                    sptr<ray> r = camera->make_ray(u, v);
+
+                    c = v3f_add(c, color(r, world));
+                }
+                c = v3f_smul(1.0f / ns, c);
 
                 dp[0] = (int32_t)(255.99 * c.x);
                 dp[1] = (int32_t)(255.99 * c.y);
