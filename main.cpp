@@ -73,8 +73,11 @@ int main(int argc, char *argv[])
     v3f lookat = { 0.0f, 0.0f, -1.0f };
     v3f up = { 0.0f, 1.0f, 0.0f };
     float aspect = (float)nx / (float)ny;
+    float aperture = 2.0f;
+    float focus_dist = v3f_norm(v3f_sub(eye, lookat));
 
-    sptr<camera> camera = camera::create(eye, lookat, up, 30.0f, aspect);
+    sptr<camera> camera = camera::create(eye, lookat, up, 30.0f, aspect,
+                                         aperture, focus_dist);
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);

@@ -11,7 +11,9 @@ struct camera {
                                const v3f &lookat,
                                const v3f &up,
                                float vfov,
-                               float aspect);
+                               float aspect,
+                               float aperture,
+                               float focus_dist);
 
     virtual sptr<ray> make_ray(float u, float v) const = 0;
 };
