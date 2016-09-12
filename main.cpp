@@ -69,12 +69,12 @@ int main(int argc, char *argv[])
     uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
     size_t bpr = nx * 3 * sizeof(*img);
 
-    v3f bl = { -2.0f, -1.0f, -1.0f };
-    v3f horizontal = { 4.0f, 0.0f, 0.0f };
-    v3f vertical  = { 0.0f, 2.0f, 0.0f };
-    v3f org = { 0.0f, 0.0f, 0.0f };
+    v3f eye = { -2.0f, 2.0f, 1.0f };
+    v3f lookat = { 0.0f, 0.0f, -1.0f };
+    v3f up = { 0.0f, 1.0f, 0.0f };
+    float aspect = (float)nx / (float)ny;
 
-    sptr<camera> camera = camera::create(bl, horizontal, vertical, org);
+    sptr<camera> camera = camera::create(eye, lookat, up, 30.0f, aspect);
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
