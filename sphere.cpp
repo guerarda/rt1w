@@ -26,9 +26,10 @@ _sphere::_sphere(const v3f &c, float r, const sptr<material> &m)
 
 bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
+    v3f rdir = r->direction();
     v3f oc = v3f_sub(r->origin(), m_center);
-    float a = v3f_dot(r->direction(), r->direction());
-    float b = 2 * v3f_dot(r->direction(), oc);
+    float a = v3f_dot(rdir, rdir);
+    float b = 2 * v3f_dot(rdir, oc);
     float c = v3f_dot(oc, oc) - m_radius * m_radius;
     float delta = b * b - 4 * a * c;
 
@@ -39,7 +40,7 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
         }
         if (t > min && t < max) {
             rec.t = t;
-            rec.p = r->point_at_param(t);
+            rec.p = r->point(t);
             rec.normal = v3f_normalize(v3f_sub(rec.p, m_center));
             rec.mat = m_material;
             return true;

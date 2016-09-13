@@ -17,11 +17,6 @@
 
 #define MAX_RECURSION_DEPTH 50
 
-static void print_info_str()
-{
-    fprintf(stderr, "Usage: rt1f output_path ray_count\n");
-}
-
 v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
 {
     hit_record rec;
@@ -106,26 +101,68 @@ sptr<hitable> random_scene()
     return hitable_list::create(i, list);
 }
 
+static void usage(const char *msg = nullptr)
+{
+    if (msg) {
+        fprintf(stderr, "rt1w: %s\n\n", msg);
+    }
+    fprintf(stderr, R"(usage: rt1w [<options>] <outfile>
+--help               Print this help text.
+--quality=<num>      log2 of the number of ray traced for each pixel.
+                     Set to zero by default, so only one ray per pixel.
+--quiet              Only prints error messages.
+--verbose            Print more stuff.
+
+)");
+    exit(1);
+}
+
+enum {
+    OPTION_QUIET   = 1,
+    OPTION_VERBOSE = 1<<1
+};
+
+struct options {
+    char     outfile[256];
+    uint32_t quality;
+    uint32_t flags;
+};
+
 int main(int argc, char *argv[])
 {
-    const char *arg1 = nullptr;
-    int arg2 = 0;
+    /* Process arguments */
+    struct options options = { "\0", 0, 0 };
 
     if (argc == 1) {
-        arg1 = "rt1w.png";
-        arg2 = 1;
+        usage();
     }
-    else if (argc == 3) {
-        arg1 = argv[1];
-        arg2 = atoi(argv[2]);
-    } else {
-        print_info_str();
-        return 0;
+    for (int i = 1; i < argc; i++) {
+        if (char * c = strstr(argv[i], "--quality=")) {
+            options.quality = atoi(c + 10);
+        }
+        else if (char * c = strstr(argv[i], "-quality=")) {
+            options.quality = atoi(c + 9);
+        }
+        else if (   !strcmp(argv[i], "--quiet")
+                 || !strcmp(argv[i], "-quiet")) {
+            options.flags |= OPTION_QUIET;
+        }
+        else if (   !strcmp(argv[i], "--verbose")
+                 || !strcmp(argv[i], "-verbose")) {
+            options.flags |= OPTION_VERBOSE;
+        }
+        else if (   !strcmp(argv[i], "--help")
+                 || !strcmp(argv[i], "-h")
+                 || !strcmp(argv[i], "-help")) {
+            usage();
+            return 0;
+        } else {
+            strncpy(options.outfile, argv[i], 255);
+        }
     }
-
     size_t nx = 800;
     size_t ny = 400;
-    size_t ns = arg2;
+    size_t ns = 1 << options.quality;
     uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
     size_t bpr = nx * 3 * sizeof(*img);
 
@@ -142,18 +179,6 @@ int main(int argc, char *argv[])
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    // sptr<material> soil = lambertian::create({ 0.8f, 0.8f, 0.0f });
-    // sptr<material> mat = lambertian::create({ 0.1f, 0.2f, 0.5f });
-    // sptr<material> metal = metal::create({ 0.8f, 0.6f, 0.2f }, 0.3f);
-    // sptr<material> glass = dielectric::create(1.5f);
-
-    // sptr<hitable> list[4];
-    // list[0] = sphere::create({ 0.0f, 0.0f, -1.0f }, 0.5f, mat);
-    // list[1] = sphere::create({ 0.0f, -100.5f, -1.0f }, 100.0f, soil);
-    // list[2] = sphere::create({ 1.0f, 0.0f, -1.0f }, 0.5f, metal);
-    // list[3] = sphere::create({ -1.0f, 0.0f, -1.0f }, 0.5f, glass);
-
-    // sptr<hitable_list> world = hitable_list::create(4, list);
     sptr<hitable> scene = random_scene();
     for (size_t i = 0; i < ny; i++) {
             uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
@@ -179,7 +204,7 @@ int main(int argc, char *argv[])
                 dp += 3;
         }
     }
-    stbi_write_png(arg1, nx, ny, 3, img, bpr);
+    stbi_write_png(options.outfile, nx, ny, 3, img, bpr);
     free(img);
 
     return 0;

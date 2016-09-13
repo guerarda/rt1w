@@ -9,7 +9,8 @@ struct ray {
 
     virtual v3f origin() const = 0;
     virtual v3f direction() const = 0;
-    virtual v3f point_at_param(float t) const = 0;
+
+    virtual v3f point(float t) const = 0;
 };
 
 #endif
