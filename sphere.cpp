@@ -33,10 +33,10 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
     float c = v3f_dot(oc, oc) - m_radius * m_radius;
     float delta = b * b - 4 * a * c;
 
-    if (delta > 0.0f) {
-        float t = (-b - sqrtf(delta)) / (2.0 * a);
+    if (delta >= 0.0f) {
+        float t = (-b - sqrtf(delta)) / (2.0f * a);
         if (!(t > min && t < max)) {
-            t = (-b + sqrtf(delta)) / (2.0 * a);
+            t = (-b + sqrtf(delta)) / (2.0f * a);
         }
         if (t > min && t < max) {
             rec.t = t;

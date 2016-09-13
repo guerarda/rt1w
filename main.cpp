@@ -21,7 +21,7 @@ v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
 {
     hit_record rec;
 
-    if (world->hit(r, 0.00001f, FLT_MAX, rec)) {
+    if (world->hit(r, 0.001f, FLT_MAX, rec)) {
         v3f attenuation;
         sptr<ray> scattered;
 
