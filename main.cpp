@@ -128,6 +128,20 @@ struct options {
     uint32_t flags;
 };
 
+static void progress(uint32_t done, uint32_t total)
+{
+    float p = 100.0f * (float)done / (float)total;
+    fprintf(stderr, "\r%.1f%% [", p);
+
+    uint32_t n = (uint32_t)floorf(p) / 2;
+    for (uint i = 0; i < 50; i++) {
+        char c = i <= n ? '#' : ' ';
+        fprintf(stderr, "%c", c);
+    }
+    fprintf(stderr, "]");
+    fflush(stderr);
+}
+
 int main(int argc, char *argv[])
 {
     /* Process arguments */
@@ -180,29 +194,43 @@ int main(int argc, char *argv[])
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     sptr<hitable> scene = random_scene();
+
+    uint32_t total = nx * ny;
+    if (!options.flags & OPTION_QUIET) {
+        progress(0, total);
+    }
     for (size_t i = 0; i < ny; i++) {
-            uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
+        uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
 
-            for (size_t j = 0; j < nx; j++) {
-                v3f c = { 0.0f, 0.0f, 0.0f };
+        for (size_t j = 0; j < nx; j++) {
+            v3f c = { 0.0f, 0.0f, 0.0f };
 
-                for (size_t k = 0; k < ns; k++) {
-                    float u = (float)(j + dist(mt)) / (float)nx;
-                    float v = (float)(ny - (i - dist(mt))) / (float)ny;
-                    sptr<ray> r = camera->make_ray(u, v);
+            for (size_t k = 0; k < ns; k++) {
+                float u = (float)(j + dist(mt)) / (float)nx;
+                float v = (float)(ny - (i - dist(mt))) / (float)ny;
+                sptr<ray> r = camera->make_ray(u, v);
 
-                    c = v3f_add(c, color(r, scene, 0));
-                }
-                c = v3f_smul(1.0f / ns, c);
+                c = v3f_add(c, color(r, scene, 0));
+            }
+            c = v3f_smul(1.0f / ns, c);
 
-                /* Approx Gamma correction */
-                c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
+            /* Approx Gamma correction */
+            c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
 
-                dp[0] = (int32_t)(255.99 * c.x);
-                dp[1] = (int32_t)(255.99 * c.y);
-                dp[2] = (int32_t)(255.99 * c.z);
-                dp += 3;
+            dp[0] = (int32_t)(255.99 * c.x);
+            dp[1] = (int32_t)(255.99 * c.y);
+            dp[2] = (int32_t)(255.99 * c.z);
+            dp += 3;
         }
+        if (!options.flags & OPTION_QUIET) {
+            progress((i + 1) * nx, total);
+        }
+    }
+    if (!options.flags & OPTION_QUIET) {
+        fprintf(stderr, "\nDone!\n");
+    }
+    if (!options.flags & OPTION_QUIET) {
+        fprintf(stderr, "Saving output to %s\n", options.outfile);
     }
     stbi_write_png(options.outfile, nx, ny, 3, img, bpr);
     free(img);
