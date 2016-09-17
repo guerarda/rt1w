@@ -1,15 +1,10 @@
 #ifndef VEC_H
 #define VEC_H
 
-#include <stdint.h>
+#include "types.h"
 
 __BEGIN_DECLS
 
-typedef struct v3f {
-    float x;
-    float y;
-    float z;
-} v3f;
 
 __END_DECLS
 

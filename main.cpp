@@ -5,6 +5,7 @@
 #include <random>
 #include <float.h>
 
+#include "tile.h"
 #include "vec.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
@@ -47,11 +48,10 @@ sptr<hitable> random_scene()
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    sptr<hitable> list[500];
-    list[0] = sphere::create({ 0.0f, -1000.0f, 0.0f },
-                             1000.0f,
-                             lambertian::create({0.5, 0.5, 0.5}));
-    int i = 1;
+    std::vector<sptr<hitable>> v;
+    v.push_back(sphere::create({ 0.0f, -1000.0f, 0.0f },
+                               1000.0f,
+                               lambertian::create({0.5, 0.5, 0.5})));
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
             float choose_mat = dist(mt);
@@ -67,9 +67,9 @@ sptr<hitable> random_scene()
                         dist(mt) * dist(mt),
                         dist(mt) * dist(mt)
                     };
-                    list[i++] = sphere::create(center,
+                    v.push_back(sphere::create(center,
                                                0.2f,
-                                               lambertian::create(albedo));
+                                               lambertian::create(albedo)));
                 }
                 else if (choose_mat < 0.95f) { // metal
                     v3f albedo = {
@@ -77,28 +77,28 @@ sptr<hitable> random_scene()
                         0.5f * (1 + dist(mt)),
                         0.5f * (1 + dist(mt))
                     };
-                    list[i++] = sphere::create(center,
+                    v.push_back(sphere::create(center,
                                                0.2f,
-                                               metal::create(albedo, 0.5f * dist(mt)));
+                                               metal::create(albedo, 0.5f * dist(mt))));
                 }
                 else {  // glass
-                    list[i++] = sphere::create(center, 0.2, dielectric::create(1.5));
+                    v.push_back(sphere::create(center,
+                                               0.2,
+                                               dielectric::create(1.5f)));
                 }
             }
         }
     }
-
-    list[i++] = sphere::create({ 0.0f, 1.0f, 0.0 },
+    v.push_back(sphere::create({ 0.0f, 1.0f, 0.0 },
                                1.0f,
-                               dielectric::create(1.5f));
-    list[i++] = sphere::create({ -4.0f, 1.0f, 0.0f },
+                               dielectric::create(1.5f)));
+    v.push_back(sphere::create({ -4.0f, 1.0f, 0.0f },
                                1.0f,
-                               lambertian::create({ 0.4f, 0.2f, 0.1f }));
-    list[i++] = sphere::create({ 4.0f, 1.0f, 0.0f },
+                               lambertian::create({ 0.4f, 0.2f, 0.1f })));
+    v.push_back(sphere::create({ 4.0f, 1.0f, 0.0f },
                                1.0f, metal::create({ 0.7f, 0.6f, 0.5f },
-                                                   0.0f));
-
-    return hitable_list::create(i, list);
+                                                   0.0f)));
+    return hitable_list::create(v.size(), v.data());
 }
 
 static void usage(const char *msg = nullptr)
@@ -130,7 +130,7 @@ struct options {
 
 static void progress(uint32_t done, uint32_t total)
 {
-    float p = 100.0f * (float)done / (float)total;
+    float p = done == 0.0f ? 0.0f : 100.0f * (float)done / (float)total;
     fprintf(stderr, "\r%.1f%% [", p);
 
     uint32_t n = (uint32_t)floorf(p) / 2;
@@ -174,16 +174,36 @@ int main(int argc, char *argv[])
             strncpy(options.outfile, argv[i], 255);
         }
     }
-    size_t nx = 800;
-    size_t ny = 400;
+    v2u img_size = { 800, 400 };
     size_t ns = 1 << options.quality;
-    uint8_t *img = (uint8_t *)malloc(nx * ny * 3 * sizeof(*img));
-    size_t bpr = nx * 3 * sizeof(*img);
+    uint8_t *img = (uint8_t *)malloc(img_size.x * img_size.y * 3 * sizeof(*img));
+    size_t bpr = img_size.x * 3 * sizeof(*img);
 
+    /* Divide in tiles 32x32 */
+    std::vector<tile> tiles;
+    size_t ntx = img_size.x / 32 + 1;
+    size_t nty = img_size.y / 32 + 1;
+
+    /* Compute tiles */
+    for (size_t i = 0; i < ntx; i++) {
+        for (size_t j = 0; j < nty; j++) {
+            tile t;
+            t.ptr = (uint8_t *)img + j * 32 * bpr + i * 32 * 3 * sizeof(*img);
+            t.bytes_per_row = bpr;
+            t.rect.org.x = i * 32;
+            t.rect.org.y = j * 32;
+            t.rect.size.x = i < ntx - 1 ? 32 : 32 - (ntx * 32 - img_size.x);
+            t.rect.size.y = j < nty - 1 ? 32 : 32 - (nty * 32 - img_size.y);
+
+            tiles.push_back(t);
+        }
+    }
+
+    /* Camera */
     v3f eye = { 13.0f, 2.0f, 3.0f };
     v3f lookat = { 0.0f, 0.0f, 0.0f };
     v3f up = { 0.0f, 1.0f, 0.0f };
-    float aspect = (float)nx / (float)ny;
+    float aspect = (float)img_size.x / (float)img_size.y;
     float aperture = 0.1f;
     float focus_dist = 10.0f;
 
@@ -195,35 +215,43 @@ int main(int argc, char *argv[])
 
     sptr<hitable> scene = random_scene();
 
-    uint32_t total = nx * ny;
+    uint32_t p = 0;
     if (!options.flags & OPTION_QUIET) {
-        progress(0, total);
+        progress(p, 0);
     }
-    for (size_t i = 0; i < ny; i++) {
-        uint8_t *dp = (uint8_t *)((uint8_t *)img + i * bpr);
+    /* Actual rendering */
+    for (tile t : tiles) {
+        uint32_t nx = t.rect.size.x;
+        uint32_t ny = t.rect.size.y;
+        int32_t orgx = t.rect.org.x;
+        int32_t orgy = t.rect.org.y;
 
-        for (size_t j = 0; j < nx; j++) {
-            v3f c = { 0.0f, 0.0f, 0.0f };
+        for (size_t i = 0; i < ny; i++) {
+            uint8_t *dp = (uint8_t *)((uint8_t *)t.ptr + i * bpr);
 
-            for (size_t k = 0; k < ns; k++) {
-                float u = (float)(j + dist(mt)) / (float)nx;
-                float v = (float)(ny - (i - dist(mt))) / (float)ny;
-                sptr<ray> r = camera->make_ray(u, v);
+            for (size_t j = 0; j < nx; j++) {
+                v3f c = { 0.0f, 0.0f, 0.0f };
 
-                c = v3f_add(c, color(r, scene, 0));
+                for (size_t k = 0; k < ns; k++) {
+                    float u = (float)(orgx + j + dist(mt)) / (float)img_size.x;
+                    float v = 1.0f - (float)(orgy + i - dist(mt)) / (float)img_size.y;
+                    sptr<ray> r = camera->make_ray(u, v);
+
+                    c = v3f_add(c, color(r, scene, 0));
+                }
+                c = v3f_smul(1.0f / ns, c);
+
+                /* Approx Gamma correction */
+                c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
+
+                dp[0] = (int32_t)(255.99 * c.x);
+                dp[1] = (int32_t)(255.99 * c.y);
+                dp[2] = (int32_t)(255.99 * c.z);
+                dp += 3;
             }
-            c = v3f_smul(1.0f / ns, c);
-
-            /* Approx Gamma correction */
-            c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
-
-            dp[0] = (int32_t)(255.99 * c.x);
-            dp[1] = (int32_t)(255.99 * c.y);
-            dp[2] = (int32_t)(255.99 * c.z);
-            dp += 3;
         }
         if (!options.flags & OPTION_QUIET) {
-            progress((i + 1) * nx, total);
+            progress(++p, tiles.size());
         }
     }
     if (!options.flags & OPTION_QUIET) {
@@ -232,7 +260,7 @@ int main(int argc, char *argv[])
     if (!options.flags & OPTION_QUIET) {
         fprintf(stderr, "Saving output to %s\n", options.outfile);
     }
-    stbi_write_png(options.outfile, nx, ny, 3, img, bpr);
+    stbi_write_png(options.outfile, img_size.x, img_size.y, 3, img, bpr);
     free(img);
 
     return 0;
