@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdlib.h>
+#include <xmmintrin.h>
 
 __BEGIN_DECLS
 
