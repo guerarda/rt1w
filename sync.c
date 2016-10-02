@@ -15,7 +15,7 @@ void * sync_lock_ptr(void * volatile * loc)
             }
         } while (1);
     } else {
-        ptr = nullptr;
+        ptr = NULL;
     }
     return ptr;
 }
