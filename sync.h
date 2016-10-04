@@ -41,10 +41,6 @@ inline int32_t sync_add_u64(uint64_t volatile *ptr, uint64_t val) {
 
 #endif
 
-inline void sync_pause() {
-    _mm_pause();
-}
-
 void *sync_lock_ptr(void * volatile *);
 void sync_unlock_ptr(void * volatile *, void *);
 

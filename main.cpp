@@ -5,13 +5,14 @@
 #include <random>
 #include <float.h>
 
-#include "tile.h"
 #include "vec.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
 #include "hitablelist.hpp"
 #include "camera.hpp"
 #include "material.hpp"
+#include "wqueue.hpp"
+#include "event.hpp"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -101,6 +102,80 @@ sptr<hitable> random_scene()
     return hitable_list::create(v.size(), v.data());
 }
 
+struct _tile : Object {
+    static sptr<_tile> create(rect r, uint8_t *dp, size_t bpr) {
+        return std::make_shared<_tile>(r, dp, bpr);
+    }
+    _tile(rect r, uint8_t *dp, size_t bpr) : m_rect(r), m_dp(dp), m_bytes_per_row(bpr) { }
+    ~_tile() { }
+
+    rect     m_rect;
+    uint8_t *m_dp;
+    size_t   m_bytes_per_row;
+};
+
+struct _ctx : Object {
+    static sptr<_ctx> create(const sptr<camera> c,
+                             sptr<hitable> s,
+                             uint32_t n,
+                             v2u size) { return std::make_shared<_ctx>(c, s, n, size); }
+
+    _ctx(const sptr<camera> c, sptr<hitable> s, uint32_t n, v2u size) {
+        m_camera = c;
+        m_scene = s;
+        m_ns = n;
+        m_img_size = size;
+    }
+    ~_ctx() { }
+
+    sptr<camera>  m_camera;
+    sptr<hitable> m_scene;
+    uint32_t      m_ns;
+    v2u           m_img_size;
+    sptr<event>   m_event;
+};
+
+void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
+{
+    sptr<_ctx> ctx    = std::static_pointer_cast<_ctx>(obj);
+    sptr<_tile> smp = std::static_pointer_cast<_tile>(arg);
+
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+
+    uint32_t nx = smp->m_rect.size.x;
+    uint32_t ny = smp->m_rect.size.y;
+    int32_t orgx = smp->m_rect.org.x;
+    int32_t orgy = smp->m_rect.org.y;
+
+    for (size_t i = 0; i < ny; i++) {
+        uint8_t *dp = (uint8_t *)((uint8_t *)smp->m_dp + i * smp->m_bytes_per_row);
+
+        for (size_t j = 0; j < nx; j++) {
+            v3f c = { 0.0f, 0.0f, 0.0f };
+
+            for (size_t k = 0; k < ctx->m_ns; k++) {
+                float u = (float)(orgx + j + dist(mt)) / (float)ctx->m_img_size.x;
+                float v = 1.0f - (float)(orgy + i - dist(mt)) / (float)ctx->m_img_size.y;
+                sptr<ray> r = ctx->m_camera->make_ray(u, v);
+
+                c = v3f_add(c, color(r, ctx->m_scene, 0));
+            }
+            c = v3f_smul(1.0f / ctx->m_ns, c);
+
+            /* Approx Gamma correction */
+            c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
+
+            dp[0] = (int32_t)(255.99 * c.x);
+            dp[1] = (int32_t)(255.99 * c.y);
+            dp[2] = (int32_t)(255.99 * c.z);
+            dp += 3;
+        }
+    }
+    ctx->m_event->signal();
+}
+
 static void usage(const char *msg = nullptr)
 {
     if (msg) {
@@ -180,22 +255,22 @@ int main(int argc, char *argv[])
     size_t bpr = img_size.x * 3 * sizeof(*img);
 
     /* Divide in tiles 32x32 */
-    std::vector<tile> tiles;
     size_t ntx = img_size.x / 32 + 1;
     size_t nty = img_size.y / 32 + 1;
 
-    /* Compute tiles */
+    std::vector<sptr<_tile>> tiles;
     for (size_t i = 0; i < ntx; i++) {
         for (size_t j = 0; j < nty; j++) {
-            tile t;
-            t.ptr = (uint8_t *)img + j * 32 * bpr + i * 32 * 3 * sizeof(*img);
-            t.bytes_per_row = bpr;
-            t.rect.org.x = i * 32;
-            t.rect.org.y = j * 32;
-            t.rect.size.x = i < ntx - 1 ? 32 : 32 - (ntx * 32 - img_size.x);
-            t.rect.size.y = j < nty - 1 ? 32 : 32 - (nty * 32 - img_size.y);
 
-            tiles.push_back(t);
+            uint8_t *ptr = (uint8_t *)img + j * 32 * bpr + i * 32 * 3 * sizeof(*img);
+            rect r;
+            r.org.x = i * 32;
+            r.org.y = j * 32;
+            r.size.x = i < ntx - 1 ? 32 : 32 - (ntx * 32 - img_size.x);
+            r.size.y = j < nty - 1 ? 32 : 32 - (nty * 32 - img_size.y);
+
+            sptr<_tile> tile = _tile::create(r, ptr, bpr);
+            tiles.push_back(tile);
         }
     }
 
@@ -220,40 +295,17 @@ int main(int argc, char *argv[])
         progress(p, 0);
     }
     /* Actual rendering */
-    for (tile t : tiles) {
-        uint32_t nx = t.rect.size.x;
-        uint32_t ny = t.rect.size.y;
-        int32_t orgx = t.rect.org.x;
-        int32_t orgy = t.rect.org.y;
+    sptr<_ctx> ctx = _ctx::create(camera, scene, ns, img_size);
+    ctx->m_event = event::create(tiles.size());
 
-        for (size_t i = 0; i < ny; i++) {
-            uint8_t *dp = (uint8_t *)((uint8_t *)t.ptr + i * bpr);
+    for (sptr<_tile> t : tiles) {
+        wqueue_execute(pixel_func, ctx, t);
 
-            for (size_t j = 0; j < nx; j++) {
-                v3f c = { 0.0f, 0.0f, 0.0f };
-
-                for (size_t k = 0; k < ns; k++) {
-                    float u = (float)(orgx + j + dist(mt)) / (float)img_size.x;
-                    float v = 1.0f - (float)(orgy + i - dist(mt)) / (float)img_size.y;
-                    sptr<ray> r = camera->make_ray(u, v);
-
-                    c = v3f_add(c, color(r, scene, 0));
-                }
-                c = v3f_smul(1.0f / ns, c);
-
-                /* Approx Gamma correction */
-                c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
-
-                dp[0] = (int32_t)(255.99 * c.x);
-                dp[1] = (int32_t)(255.99 * c.y);
-                dp[2] = (int32_t)(255.99 * c.z);
-                dp += 3;
-            }
-        }
-        if (!options.flags & OPTION_QUIET) {
-            progress(++p, tiles.size());
-        }
+        // if (!options.flags & OPTION_QUIET) {
+        //     progress(++p, tiles.size());
+        // }
     }
+    ctx->m_event->wait();
     if (!options.flags & OPTION_QUIET) {
         fprintf(stderr, "\nDone!\n");
     }

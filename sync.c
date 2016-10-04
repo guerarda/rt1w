@@ -24,7 +24,7 @@ void sync_unlock_ptr(void * volatile *loc, void * ptr)
 {
     if (loc) {
         while (!sync_cmpxchg_ptr(loc, ptr, SYNC_MARKER)) {
-            sync_pause();
+            _mm_pause();
         }
     }
 }

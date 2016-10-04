@@ -4,7 +4,7 @@
 #include "vec.hpp"
 #include "sptr.hpp"
 
-struct ray {
+struct ray : Object {
     static sptr<ray> create(const v3f &org, const v3f &dir);
 
     virtual v3f origin() const = 0;

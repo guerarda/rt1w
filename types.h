@@ -4,7 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <stdlib.h>
-#include <xmmintrin.h>
+#include <x86intrin.h>
 
 __BEGIN_DECLS
 
@@ -17,6 +17,11 @@ typedef struct v2u {
     uint32_t x;
     uint32_t y;
 } v2u;
+
+typedef struct v2f {
+    float x;
+    float y;
+} v2f;
 
 typedef struct v3f {
     float x;

@@ -85,7 +85,6 @@ _job *_wqueue::dequeue()
                 m_cv.wait(lk);
             }
         }
-
     } while(!job);
     return job;
 }
@@ -103,4 +102,15 @@ static void work()
         }
         delete job;
     }
+}
+
+void wqueue_execute(wqueue_func func,
+                    const sptr<Object> &obj,
+                    const sptr<Object> &arg)
+{
+    _job *job = new _job;
+    job->m_arg = arg;
+    job->m_obj = obj;
+    job->m_func = func;
+    wqueue->enqueue(job);
 }

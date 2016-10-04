@@ -71,26 +71,29 @@ bool _event::test() const
 
 int32_t _event::wait()
 {
-    void *token = sync_lock_ptr(&m_token);
+    if (m_token) {
+        void *token = sync_lock_ptr(&m_token);
+        if (token) {
+            sptr<_lock> lock;
+            std::mutex mutex;
 
-   if (token) {
-       sptr<_lock> lock;
-       std::mutex mutex;
+            mutex.lock();
+            lock = create_lock(&mutex);
 
-       mutex.lock();
-       lock = create_lock(&mutex);
+            /* Add the lock to the list */
+            lock->m_next = m_lock;
+            m_lock = lock;
+            lock.reset();
 
-       /* Add the lock to the list */
-       lock->m_next = m_lock;
-       m_lock = lock;
-       lock.reset();
+            sync_unlock_ptr(&m_token, token);
 
-       sync_unlock_ptr(&m_token, token);
-
-       /* Exit when the mutex has been unlocked,
-          i.e. lock is destroyed */
-       mutex.lock();
-   }
+            /* Exit when the mutex has been unlocked,
+               i.e. lock is destroyed */
+            mutex.lock();
+        } else {
+            m_token = nullptr;
+        }
+    }
     return 0;
 }
 
