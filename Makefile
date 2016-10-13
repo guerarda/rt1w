@@ -19,7 +19,8 @@ CXXSOURCES = 	vec.cpp 	\
 		camera.cpp 	\
 		material.cpp 	\
 		event.cpp 	\
-		wqueue.cpp
+		wqueue.cpp	\
+		bvh.cpp
 OBJECTS = $(CSOURCES:.c=.o) $(CXXSOURCES:.cpp=.o) $(MAIN:.cpp=.o)
 
 all: $(TARGET)

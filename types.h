@@ -34,6 +34,13 @@ typedef struct rect {
     v2u size;
 } rect;
 
+typedef struct box {
+    v3f m_lo;
+    v3f m_hi;
+} box;
+
+extern const box box_zero;
+
 __END_DECLS
 
 #endif

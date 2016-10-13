@@ -8,12 +8,13 @@ struct _sphere : sphere {
     virtual ~_sphere() { }
 
     bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-
+    box   bounding_box() const { return m_box; }
     v3f   center() const { return m_center; }
     float radius() const { return m_radius; }
 
     v3f   m_center;
     float m_radius;
+    box   m_box;
     sptr<material> m_material;
 };
 
@@ -22,6 +23,7 @@ _sphere::_sphere(const v3f &c, float r, const sptr<material> &m)
     m_center = c;
     m_radius = r;
     m_material = m;
+    m_box = { v3f_sub(c, { r, r, r }), v3f_add(c, { r, r, r }) };
 }
 
 bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const

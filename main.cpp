@@ -13,6 +13,7 @@
 #include "material.hpp"
 #include "wqueue.hpp"
 #include "event.hpp"
+#include "bvh.hpp"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -99,7 +100,8 @@ sptr<hitable> random_scene()
     v.push_back(sphere::create({ 4.0f, 1.0f, 0.0f },
                                1.0f, metal::create({ 0.7f, 0.6f, 0.5f },
                                                    0.0f)));
-    return hitable_list::create(v.size(), v.data());
+    return bvh_node::create(v.size(), v.data());
+    //    return hitable_list::create(v.size(), v.data());
 }
 
 struct _tile : Object {
