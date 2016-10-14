@@ -10,7 +10,7 @@ using sptr = typename std::shared_ptr<T>;
  *having to template everything. Might be a better way to do this...
  */
 struct Object {
-
+    virtual ~Object() { }
 };
 
 #endif

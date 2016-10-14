@@ -2,7 +2,7 @@
 #include <math.h>
 #include <random>
 
-v3f random_in_unit_disk()
+static v3f random_in_unit_disk()
 {
     static std::random_device rd;
     static std::mt19937 mt(rd());
@@ -24,7 +24,6 @@ struct _camera : camera {
             float aspect,
             float aperture,
             float focus_dist);
-    virtual ~_camera() { }
 
     sptr<ray> make_ray(float u, float v) const;
 
@@ -44,7 +43,7 @@ _camera::_camera(const v3f &eye,
                  float focus_dist)
 {
     v3f u, v, w;
-    float theta = vfov * M_PI / 180.0f;
+    float theta = vfov * float(M_PI) / 180.0f;
     float half_h = tanf(theta/ 2.0f);
     float half_w = aspect * half_h;
 

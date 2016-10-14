@@ -4,9 +4,9 @@ CXX = clang++
 INCLUDES = -I/usr/local/include
 LIBRARIES = -L/usr/local/lib
 
-CFLAGS = -std=c11
+CFLAGS = -std=c11 -Wall -Wextra -pedantic -Wnon-virtual-dtor -Wmissing-prototypes -Wconversion -g -O0
 CXXFLAGS = -std=c++11 -stdlib=libc++
-CPPFLAGS = -Wall -Wextra -pedantic -g -O0
+CPPFLAGS =  -Wall -Wextra -pedantic -Wnon-virtual-dtor -Wmissing-prototypes -Wconversion -g -O0
 LDFLAGS = $(LIBRARIES)
 
 TARGET = build/rt1w

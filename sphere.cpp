@@ -5,7 +5,6 @@
 struct _sphere : sphere {
 
     _sphere(const v3f &c, float r, const sptr<material> &m);
-    virtual ~_sphere() { }
 
     bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
     box   bounding_box() const { return m_box; }

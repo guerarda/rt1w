@@ -31,11 +31,11 @@ inline int32_t sync_add_i32(int32_t volatile *ptr, int32_t val) {
     return __sync_add_and_fetch(ptr, val);
 }
 
-inline int32_t sync_add_u32(uint32_t volatile *ptr, uint32_t val) {
+inline uint32_t sync_add_u32(uint32_t volatile *ptr, uint32_t val) {
     return __sync_add_and_fetch(ptr, val);
 }
 
-inline int32_t sync_add_u64(uint64_t volatile *ptr, uint64_t val) {
+inline uint64_t sync_add_u64(uint64_t volatile *ptr, uint64_t val) {
     return __sync_add_and_fetch(ptr, val);
 }
 

@@ -3,7 +3,6 @@
 struct _ray : ray {
 
     _ray(const v3f &org, const v3f &dir) : m_org(org), m_dir(dir) { }
-    virtual ~_ray() { }
 
     v3f origin() const { return m_org; }
     v3f direction() const { return m_dir; }

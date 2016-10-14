@@ -5,7 +5,7 @@
 static std::random_device rd;
 static std::mt19937 __prng(rd());
 
-v3f random_sphere_point()
+static v3f random_sphere_point()
 {
     static std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
     v3f p;
@@ -19,22 +19,22 @@ v3f random_sphere_point()
     return p;
 }
 
-bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refracted)
+static bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refract)
 {
     v3f uv = v3f_normalize(v);
     float dt = v3f_dot(uv, n);
     float delta = 1.0f - ni_over_nt * ni_over_nt * ( 1.0f - dt * dt);
 
     if (delta > 0.0f) {
-        refracted = v3f_smul(ni_over_nt, v3f_sub(uv, v3f_smul(dt, n)));
-        refracted = v3f_sub(refracted, v3f_smul(sqrtf(delta), n));
+        refract = v3f_smul(ni_over_nt, v3f_sub(uv, v3f_smul(dt, n)));
+        refract = v3f_sub(refract, v3f_smul(sqrtf(delta), n));
         return true;
     } else {
         return false;
     }
 }
 
-float schlick(float cos, float ri)
+static float schlick(float cos, float ri)
 {
     float r = (1.0f - ri) / (1.0f + ri);
     r  = r * r;
@@ -46,7 +46,6 @@ float schlick(float cos, float ri)
 struct _lambertian : lambertian {
 
     _lambertian(const v3f &a) : m_albedo(a) { }
-    virtual ~_lambertian() { }
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
@@ -73,7 +72,6 @@ bool _lambertian::scatter(__unused const sptr<ray> &r_in,
 struct _metal : metal {
 
     _metal(const v3f &a, float f);
-    virtual ~_metal() { }
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
@@ -107,7 +105,6 @@ bool _metal::scatter(const sptr<ray> &r_in,
 struct _dielectric : dielectric {
 
     _dielectric(float ri) : m_ref_idx(ri) { }
-    virtual ~_dielectric() { }
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,

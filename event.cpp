@@ -1,6 +1,7 @@
 #include "event.hpp"
 #include "sync.h"
 #include <mutex>
+#include <assert.h>
 
 struct token {
     void *foo;
@@ -22,8 +23,8 @@ static sptr<_lock> create_lock(std::mutex *mutex)
 
 struct _event : event {
 
-    _event(uint32_t n);
-    ~_event();
+    _event(int32_t n);
+    virtual ~_event();
 
     int32_t signal();
     bool test() const;
@@ -34,8 +35,9 @@ struct _event : event {
     void * volatile  m_token;
 };
 
-_event::_event(uint32_t n)
+_event::_event(int32_t n)
 {
+    assert(n > 0);
     m_counter = n;
     m_token = new token;
     m_lock = nullptr;
@@ -99,7 +101,7 @@ int32_t _event::wait()
 
 #pragma mark - Static constructor
 
-sptr<event> event::create(uint32_t n)
+sptr<event> event::create(int32_t n)
 {
     return std::make_shared<_event>(n);
 }

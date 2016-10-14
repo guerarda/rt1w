@@ -4,9 +4,9 @@
 #include "types.h"
 #include "sptr.hpp"
 
-struct event {
+struct event : Object {
 
-    static sptr<event> create(uint32_t n);
+    static sptr<event> create(int32_t);
 
     virtual int32_t signal() = 0;
     virtual bool test() const = 0;

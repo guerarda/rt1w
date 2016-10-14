@@ -20,7 +20,7 @@
 
 #define MAX_RECURSION_DEPTH 50
 
-v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
+static v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
 {
     hit_record rec;
 
@@ -44,7 +44,7 @@ v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
     }
 }
 
-sptr<hitable> random_scene()
+static sptr<hitable> random_scene()
 {
     std::random_device rd;
     std::mt19937 mt(rd());
@@ -85,7 +85,7 @@ sptr<hitable> random_scene()
                 }
                 else {  // glass
                     v.push_back(sphere::create(center,
-                                               0.2,
+                                               0.2f,
                                                dielectric::create(1.5f)));
                 }
             }
@@ -100,8 +100,8 @@ sptr<hitable> random_scene()
     v.push_back(sphere::create({ 4.0f, 1.0f, 0.0f },
                                1.0f, metal::create({ 0.7f, 0.6f, 0.5f },
                                                    0.0f)));
+
     return bvh_node::create(v.size(), v.data());
-    //    return hitable_list::create(v.size(), v.data());
 }
 
 struct _tile : Object {
@@ -137,9 +137,9 @@ struct _ctx : Object {
     sptr<event>   m_event;
 };
 
-void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
+static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
 {
-    sptr<_ctx> ctx    = std::static_pointer_cast<_ctx>(obj);
+    sptr<_ctx> ctx  = std::static_pointer_cast<_ctx>(obj);
     sptr<_tile> smp = std::static_pointer_cast<_tile>(arg);
 
     std::random_device rd;
@@ -151,27 +151,26 @@ void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
     int32_t orgx = smp->m_rect.org.x;
     int32_t orgy = smp->m_rect.org.y;
 
-    for (size_t i = 0; i < ny; i++) {
-        uint8_t *dp = (uint8_t *)((uint8_t *)smp->m_dp + i * smp->m_bytes_per_row);
+    for (uint32_t i = 0; i < ny; i++) {
+        uint8_t *dp = smp->m_dp + i * smp->m_bytes_per_row;
 
-        for (size_t j = 0; j < nx; j++) {
+        for (uint32_t j = 0; j < nx; j++) {
             v3f c = { 0.0f, 0.0f, 0.0f };
 
             for (size_t k = 0; k < ctx->m_ns; k++) {
-                float u = (float)(orgx + j + dist(mt)) / (float)ctx->m_img_size.x;
-                float v = 1.0f - (float)(orgy + i - dist(mt)) / (float)ctx->m_img_size.y;
+                float u = (orgx + (int32_t)j + dist(mt)) / float(ctx->m_img_size.x);
+                float v = 1.0f - (float(orgy + (int32_t)i) - dist(mt)) / float(ctx->m_img_size.y);
                 sptr<ray> r = ctx->m_camera->make_ray(u, v);
 
                 c = v3f_add(c, color(r, ctx->m_scene, 0));
             }
             c = v3f_smul(1.0f / ctx->m_ns, c);
-
             /* Approx Gamma correction */
             c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
 
-            dp[0] = (int32_t)(255.99 * c.x);
-            dp[1] = (int32_t)(255.99 * c.y);
-            dp[2] = (int32_t)(255.99 * c.z);
+            dp[0] = (uint8_t)(255.99 * c.x);
+            dp[1] = (uint8_t)(255.99 * c.y);
+            dp[2] = (uint8_t)(255.99 * c.z);
             dp += 3;
         }
     }
@@ -210,8 +209,8 @@ static void progress(uint32_t done, uint32_t total)
     float p = done == 0.0f ? 0.0f : 100.0f * (float)done / (float)total;
     fprintf(stderr, "\r%.1f%% [", p);
 
-    uint32_t n = (uint32_t)floorf(p) / 2;
-    for (uint i = 0; i < 50; i++) {
+    int64_t n = lrint(floorf(p)) / 2;
+    for (int32_t i = 0; i < 50; i++) {
         char c = i <= n ? '#' : ' ';
         fprintf(stderr, "%c", c);
     }
@@ -229,10 +228,10 @@ int main(int argc, char *argv[])
     }
     for (int i = 1; i < argc; i++) {
         if (char * c = strstr(argv[i], "--quality=")) {
-            options.quality = atoi(c + 10);
+            options.quality = (uint32_t)atoi(c + 10);
         }
         else if (char * c = strstr(argv[i], "-quality=")) {
-            options.quality = atoi(c + 9);
+            options.quality = (uint32_t)atoi(c + 9);
         }
         else if (   !strcmp(argv[i], "--quiet")
                  || !strcmp(argv[i], "-quiet")) {
@@ -252,24 +251,24 @@ int main(int argc, char *argv[])
         }
     }
     v2u img_size = { 800, 400 };
-    size_t ns = 1 << options.quality;
+    uint32_t ns = 1 << options.quality;
     uint8_t *img = (uint8_t *)malloc(img_size.x * img_size.y * 3 * sizeof(*img));
     size_t bpr = img_size.x * 3 * sizeof(*img);
 
     /* Divide in tiles 32x32 */
-    size_t ntx = img_size.x / 32 + 1;
-    size_t nty = img_size.y / 32 + 1;
+    int32_t ntx = img_size.x / 32 + 1;
+    int32_t nty = img_size.y / 32 + 1;
 
     std::vector<sptr<_tile>> tiles;
-    for (size_t i = 0; i < ntx; i++) {
-        for (size_t j = 0; j < nty; j++) {
+    for (int32_t i = 0; i < ntx; i++) {
+        for (int32_t j = 0; j < nty; j++) {
 
-            uint8_t *ptr = (uint8_t *)img + j * 32 * bpr + i * 32 * 3 * sizeof(*img);
+            uint8_t *ptr = (uint8_t *)img + (uint32_t)j * 32 * bpr + (uint32_t)i * 32 * 3 * sizeof(*img);
             rect r;
             r.org.x = i * 32;
             r.org.y = j * 32;
-            r.size.x = i < ntx - 1 ? 32 : 32 - (ntx * 32 - img_size.x);
-            r.size.y = j < nty - 1 ? 32 : 32 - (nty * 32 - img_size.y);
+            r.size.x = i < ntx - 1 ? 32 : 32 - ((uint32_t)ntx * 32 - img_size.x);
+            r.size.y = j < nty - 1 ? 32 : 32 - ((uint32_t)nty * 32 - img_size.y);
 
             sptr<_tile> tile = _tile::create(r, ptr, bpr);
             tiles.push_back(tile);
@@ -298,7 +297,7 @@ int main(int argc, char *argv[])
     }
     /* Actual rendering */
     sptr<_ctx> ctx = _ctx::create(camera, scene, ns, img_size);
-    ctx->m_event = event::create(tiles.size());
+    ctx->m_event = event::create((int32_t)tiles.size());
 
     for (sptr<_tile> t : tiles) {
         wqueue_execute(pixel_func, ctx, t);
@@ -314,7 +313,12 @@ int main(int argc, char *argv[])
     if (!options.flags & OPTION_QUIET) {
         fprintf(stderr, "Saving output to %s\n", options.outfile);
     }
-    stbi_write_png(options.outfile, img_size.x, img_size.y, 3, img, bpr);
+    stbi_write_png(options.outfile,
+                   (int32_t)img_size.x,
+                   (int32_t)img_size.y,
+                   3,
+                   img,
+                   (int32_t)bpr);
     free(img);
 
     return 0;

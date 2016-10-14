@@ -8,6 +8,8 @@
 
 __BEGIN_DECLS
 
+#define __zero_box { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } }
+
 typedef struct v2i {
     int32_t x;
     int32_t y;
@@ -35,11 +37,9 @@ typedef struct rect {
 } rect;
 
 typedef struct box {
-    v3f m_lo;
-    v3f m_hi;
+    v3f lo;
+    v3f hi;
 } box;
-
-extern const box box_zero;
 
 __END_DECLS
 

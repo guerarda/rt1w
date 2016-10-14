@@ -11,9 +11,9 @@ bool box_hit(const box &b, const sptr<ray> &r, float tmin, float tmax)
     float i_dir, t0, t1;
 
     for (size_t i = 0; i < 3; i++) {
-        i_dir = 1.0f / ((float *)&dir.x)[i];
-        t0 = (((float *)&b.m_lo.x)[i] - ((float *)&org.x)[i]) * i_dir;
-        t1 = (((float *)&b.m_hi.x)[i] - ((float *)&org.x)[i]) * i_dir;
+        i_dir = 1.0f / (&dir.x)[i];
+        t0 = ((&b.lo.x)[i] - (&org.x)[i]) * i_dir;
+        t1 = ((&b.hi.x)[i] - (&org.x)[i]) * i_dir;
         if (i_dir < 0.0f) {
             std::swap(t0, t1);
         }
@@ -42,33 +42,33 @@ struct _bvh_node : bvh_node {
 
 struct {
     bool operator()(const sptr<hitable> &a, const sptr<hitable> &b) {
-        return a->bounding_box().m_lo.x < b->bounding_box().m_lo.x;
+        return a->bounding_box().lo.x < b->bounding_box().lo.x;
     }
 } bvh_xcmp;
 
 struct {
     bool operator()(const sptr<hitable> &a, const sptr<hitable> &b) {
-        return a->bounding_box().m_lo.y < b->bounding_box().m_lo.y;
+        return a->bounding_box().lo.y < b->bounding_box().lo.y;
     }
 } bvh_ycmp;
 
 struct {
     bool operator()(const sptr<hitable> &a, const sptr<hitable> &b) {
-        return a->bounding_box().m_lo.z < b->bounding_box().m_lo.z;
+        return a->bounding_box().lo.z < b->bounding_box().lo.z;
     }
 } bvh_zcmp;
 
 static box box_merge(const box &a, const box &b)
 {
     v3f lo = {
-        fminf(a.m_lo.x, b.m_lo.x),
-        fminf(a.m_lo.y, b.m_lo.y),
-        fminf(a.m_lo.z, b.m_lo.z)
+        fminf(a.lo.x, b.lo.x),
+        fminf(a.lo.y, b.lo.y),
+        fminf(a.lo.z, b.lo.z)
     };
     v3f hi = {
-        fmaxf(a.m_hi.x, b.m_hi.x),
-        fmaxf(a.m_hi.y, b.m_hi.y),
-        fmaxf(a.m_hi.z, b.m_hi.z)
+        fmaxf(a.hi.x, b.hi.x),
+        fmaxf(a.hi.y, b.hi.y),
+        fmaxf(a.hi.z, b.hi.z)
     };
     return { lo, hi };
 }

@@ -6,7 +6,6 @@
 struct _hitable_list : hitable_list {
 
     _hitable_list(size_t count, sptr<hitable> *l);
-    virtual ~_hitable_list() { }
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
     box bounding_box() const;
@@ -36,48 +35,43 @@ bool _hitable_list::hit(const sptr<ray> &r, float min, float max, hit_record &re
     return hit;
 }
 
-const box box_zero = {
-    { 0.0f, 0.0f, 0.0f },
-    { 0.0f, 0.0f, 0.0f }
-};
-
 static bool box_eq(const box &a, const box &b)
 {
-    return a.m_lo.x == b.m_lo.x
-        && a.m_lo.y == b.m_lo.y
-        && a.m_lo.z == b.m_lo.z
-        && a.m_hi.x == b.m_hi.x
-        && a.m_hi.y == b.m_hi.y
-        && a.m_hi.z == b.m_hi.z;
+    return a.lo.x == b.lo.x
+        && a.lo.y == b.lo.y
+        && a.lo.z == b.lo.z
+        && a.hi.x == b.hi.x
+        && a.hi.y == b.hi.y
+        && a.hi.z == b.hi.z;
 }
 
 static box box_merge(const box &a, const box &b)
 {
     v3f lo = {
-        fminf(a.m_lo.x, b.m_lo.x),
-        fminf(a.m_lo.y, b.m_lo.y),
-        fminf(a.m_lo.z, b.m_lo.z)
+        fminf(a.lo.x, b.lo.x),
+        fminf(a.lo.y, b.lo.y),
+        fminf(a.lo.z, b.lo.z)
     };
     v3f hi = {
-        fmaxf(a.m_hi.x, b.m_hi.x),
-        fmaxf(a.m_hi.y, b.m_hi.y),
-        fmaxf(a.m_hi.z, b.m_hi.z)
+        fmaxf(a.hi.x, b.hi.x),
+        fmaxf(a.hi.y, b.hi.y),
+        fmaxf(a.hi.z, b.hi.z)
     };
     return { lo, hi };
 }
 
 box _hitable_list::bounding_box() const
 {
-    box rbox = box_zero;
+    box rbox = __zero_box;
     if (m_hitables.size() > 0) {
         rbox = m_hitables[0]->bounding_box();
-        if (!box_eq(rbox, box_zero)) {
+        if (!box_eq(rbox, __zero_box)) {
             for (size_t i = 1; i < m_hitables.size(); i++) {
                 box b = m_hitables[i]->bounding_box();
-                if (!box_eq(b, box_zero)) {
+                if (!box_eq(b, __zero_box)) {
                     rbox = box_merge(rbox, b);
                 } else {
-                    return box_zero;
+                    return __zero_box;
                 }
             }
         }

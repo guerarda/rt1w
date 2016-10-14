@@ -12,7 +12,7 @@ struct hit_record {
     sptr<material> mat;
 };
 
- struct hitable {
+struct hitable : Object {
      virtual bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
      virtual box bounding_box() const = 0;
  };

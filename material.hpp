@@ -3,7 +3,7 @@
 
 #include "hitable.hpp"
 
-struct material {
+struct material : Object {
     virtual bool scatter(const sptr<ray> &r_in,
                          const hit_record &rec,
                          v3f &attenuation,
