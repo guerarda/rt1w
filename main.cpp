@@ -177,7 +177,7 @@ static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
     ctx->m_event->signal();
 }
 
-static void usage(const char *msg = nullptr)
+__attribute__((noreturn)) static void usage(const char *msg = nullptr)
 {
     if (msg) {
         fprintf(stderr, "rt1w: %s\n\n", msg);
@@ -227,11 +227,11 @@ int main(int argc, char *argv[])
         usage();
     }
     for (int i = 1; i < argc; i++) {
-        if (char * c = strstr(argv[i], "--quality=")) {
+        if (char *c = strstr(argv[i], "--quality=")) {
             options.quality = (uint32_t)atoi(c + 10);
         }
-        else if (char * c = strstr(argv[i], "-quality=")) {
-            options.quality = (uint32_t)atoi(c + 9);
+        else if (char *cc = strstr(argv[i], "-quality=")) {
+            options.quality = (uint32_t)atoi(cc + 9);
         }
         else if (   !strcmp(argv[i], "--quiet")
                  || !strcmp(argv[i], "-quiet")) {

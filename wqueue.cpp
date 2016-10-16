@@ -93,7 +93,7 @@ _job *_wqueue::dequeue()
 
 static _wqueue *wqueue = new _wqueue(std::thread::hardware_concurrency() + 1);
 
-static void work()
+__attribute__((noreturn)) static void work()
 {
     while (1) {
         _job *job = wqueue->dequeue();
