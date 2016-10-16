@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <vector>
 #include <math.h>
+#include <cfloat>
 
 struct _hitable_list : hitable_list {
 
@@ -35,14 +36,23 @@ bool _hitable_list::hit(const sptr<ray> &r, float min, float max, hit_record &re
     return hit;
 }
 
+static int32_t f32_cmp(float x, float y)
+{
+    if (fabs(x - y) <= fmaxf(fabsf(x), fabsf(y)) * FLT_EPSILON) {
+        return 0;
+    } else {
+        return x < y ? -1 : + 1;
+    }
+}
+
 static bool box_eq(const box &a, const box &b)
 {
-    return a.lo.x == b.lo.x
-        && a.lo.y == b.lo.y
-        && a.lo.z == b.lo.z
-        && a.hi.x == b.hi.x
-        && a.hi.y == b.hi.y
-        && a.hi.z == b.hi.z;
+    return f32_cmp(a.lo.x, b.lo.x)
+        && f32_cmp(a.lo.y, b.lo.y)
+        && f32_cmp(a.lo.z, b.lo.z)
+        && f32_cmp(a.hi.x, b.hi.x)
+        && f32_cmp(a.hi.y, b.hi.y)
+        && f32_cmp(a.hi.z, b.hi.z);
 }
 
 static box box_merge(const box &a, const box &b)
