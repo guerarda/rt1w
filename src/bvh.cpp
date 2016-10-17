@@ -1,7 +1,9 @@
 #include "bvh.hpp"
 #include <vector>
-#include <random>
 #include <algorithm>
+#include <functional>
+#include <cfloat>
+#include <math.h>
 #include <assert.h>
 
 bool box_hit(const box &b, const sptr<ray> &r, float tmin, float tmax)
@@ -40,37 +42,67 @@ struct _bvh_node : bvh_node {
     sptr<hitable> m_right;
 };
 
-struct {
-    bool operator()(const sptr<hitable> &a, const sptr<hitable> &b) {
-        return a->bounding_box().lo.x < b->bounding_box().lo.x;
-    }
-} bvh_xcmp;
+static bool bvh_x_cmp(const sptr<hitable> &a, const sptr<hitable> &b)
+{
+    return a->bounding_box().lo.x < b->bounding_box().lo.x;
+}
 
-struct {
-    bool operator()(const sptr<hitable> &a, const sptr<hitable> &b) {
-        return a->bounding_box().lo.y < b->bounding_box().lo.y;
-    }
-} bvh_ycmp;
+static bool bvh_y_cmp(const sptr<hitable> &a, const sptr<hitable> &b)
+{
+    return a->bounding_box().lo.y < b->bounding_box().lo.y;
+}
 
-struct {
-    bool operator()(const sptr<hitable> &a, const sptr<hitable> &b) {
-        return a->bounding_box().lo.z < b->bounding_box().lo.z;
+static bool bvh_z_cmp(const sptr<hitable> &a, const sptr<hitable> &b)
+{
+    return a->bounding_box().lo.z < b->bounding_box().lo.z;
+}
+
+static int32_t f32_cmp(float x, float y)
+{
+    if (fabs(x - y) <= fmaxf(fabsf(x), fabsf(y)) * FLT_EPSILON) {
+        return 0;
+    } else {
+        return x < y ? -1 : + 1;
     }
-} bvh_zcmp;
+}
+
+static bool box_eq(const box &a, const box &b)
+{
+    return f32_cmp(a.lo.x, b.lo.x)
+        && f32_cmp(a.lo.y, b.lo.y)
+        && f32_cmp(a.lo.z, b.lo.z)
+        && f32_cmp(a.hi.x, b.hi.x)
+        && f32_cmp(a.hi.y, b.hi.y)
+        && f32_cmp(a.hi.z, b.hi.z);
+}
+
+static float box_area(const box &box)
+{
+    v3f d = v3f_sub(box.hi, box.lo);
+    return 2 * (d.x * d.y + d.y * d.z + d.x * d.z);
+}
 
 static box box_merge(const box &a, const box &b)
 {
-    v3f lo = {
-        fminf(a.lo.x, b.lo.x),
-        fminf(a.lo.y, b.lo.y),
-        fminf(a.lo.z, b.lo.z)
-    };
-    v3f hi = {
-        fmaxf(a.hi.x, b.hi.x),
-        fmaxf(a.hi.y, b.hi.y),
-        fmaxf(a.hi.z, b.hi.z)
-    };
-    return { lo, hi };
+    if (box_eq(a, b)) {
+        return a;
+    } else if (box_eq(b, __zero_box)) {
+        return a;
+    } else if (box_eq(a, __zero_box)) {
+        return b;
+    } else {
+        v3f lo = {
+            fminf(a.lo.x, b.lo.x),
+            fminf(a.lo.y, b.lo.y),
+            fminf(a.lo.z, b.lo.z)
+        };
+        v3f hi = {
+            fmaxf(a.hi.x, b.hi.x),
+            fmaxf(a.hi.y, b.hi.y),
+            fmaxf(a.hi.z, b.hi.z)
+        };
+        return { lo, hi };
+    }
 }
 
 _bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
@@ -78,29 +110,58 @@ _bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
     assert(ptr);
     assert(n > 0);
 
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, 2);
+    std::vector<sptr<hitable>> best_v;
+    std::vector<float> left_area(n), right_area(n);
+    box b;
+    size_t idx = 0;
+    float min_sha = FLT_MAX;
 
-    std::vector<sptr<hitable>> v;
-    v.assign(ptr, ptr + n);
+    /* Find the optimal split plane for an axis and then
+     * compare the cost to the split plance for the previous
+     * axis
+     */
+    for (size_t axis = 0; axis < 3; axis++) {
+        std::vector<sptr<hitable>> v(n);
+        std::function<bool(const sptr<hitable> &, const sptr<hitable> &)> cmp_fn;
 
-    int axis = dis(gen);
-    if (axis == 0) {
-        std::sort(v.begin(), v.end(), bvh_xcmp);
-    } else if (axis == 1) {
-        std::sort(v.begin(), v.end(), bvh_ycmp);
-    } else {
-        std::sort(v.begin(), v.end(), bvh_zcmp);
+        v.assign(ptr, ptr + n);
+        cmp_fn = axis == 0 ? bvh_x_cmp : (axis == 1 ? bvh_y_cmp : bvh_z_cmp);
+
+        std::sort(v.begin(), v.end(), cmp_fn);
+
+        b = __zero_box;
+        for (size_t i = 0; i < n - 1; i++) {
+            b = box_merge(b, v[i]->bounding_box());
+            left_area[i] = box_area(b);
+        }
+        b = __zero_box;
+        for (size_t i = n; i-- > 1;) {
+            b = box_merge(b, v[i]->bounding_box());
+            right_area[i] = box_area(b);
+        }
+
+        bool best = false;
+        for (size_t i = 0; i < n - 1; i++) {
+            float sha = i * left_area[i] + (n - i - 1) * right_area[i + 1];
+            if (sha < min_sha) {
+                min_sha = sha;
+                idx = i;
+                best = true;
+            }
+        }
+        if (best) {
+            best_v = std::move(v);
+        }
     }
-    if (n == 1) {
-        m_left = m_right = ptr[0];
-    } else if (n == 2) {
-        m_left = ptr[0];
-        m_right = ptr[1];
+    if (idx == 0) {
+        m_left = best_v[0];
     } else {
-        m_left = bvh_node::create(n / 2, ptr);
-        m_right = bvh_node::create(n - n / 2, ptr + n / 2);
+        m_left = bvh_node::create(idx + 1, &best_v[0]);
+    }
+    if (idx == n - 2) {
+        m_right = best_v[n - 1];
+    } else {
+        m_right = bvh_node::create(n - 1 - idx, &best_v[idx + 1]);
     }
     m_box = box_merge(m_left->bounding_box(), m_right->bounding_box());
 }
