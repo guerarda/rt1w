@@ -45,14 +45,14 @@ static float schlick(float cos, float ri)
 
 struct _lambertian : lambertian {
 
-    _lambertian(const v3f &a) : m_albedo(a) { }
+    _lambertian(const sptr<Texture> &tex) : m_albedo(tex) { }
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
                  sptr<ray> &scattered) const;
 
-    v3f m_albedo;
+    sptr<Texture>  m_albedo;
 };
 
 bool _lambertian::scatter(__unused const sptr<ray> &r_in,
@@ -63,7 +63,7 @@ bool _lambertian::scatter(__unused const sptr<ray> &r_in,
     v3f target = v3f_add(v3f_add(rec.p, rec.normal),
                          random_sphere_point());
     scattered = ray::create(rec.p, v3f_sub(target, rec.p));
-    attenuation = m_albedo;
+    attenuation = m_albedo->value(0.0f, 0.0f, rec.p);
     return true;
 }
 
@@ -153,9 +153,9 @@ bool _dielectric::scatter(const sptr<ray> &r_in,
 
 #pragma mark - Static constructors
 
-sptr<lambertian> lambertian::create(const v3f &a)
+sptr<lambertian> lambertian::create(const sptr<Texture> &tex)
 {
-    return std::make_shared<_lambertian>(a);
+    return std::make_shared<_lambertian>(tex);
 }
 
 sptr<metal> metal::create(const v3f &a, float f)

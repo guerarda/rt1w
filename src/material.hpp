@@ -2,6 +2,7 @@
 #define MATERIAL_H
 
 #include "hitable.hpp"
+#include "texture.hpp"
 
 struct material : Object {
     virtual bool scatter(const sptr<ray> &r_in,
@@ -11,7 +12,7 @@ struct material : Object {
 };
 
 struct lambertian : material {
-    static sptr<lambertian> create(const v3f &albedo);
+    static sptr<lambertian> create(const sptr<Texture> &);
 };
 
 struct metal : material {

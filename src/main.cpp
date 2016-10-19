@@ -49,9 +49,12 @@ static sptr<hitable> random_scene()
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     std::vector<sptr<hitable>> v;
+    sptr<Texture> tex = Texture::create_checker(Texture::create_const({ 0.2f, 0.3f, 0.2f }),
+                                                Texture::create_const({ 0.9f, 0.9f, 0.9f }));
+
     v.push_back(sphere::create({ 0.0f, -1000.0f, 0.0f },
                                1000.0f,
-                               lambertian::create({0.5, 0.5, 0.5})));
+                               lambertian::create(tex)));
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
             float choose_mat = dist(mt);
@@ -67,9 +70,10 @@ static sptr<hitable> random_scene()
                         dist(mt) * dist(mt),
                         dist(mt) * dist(mt)
                     };
+                    tex = Texture::create_const(albedo);
                     v.push_back(sphere::create(center,
                                                0.2f,
-                                               lambertian::create(albedo)));
+                                               lambertian::create(tex)));
                 }
                 else if (choose_mat < 0.95f) { // metal
                     v3f albedo = {
@@ -89,12 +93,13 @@ static sptr<hitable> random_scene()
             }
         }
     }
+    tex = Texture::create_const({ 0.4f, 0.2f, 0.1f });
     v.push_back(sphere::create({ 0.0f, 1.0f, 0.0 },
                                1.0f,
                                dielectric::create(1.5f)));
     v.push_back(sphere::create({ -4.0f, 1.0f, 0.0f },
                                1.0f,
-                               lambertian::create({ 0.4f, 0.2f, 0.1f })));
+                               lambertian::create(tex)));
     v.push_back(sphere::create({ 4.0f, 1.0f, 0.0f },
                                1.0f, metal::create({ 0.7f, 0.6f, 0.5f },
                                                    0.0f)));

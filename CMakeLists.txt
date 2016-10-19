@@ -54,6 +54,7 @@ SET(RT1W_SOURCES
   src/ray.cpp
   src/sphere.cpp
   src/sync.c
+  src/texture.cpp
   src/vec.cpp
   src/wqueue.cpp
 )
