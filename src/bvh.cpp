@@ -68,12 +68,12 @@ static int32_t f32_cmp(float x, float y)
 
 static bool box_eq(const box &a, const box &b)
 {
-    return f32_cmp(a.lo.x, b.lo.x)
-        && f32_cmp(a.lo.y, b.lo.y)
-        && f32_cmp(a.lo.z, b.lo.z)
-        && f32_cmp(a.hi.x, b.hi.x)
-        && f32_cmp(a.hi.y, b.hi.y)
-        && f32_cmp(a.hi.z, b.hi.z);
+    return f32_cmp(a.lo.x, b.lo.x) == 0
+        && f32_cmp(a.lo.y, b.lo.y) == 0
+        && f32_cmp(a.lo.z, b.lo.z) == 0
+        && f32_cmp(a.hi.x, b.hi.x) == 0
+        && f32_cmp(a.hi.y, b.hi.y) == 0
+        && f32_cmp(a.hi.z, b.hi.z) == 0;
 }
 
 static float box_area(const box &box)
