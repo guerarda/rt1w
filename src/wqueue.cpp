@@ -1,11 +1,11 @@
 #include "wqueue.hpp"
+#include "event.hpp"
+#include "sync.h"
 
 #include <vector>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
-
-#include "sync.h"
 
 static void work();
 
@@ -13,13 +13,14 @@ struct _job {
     sptr<Object>  m_obj;
     sptr<Object>  m_arg;
     wqueue_func   m_func;
+    sptr<event>   m_event;
     _job         *m_next;
 };
 
-struct _wqueue {
+struct wqueue {
 
-    _wqueue(uint32_t concurrency);
-    ~_wqueue();
+    wqueue(uint32_t concurrency);
+    ~wqueue();
 
     void  enqueue(_job *);
     _job *dequeue();
@@ -33,7 +34,7 @@ struct _wqueue {
     std::vector<std::thread> m_threads;
 };
 
-_wqueue::_wqueue(uint32_t concurrency)
+wqueue::wqueue(uint32_t concurrency)
 {
     m_concurrency = concurrency;
     m_head        = nullptr;
@@ -45,7 +46,7 @@ _wqueue::_wqueue(uint32_t concurrency)
     }
 }
 
-void _wqueue::enqueue(_job *job)
+void wqueue::enqueue(_job *job)
 {
     _job *q = (_job *)sync_lock_ptr(&m_queue);
     job->m_next = q;
@@ -56,7 +57,7 @@ void _wqueue::enqueue(_job *job)
     sync_unlock_ptr(&m_queue, job);
 }
 
-_job *_wqueue::dequeue()
+_job *wqueue::dequeue()
 {
     _job *job = nullptr;
     do {
@@ -91,26 +92,42 @@ _job *_wqueue::dequeue()
 
 #pragma mark - Static
 
-static _wqueue *wqueue = new _wqueue(std::thread::hardware_concurrency() + 1);
+static wqueue *global_wqueue = new wqueue(std::thread::hardware_concurrency() + 1);
 
 __attribute__((noreturn)) static void work()
 {
     while (1) {
-        _job *job = wqueue->dequeue();
+        _job *job = global_wqueue->dequeue();
         if (job->m_func) {
             job->m_func(job->m_obj, job->m_arg);
         }
+        job->m_event->signal();
         delete job;
     }
 }
 
-void wqueue_execute(wqueue_func func,
+wqueue *wqueue_get_queue()
+{
+    return global_wqueue;
+}
+
+sptr<event> wqueue_execute(wqueue *wqueue,
+                    wqueue_func func,
                     const sptr<Object> &obj,
                     const sptr<Object> &arg)
 {
-    _job *job = new _job;
-    job->m_arg = arg;
-    job->m_obj = obj;
-    job->m_func = func;
-    wqueue->enqueue(job);
+    sptr<event> event;
+    if (wqueue) {
+        _job *job = new _job;
+        event = event::create(1);
+        job->m_arg = arg;
+        job->m_obj = obj;
+        job->m_func = func;
+        job->m_event = event;
+        wqueue->enqueue(job);
+    } else if (func) {
+        func(obj, arg);
+        event = event::create(0);
+    }
+    return event;
 }

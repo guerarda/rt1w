@@ -4,6 +4,7 @@
 #include <string.h>
 #include <random>
 #include <float.h>
+#include <string>
 
 #include "vec.hpp"
 #include "ray.hpp"
@@ -15,6 +16,7 @@
 #include "event.hpp"
 #include "bvh.hpp"
 #include "imageio.h"
+#include "sync.h"
 
 #define MAX_RECURSION_DEPTH 50
 
@@ -29,9 +31,8 @@ static v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
         if (depth < MAX_RECURSION_DEPTH
             && rec.mat->scatter(r, rec, attenuation, scattered)) {
             return v3f_vmul(attenuation, color(scattered, world, depth + 1));
-        } else {
-            return { 0.0f, 0.0f, 0.0f };
         }
+        return { 0.0f, 0.0f, 0.0f };
     } else {
         v3f udir = v3f_normalize(r->direction());
         v3f white = { 1.0f, 1.0f, 1.0f };
@@ -136,6 +137,7 @@ struct _ctx : Object {
     sptr<camera>  m_camera;
     sptr<hitable> m_scene;
     uint32_t      m_ns;
+    size_t        m_ntiles;
     v2u           m_img_size;
     sptr<event>   m_event;
 };
@@ -207,17 +209,25 @@ struct options {
     uint32_t flags;
 };
 
-static void progress(uint32_t done, uint32_t total)
+static void progress(const sptr<Object> &obj, const sptr<Object> &)
 {
-    float p = done == 0.0f ? 0.0f : 100.0f * (float)done / (float)total;
-    fprintf(stderr, "\r%.1f%% [", p);
+    static int32_t volatile progress = -1;
 
+    int32_t done = sync_add_i32(&progress, 1);
+    sptr<_ctx> ctx = std::static_pointer_cast<_ctx>(obj);
+
+    float p = ctx ? (float)done / (float)ctx->m_ntiles * 100.0f : 0.0f;
+
+    char buf[256];
+    size_t offset = (size_t)snprintf(buf, 256, "\r%.1f%% [", p);
     int64_t n = lrint(floorf(p)) / 2;
     for (int32_t i = 0; i < 50; i++) {
         char c = i <= n ? '#' : ' ';
-        fprintf(stderr, "%c", c);
+        snprintf(&buf[offset], 256 - offset, "%c", c);
+        offset++;
     }
-    fprintf(stderr, "]");
+    snprintf(&buf[offset], 256- offset, "]");
+    fprintf(stderr, "%s", buf);
     fflush(stderr);
 }
 
@@ -294,20 +304,17 @@ int main(int argc, char *argv[])
 
     sptr<hitable> scene = random_scene();
 
-    uint32_t p = 0;
-    if (!options.flags & OPTION_QUIET) {
-        progress(p, 0);
-    }
     /* Actual rendering */
     sptr<_ctx> ctx = _ctx::create(camera, scene, ns, img_size);
+    ctx->m_ntiles = tiles.size();
     ctx->m_event = event::create((int32_t)tiles.size());
 
+    if (!options.flags & OPTION_QUIET) {
+        progress(ctx, std::shared_ptr<Object>());
+    }
     for (sptr<_tile> t : tiles) {
-        wqueue_execute(pixel_func, ctx, t);
-
-        // if (!options.flags & OPTION_QUIET) {
-        //     progress(++p, tiles.size());
-        // }
+        sptr<event> e = wqueue_execute(wqueue_get_queue(), pixel_func, ctx, t);
+        e->notify(nullptr, progress, ctx, std::shared_ptr<Object>());
     }
     ctx->m_event->wait();
     if (!options.flags & OPTION_QUIET) {
