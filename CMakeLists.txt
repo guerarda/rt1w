@@ -67,3 +67,11 @@ ADD_EXECUTABLE(rt1w
   ${RT1W_SOURCES})
 
 TARGET_LINK_LIBRARIES(rt1w ${PNG_LIBRARY})
+
+ADD_CUSTOM_TARGET(analyze
+  COMMAND make clean
+  COMMAND /usr/local/opt/llvm/bin/scan-build
+  -k
+  -v
+  make
+)
