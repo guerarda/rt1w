@@ -14,12 +14,12 @@ struct _lock {
     ~_lock() { m_mutex->unlock(); }
 
     std::mutex *m_mutex;
-    sptr<_lock> m_next;
+    uptr<_lock> m_next;
 };
 
-static sptr<_lock> create_lock(std::mutex *mutex)
+static uptr<_lock> create_lock(std::mutex *mutex)
 {
-    return std::make_shared<_lock>(mutex);
+    return make_unique<_lock>(mutex);
 }
 
 struct _notif {
@@ -34,15 +34,15 @@ struct _notif {
     wqueue_func   m_func;
     sptr<Object>  m_obj;
     sptr<Object>  m_arg;
-    sptr<_notif>  m_next;
+    uptr<_notif>  m_next;
 };
 
-static sptr<_notif> create_notif(wqueue *wqueue,
+static uptr<_notif> create_notif(wqueue *wqueue,
                                                wqueue_func func,
                                                const sptr<Object> &obj,
                                                const sptr<Object> &arg)
 {
-    return std::make_shared<_notif>(wqueue, func, obj, arg);
+    return make_unique<_notif>(wqueue, func, obj, arg);
 }
 
 _notif::_notif(wqueue *q,
@@ -81,8 +81,8 @@ struct _event : event {
     bool test() const;
     int32_t wait();
 
-    sptr<_lock>      m_lock;
-    sptr<_notif>     m_notif;
+    uptr<_lock>      m_lock;
+    uptr<_notif>     m_notif;
     int32_t volatile m_counter;
     void * volatile  m_token;
 };
@@ -99,7 +99,6 @@ _event::~_event()
     if (m_token) {
         delete (token *)m_token;
     }
-    m_lock = nullptr;
 }
 
 int32_t _event::notify(wqueue *wqueue,
@@ -110,10 +109,10 @@ int32_t _event::notify(wqueue *wqueue,
     if (m_token) {
         void *token = sync_lock_ptr(&m_token);
         if (token) {
-            sptr<_notif> notif = create_notif(wqueue, func, obj, arg);
+            uptr<_notif> notif = create_notif(wqueue, func, obj, arg);
 
-            notif->m_next = m_notif;
-            m_notif = notif;
+            notif->m_next = std::move(m_notif);
+            m_notif = std::move(notif);
             notif.reset();
             sync_unlock_ptr(&m_token, token);
         } else {
@@ -149,15 +148,15 @@ int32_t _event::wait()
     if (m_token) {
         void *token = sync_lock_ptr(&m_token);
         if (token) {
-            sptr<_lock> lock;
+            uptr<_lock> lock;
             std::mutex mutex;
 
             mutex.lock();
             lock = create_lock(&mutex);
 
             /* Add the lock to the list */
-            lock->m_next = m_lock;
-            m_lock = lock;
+            lock->m_next = std::move(m_lock);
+            m_lock = std::move(lock);
             lock.reset();
 
             sync_unlock_ptr(&m_token, token);
