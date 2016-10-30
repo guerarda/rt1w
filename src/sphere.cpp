@@ -1,6 +1,23 @@
 #include "sphere.hpp"
-#include <math.h>
 #include "material.hpp"
+#include <assert.h>
+#include <math.h>
+
+
+static v2f sphere_uv(const v3f &p)
+{
+    float x = fminf(1.0f, fmaxf(-1.0f, p.x));
+    float y = fminf(1.0f, fmaxf(-1.0f, p.y));
+    float z = fminf(1.0f, fmaxf(-1.0f, p.z));
+
+    double phi = atan2(z, x);
+    double theta = asin(y);
+
+    double u = 1.0 - (phi + M_PI) / (2 * M_PI);
+    double v = (theta +M_PI_2) / M_PI;
+
+    return { (float)u, (float)v };
+}
 
 struct _sphere : sphere {
 
@@ -44,6 +61,8 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
             rec.p = r->point(t);
             rec.normal = v3f_normalize(v3f_sub(rec.p, m_center));
             rec.mat = m_material;
+            v3f v = v3f_smul(1.0f / m_radius, v3f_sub(rec.p, m_center));
+            rec.uv = sphere_uv(v);
             return true;
         }
     }

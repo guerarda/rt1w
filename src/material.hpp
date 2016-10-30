@@ -12,11 +12,11 @@ struct material : Object {
 };
 
 struct lambertian : material {
-    static sptr<lambertian> create(const sptr<Texture> &);
+    static sptr<lambertian> create(const sptr<Texture> &tex);
 };
 
 struct metal : material {
-    static sptr<metal> create(const v3f &albedo, float fuzz);
+    static sptr<metal> create(const sptr<Texture> &tex, float fuzz);
 };
 
 struct dielectric : material {

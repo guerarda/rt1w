@@ -63,7 +63,7 @@ bool _lambertian::scatter(__unused const sptr<ray> &r_in,
     v3f target = v3f_add(v3f_add(rec.p, rec.normal),
                          random_sphere_point());
     scattered = ray::create(rec.p, v3f_sub(target, rec.p));
-    attenuation = m_albedo->value(0.0f, 0.0f, rec.p);
+    attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
     return true;
 }
 
@@ -71,20 +71,20 @@ bool _lambertian::scatter(__unused const sptr<ray> &r_in,
 
 struct _metal : metal {
 
-    _metal(const v3f &a, float f);
+    _metal(const sptr<Texture> &tex, float f);
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
                  sptr<ray> &scattered) const;
 
-    v3f m_albedo;
-    float m_fuzz;
+    sptr<Texture> m_albedo;
+    float         m_fuzz;
 };
 
-_metal::_metal(const v3f &a, float f)
+_metal::_metal(const sptr<Texture> &tex, float f)
 {
-    m_albedo = a;
+    m_albedo = tex;
     m_fuzz = fminf(1.0f, f);
 }
 
@@ -96,7 +96,7 @@ bool _metal::scatter(const sptr<ray> &r_in,
     v3f reflected = v3f_reflect(r_in->direction(), rec.normal);
     v3f fuzz = v3f_smul(m_fuzz, random_sphere_point());
     scattered = ray::create(rec.p, v3f_add(fuzz, reflected));
-    attenuation = m_albedo;
+    attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
     return v3f_dot(scattered->direction(), rec.normal) > 0.0f;
 }
 
@@ -158,9 +158,9 @@ sptr<lambertian> lambertian::create(const sptr<Texture> &tex)
     return std::make_shared<_lambertian>(tex);
 }
 
-sptr<metal> metal::create(const v3f &a, float f)
+sptr<metal> metal::create(const sptr<Texture> &tex, float f)
 {
-    return std::make_shared<_metal>(a, f);
+    return std::make_shared<_metal>(tex, f);
 }
 
 sptr<dielectric> dielectric::create(float ri)

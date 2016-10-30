@@ -1,4 +1,5 @@
 #include "texture.hpp"
+#include <assert.h>
 #include <math.h>
 
 struct _Texture_const : Texture {
@@ -26,9 +27,56 @@ v3f _Texture_checker::value(float u, float v, const v3f &p) const
     return sines > 0.0f ? m_even->value(u, v, p) : m_odd->value(u, v, p);
 }
 
+struct _Texture_img : Texture {
+
+    _Texture_img(buffer_t *buf, const rect &r);
+    ~_Texture_img();
+
+    v3f value(float, float, const v3f &) const;
+
+    buffer_t *m_buf;
+    rect      m_rect;
+};
+
+_Texture_img::_Texture_img(buffer_t *buf, const rect &r)
+{
+    assert(buf);
+    assert(buf->data);
+
+    m_buf = buf;
+    m_rect = r;
+}
+
+_Texture_img::~_Texture_img()
+{
+    if (m_buf->data) {
+        free(m_buf->data);
+    }
+}
+
+v3f _Texture_img::value(float u, float v, const v3f &) const
+{
+    uint32_t x, y;
+
+    u = fminf(1.0f, fmaxf(0.0f, u));
+    v = fminf(1.0f, fmaxf(0.0f, v));
+    x = (uint32_t)lrint(u * (float)(m_rect.size.x - 1));
+    y = (uint32_t)lrint((1.0f - v) * (float)(m_rect.size.y - 1));
+
+    size_t pix_size = m_buf->format.size;
+    uint8_t *sp = (uint8_t *)m_buf->data + y * m_buf->bpr + x * pix_size;
+    v3f color = {
+        sp[0] / 255.0f,
+        sp[1] / 255.0f,
+        sp[2] / 255.0f
+    };
+
+    return color;
+}
+
 #pragma mark - Static constructors
 
-sptr<Texture> Texture::create_const(const v3f &c)
+sptr<Texture> Texture::create_color(const v3f &c)
 {
     return std::make_shared<_Texture_const>(c);
 }
@@ -36,4 +84,9 @@ sptr<Texture> Texture::create_const(const v3f &c)
 sptr<Texture> Texture::create_checker(const sptr<Texture> &a, const sptr<Texture> &b)
 {
     return std::make_shared<_Texture_checker>(a, b);
+}
+
+sptr<Texture> Texture::create_image(buffer_t *b, const rect &r)
+{
+    return std::make_shared<_Texture_img>(b, r);
 }

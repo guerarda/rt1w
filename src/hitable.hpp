@@ -7,6 +7,7 @@ struct material;
 
 struct hit_record {
     float t;
+    v2f   uv;
     v3f   p;
     v3f   normal;
     sptr<material> mat;

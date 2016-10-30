@@ -50,8 +50,8 @@ static sptr<hitable> random_scene()
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     std::vector<sptr<hitable>> v;
-    sptr<Texture> tex = Texture::create_checker(Texture::create_const({ 0.2f, 0.3f, 0.2f }),
-                                                Texture::create_const({ 0.9f, 0.9f, 0.9f }));
+    sptr<Texture> tex = Texture::create_checker(Texture::create_color({ 0.2f, 0.3f, 0.2f }),
+                                                Texture::create_color({ 0.9f, 0.9f, 0.9f }));
 
     v.push_back(sphere::create({ 0.0f, -1000.0f, 0.0f },
                                1000.0f,
@@ -71,7 +71,7 @@ static sptr<hitable> random_scene()
                         dist(mt) * dist(mt),
                         dist(mt) * dist(mt)
                     };
-                    tex = Texture::create_const(albedo);
+                    tex = Texture::create_color(albedo);
                     v.push_back(sphere::create(center,
                                                0.2f,
                                                lambertian::create(tex)));
@@ -82,9 +82,10 @@ static sptr<hitable> random_scene()
                         0.5f * (1 + dist(mt)),
                         0.5f * (1 + dist(mt))
                     };
+                    tex = Texture::create_color(albedo);
                     v.push_back(sphere::create(center,
                                                0.2f,
-                                               metal::create(albedo, 0.5f * dist(mt))));
+                                               metal::create(tex, 0.5f * dist(mt))));
                 }
                 else {  // glass
                     v.push_back(sphere::create(center,
@@ -94,15 +95,14 @@ static sptr<hitable> random_scene()
             }
         }
     }
-    tex = Texture::create_const({ 0.4f, 0.2f, 0.1f });
     v.push_back(sphere::create({ 0.0f, 1.0f, 0.0 },
                                1.0f,
                                dielectric::create(1.5f)));
     v.push_back(sphere::create({ -4.0f, 1.0f, 0.0f },
                                1.0f,
-                               lambertian::create(tex)));
+                               lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }))));
     v.push_back(sphere::create({ 4.0f, 1.0f, 0.0f },
-                               1.0f, metal::create({ 0.7f, 0.6f, 0.5f },
+                               1.0f, metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }),
                                                    0.0f)));
 
     return bvh_node::create(v.size(), v.data());
