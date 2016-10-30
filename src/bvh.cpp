@@ -120,48 +120,56 @@ _bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
      * compare the cost to the split plance for the previous
      * axis
      */
-    for (size_t axis = 0; axis < 3; axis++) {
-        std::vector<sptr<hitable>> v(n);
-        std::function<bool(const sptr<hitable> &, const sptr<hitable> &)> cmp_fn;
+    if (n > 2) {
+        for (size_t axis = 0; axis < 3; axis++) {
+            std::vector<sptr<hitable>> v(n);
+            std::function<bool(const sptr<hitable> &, const sptr<hitable> &)> cmp_fn;
 
-        v.assign(ptr, ptr + n);
-        cmp_fn = axis == 0 ? bvh_x_cmp : (axis == 1 ? bvh_y_cmp : bvh_z_cmp);
+            v.assign(ptr, ptr + n);
+            cmp_fn = axis == 0 ? bvh_x_cmp : (axis == 1 ? bvh_y_cmp : bvh_z_cmp);
 
-        std::sort(v.begin(), v.end(), cmp_fn);
+            std::sort(v.begin(), v.end(), cmp_fn);
 
-        b = __zero_box;
-        for (size_t i = 0; i < n - 1; i++) {
-            b = box_merge(b, v[i]->bounding_box());
-            left_area[i] = box_area(b);
-        }
-        b = __zero_box;
-        for (size_t i = n; i-- > 1;) {
-            b = box_merge(b, v[i]->bounding_box());
-            right_area[i] = box_area(b);
-        }
+            b = __zero_box;
+            for (size_t i = 0; i < n - 1; i++) {
+                b = box_merge(b, v[i]->bounding_box());
+                left_area[i] = box_area(b);
+            }
+            b = __zero_box;
+            for (size_t i = n; i-- > 1;) {
+                b = box_merge(b, v[i]->bounding_box());
+                right_area[i] = box_area(b);
+            }
 
-        bool best = false;
-        for (size_t i = 0; i < n - 1; i++) {
-            float sha = i * left_area[i] + (n - i - 1) * right_area[i + 1];
-            if (sha < min_sha) {
-                min_sha = sha;
-                idx = i;
-                best = true;
+            bool best = false;
+            for (size_t i = 0; i < n - 1; i++) {
+                float sha = i * left_area[i] + (n - i - 1) * right_area[i + 1];
+                if (sha < min_sha) {
+                    min_sha = sha;
+                    idx = i;
+                    best = true;
+                }
+            }
+            if (best) {
+                best_v = std::move(v);
             }
         }
-        if (best) {
-            best_v = std::move(v);
+        if (idx == 0) {
+            m_left = best_v[0];
+        } else {
+            m_left = bvh_node::create(idx + 1, &best_v[0]);
         }
-    }
-    if (idx == 0) {
-        m_left = best_v[0];
-    } else {
-        m_left = bvh_node::create(idx + 1, &best_v[0]);
-    }
-    if (idx == n - 2) {
-        m_right = best_v[n - 1];
-    } else {
-        m_right = bvh_node::create(n - 1 - idx, &best_v[idx + 1]);
+        if (idx == n - 2) {
+            m_right = best_v[n - 1];
+        } else {
+            m_right = bvh_node::create(n - 1 - idx, &best_v[idx + 1]);
+        }
+    } else if (n == 2) {
+        m_left = ptr[0];
+        m_right = ptr[1];
+    } else if (n == 1) {
+        m_left = ptr[0];
+        m_right = ptr[0];
     }
     m_box = box_merge(m_left->bounding_box(), m_right->bounding_box());
 }
