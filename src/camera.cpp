@@ -16,8 +16,8 @@ static v3f random_in_unit_disk()
     return p;
 }
 
-struct _camera : camera {
-    _camera(const v3f &eye,
+struct _Camera : Camera {
+    _Camera(const v3f &eye,
             const v3f &lookat,
             const v3f &up,
             float vfov,
@@ -34,7 +34,7 @@ struct _camera : camera {
     float m_lens_radius;
 };
 
-_camera::_camera(const v3f &eye,
+_Camera::_Camera(const v3f &eye,
                  const v3f &lookat,
                  const v3f &up,
                  float vfov,
@@ -60,7 +60,7 @@ _camera::_camera(const v3f &eye,
     m_v = v3f_smul(2.0f * half_h * focus_dist, v);
 }
 
-sptr<ray> _camera::make_ray(float u, float v) const
+sptr<ray> _Camera::make_ray(float u, float v) const
 {
     v3f rd = v3f_smul(m_lens_radius, random_in_unit_disk());
     v3f offset = v3f_vmul({ u, v, 0.0f }, rd);
@@ -73,7 +73,7 @@ sptr<ray> _camera::make_ray(float u, float v) const
 
 #pragma mark - Static constructors
 
-sptr<camera> camera::create(const v3f &eye,
+sptr<Camera> Camera::create(const v3f &eye,
                             const v3f &lookat,
                             const v3f &up,
                             float vfov,
@@ -81,6 +81,6 @@ sptr<camera> camera::create(const v3f &eye,
                             float aperture,
                             float focus_dist)
 {
-    return std::make_shared<_camera>(eye, lookat, up, vfov, aspect,
+    return std::make_shared<_Camera>(eye, lookat, up, vfov, aspect,
                                      aperture, focus_dist);
 }

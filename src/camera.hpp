@@ -4,8 +4,8 @@
 #include "sptr.hpp"
 #include "ray.hpp"
 
-struct camera : Object {
-    static sptr<camera> create(const v3f &eye,
+struct Camera : Object {
+    static sptr<Camera> create(const v3f &eye,
                                const v3f &lookat,
                                const v3f &up,
                                float vfov,

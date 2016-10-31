@@ -14,27 +14,27 @@ static v2f sphere_uv(const v3f &p)
     double theta = asin(y);
 
     double u = 1.0 - (phi + M_PI) / (2 * M_PI);
-    double v = (theta +M_PI_2) / M_PI;
+    double v = (theta + M_PI_2) / M_PI;
 
     return { (float)u, (float)v };
 }
 
-struct _sphere : sphere {
+struct _Sphere : Sphere {
 
-    _sphere(const v3f &c, float r, const sptr<material> &m);
+    _Sphere(const v3f &c, float r, const sptr<Material> &m);
 
     bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    box   bounding_box() const { return m_box; }
+    box_t   bounding_box() const { return m_box; }
     v3f   center() const { return m_center; }
     float radius() const { return m_radius; }
 
     v3f   m_center;
     float m_radius;
-    box   m_box;
-    sptr<material> m_material;
+    box_t m_box;
+    sptr<Material> m_material;
 };
 
-_sphere::_sphere(const v3f &c, float r, const sptr<material> &m)
+_Sphere::_Sphere(const v3f &c, float r, const sptr<Material> &m)
 {
     m_center = c;
     m_radius = r;
@@ -42,7 +42,7 @@ _sphere::_sphere(const v3f &c, float r, const sptr<material> &m)
     m_box = { v3f_sub(c, { r, r, r }), v3f_add(c, { r, r, r }) };
 }
 
-bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
     v3f rdir = r->direction();
     v3f oc = v3f_sub(r->origin(), m_center);
@@ -71,7 +71,7 @@ bool _sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
 
 #pragma mark - Static constructors
 
-sptr<sphere> sphere::create(const v3f &c, float r, const sptr<material> &m)
+sptr<Sphere> Sphere::create(const v3f &c, float r, const sptr<Material> &m)
 {
-    return std::make_shared<_sphere>(c, r, m);
+    return std::make_shared<_Sphere>(c, r, m);
 }

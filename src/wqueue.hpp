@@ -5,7 +5,7 @@
 #include "sptr.hpp"
 
 struct wqueue;
-struct event;
+struct Event;
 
 typedef void (*wqueue_func)(const sptr<Object> &, const sptr<Object> &);
 
@@ -25,7 +25,7 @@ struct wqueue *wqueue_get_queue();
  * @param arg The second argument to func.
  * @returns An event that signals when the func has been executed.
  */
-sptr<event> wqueue_execute(struct wqueue *wqueue,
+sptr<Event> wqueue_execute(struct wqueue *wqueue,
                            wqueue_func func,
                            const sptr<Object> &obj,
                            const sptr<Object> &arg);

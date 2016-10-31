@@ -13,7 +13,7 @@ struct _job {
     sptr<Object>  m_obj;
     sptr<Object>  m_arg;
     wqueue_func   m_func;
-    sptr<event>   m_event;
+    sptr<Event>   m_event;
     _job         *m_next;
 };
 
@@ -111,15 +111,15 @@ wqueue *wqueue_get_queue()
     return global_wqueue;
 }
 
-sptr<event> wqueue_execute(wqueue *wqueue,
+sptr<Event> wqueue_execute(wqueue *wqueue,
                     wqueue_func func,
                     const sptr<Object> &obj,
                     const sptr<Object> &arg)
 {
-    sptr<event> event;
+    sptr<Event> event;
     if (wqueue) {
         _job *job = new _job;
-        event = event::create(1);
+        event = Event::create(1);
         job->m_arg = arg;
         job->m_obj = obj;
         job->m_func = func;
@@ -127,7 +127,7 @@ sptr<event> wqueue_execute(wqueue *wqueue,
         wqueue->enqueue(job);
     } else if (func) {
         func(obj, arg);
-        event = event::create(0);
+        event = Event::create(0);
     }
     return event;
 }

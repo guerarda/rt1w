@@ -20,7 +20,7 @@
 
 #define MAX_RECURSION_DEPTH 50
 
-static v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
+static v3f color(const sptr<ray> &r, const sptr<Hitable> &world, size_t depth)
 {
     hit_record rec;
 
@@ -43,19 +43,19 @@ static v3f color(const sptr<ray> &r, const sptr<hitable> &world, size_t depth)
     }
 }
 
-static sptr<hitable> random_scene()
+static sptr<Hitable> random_scene()
 {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    std::vector<sptr<hitable>> v;
+    std::vector<sptr<Hitable>> v;
     sptr<Texture> tex = Texture::create_checker(Texture::create_color({ 0.2f, 0.3f, 0.2f }),
                                                 Texture::create_color({ 0.9f, 0.9f, 0.9f }));
 
-    v.push_back(sphere::create({ 0.0f, -1000.0f, 0.0f },
+    v.push_back(Sphere::create({ 0.0f, -1000.0f, 0.0f },
                                1000.0f,
-                               lambertian::create(tex)));
+                               Lambertian::create(tex)));
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
             float choose_mat = dist(mt);
@@ -72,9 +72,9 @@ static sptr<hitable> random_scene()
                         dist(mt) * dist(mt)
                     };
                     tex = Texture::create_color(albedo);
-                    v.push_back(sphere::create(center,
+                    v.push_back(Sphere::create(center,
                                                0.2f,
-                                               lambertian::create(tex)));
+                                               Lambertian::create(tex)));
                 }
                 else if (choose_mat < 0.95f) { // metal
                     v3f albedo = {
@@ -83,50 +83,50 @@ static sptr<hitable> random_scene()
                         0.5f * (1 + dist(mt))
                     };
                     tex = Texture::create_color(albedo);
-                    v.push_back(sphere::create(center,
+                    v.push_back(Sphere::create(center,
                                                0.2f,
-                                               metal::create(tex, 0.5f * dist(mt))));
+                                               Metal::create(tex, 0.5f * dist(mt))));
                 }
                 else {  // glass
-                    v.push_back(sphere::create(center,
+                    v.push_back(Sphere::create(center,
                                                0.2f,
-                                               dielectric::create(1.5f)));
+                                               Dielectric::create(1.5f)));
                 }
             }
         }
     }
-    v.push_back(sphere::create({ 0.0f, 1.0f, 0.0 },
+    v.push_back(Sphere::create({ 0.0f, 1.0f, 0.0 },
                                1.0f,
-                               dielectric::create(1.5f)));
-    v.push_back(sphere::create({ -4.0f, 1.0f, 0.0f },
+                               Dielectric::create(1.5f)));
+    v.push_back(Sphere::create({ -4.0f, 1.0f, 0.0f },
                                1.0f,
-                               lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }))));
-    v.push_back(sphere::create({ 4.0f, 1.0f, 0.0f },
-                               1.0f, metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }),
+                               Lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }))));
+    v.push_back(Sphere::create({ 4.0f, 1.0f, 0.0f },
+                               1.0f, Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }),
                                                    0.0f)));
 
-    return bvh_node::create(v.size(), v.data());
+    return BVH_node::create(v.size(), v.data());
 }
 
 struct _tile : Object {
-    static sptr<_tile> create(rect r, uint8_t *dp, size_t bpr) {
+    static sptr<_tile> create(rect_t r, uint8_t *dp, size_t bpr) {
         return std::make_shared<_tile>(r, dp, bpr);
     }
-    _tile(rect r, uint8_t *dp, size_t bpr) : m_rect(r), m_dp(dp), m_bytes_per_row(bpr) { }
+    _tile(rect_t r, uint8_t *dp, size_t bpr) : m_rect(r), m_dp(dp), m_bytes_per_row(bpr) { }
     ~_tile() { }
 
-    rect     m_rect;
+    rect_t   m_rect;
     uint8_t *m_dp;
     size_t   m_bytes_per_row;
 };
 
 struct _ctx : Object {
-    static sptr<_ctx> create(const sptr<camera> c,
-                             sptr<hitable> s,
+    static sptr<_ctx> create(const sptr<Camera> c,
+                             sptr<Hitable> s,
                              uint32_t n,
                              v2u size) { return std::make_shared<_ctx>(c, s, n, size); }
 
-    _ctx(const sptr<camera> c, sptr<hitable> s, uint32_t n, v2u size) {
+    _ctx(const sptr<Camera> c, sptr<Hitable> s, uint32_t n, v2u size) {
         m_camera = c;
         m_scene = s;
         m_ns = n;
@@ -134,12 +134,12 @@ struct _ctx : Object {
     }
     ~_ctx() { }
 
-    sptr<camera>  m_camera;
-    sptr<hitable> m_scene;
+    sptr<Camera>  m_camera;
+    sptr<Hitable> m_scene;
     uint32_t      m_ns;
     size_t        m_ntiles;
     v2u           m_img_size;
-    sptr<event>   m_event;
+    sptr<Event>   m_event;
 };
 
 static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
@@ -277,7 +277,7 @@ int main(int argc, char *argv[])
         for (int32_t j = 0; j < nty; j++) {
 
             uint8_t *ptr = (uint8_t *)img + (uint32_t)j * 32 * bpr + (uint32_t)i * 32 * 3 * sizeof(*img);
-            rect r;
+            rect_t r;
             r.org.x = i * 32;
             r.org.y = j * 32;
             r.size.x = i < ntx - 1 ? 32 : 32 - ((uint32_t)ntx * 32 - img_size.x);
@@ -296,24 +296,24 @@ int main(int argc, char *argv[])
     float aperture = 0.1f;
     float focus_dist = 10.0f;
 
-    sptr<camera> camera = camera::create(eye, lookat, up, 20.0f, aspect,
+    sptr<Camera> camera = Camera::create(eye, lookat, up, 20.0f, aspect,
                                          aperture, focus_dist);
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    sptr<hitable> scene = random_scene();
+    sptr<Hitable> scene = random_scene();
 
     /* Actual rendering */
     sptr<_ctx> ctx = _ctx::create(camera, scene, ns, img_size);
     ctx->m_ntiles = tiles.size();
-    ctx->m_event = event::create((int32_t)tiles.size());
+    ctx->m_event = Event::create((int32_t)tiles.size());
 
     if (!options.flags & OPTION_QUIET) {
         progress(ctx, std::shared_ptr<Object>());
     }
     for (sptr<_tile> t : tiles) {
-        sptr<event> e = wqueue_execute(wqueue_get_queue(), pixel_func, ctx, t);
+        sptr<Event> e = wqueue_execute(wqueue_get_queue(), pixel_func, ctx, t);
         e->notify(nullptr, progress, ctx, std::shared_ptr<Object>());
     }
     ctx->m_event->wait();

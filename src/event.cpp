@@ -68,10 +68,10 @@ _notif::~_notif()
     }
 }
 
-struct _event : event {
+struct _Event : Event {
 
-    _event(int32_t n);
-    virtual ~_event();
+    _Event(int32_t n);
+    virtual ~_Event();
 
     int32_t notify(wqueue *,
                    wqueue_func,
@@ -87,21 +87,21 @@ struct _event : event {
     void * volatile  m_token;
 };
 
-_event::_event(int32_t n)
+_Event::_Event(int32_t n)
 {
     m_counter = n;
     m_lock = nullptr;
     m_token = n > 0 ? new token : nullptr;
 }
 
-_event::~_event()
+_Event::~_Event()
 {
     if (m_token) {
         delete (token *)m_token;
     }
 }
 
-int32_t _event::notify(wqueue *wqueue,
+int32_t _Event::notify(wqueue *wqueue,
                     wqueue_func func,
                     const sptr<Object> &obj,
                     const sptr<Object> &arg)
@@ -122,7 +122,7 @@ int32_t _event::notify(wqueue *wqueue,
     return 0;
 }
 
-int32_t _event::signal()
+int32_t _Event::signal()
 {
     if (sync_add_i32(&m_counter, -1) == 0) {
         /* Delete token which marks the event as completed.
@@ -138,12 +138,12 @@ int32_t _event::signal()
     return 0;
 }
 
-bool _event::test() const
+bool _Event::test() const
 {
     return m_token == nullptr;
 }
 
-int32_t _event::wait()
+int32_t _Event::wait()
 {
     if (m_token) {
         void *token = sync_lock_ptr(&m_token);
@@ -173,7 +173,7 @@ int32_t _event::wait()
 
 #pragma mark - Static constructor
 
-sptr<event> event::create(int32_t n)
+sptr<Event> Event::create(int32_t n)
 {
-    return std::make_shared<_event>(n);
+    return std::make_shared<_Event>(n);
 }

@@ -7,7 +7,7 @@
 struct Texture : Object {
     static sptr<Texture> create_color(const v3f &);
     static sptr<Texture> create_checker(const sptr<Texture> &, const sptr<Texture> &);
-    static sptr<Texture> create_image(buffer_t *buf, const rect &r);
+    static sptr<Texture> create_image(buffer_t *buf, const rect_t &r);
 
     virtual v3f value(float u, float v, const v3f &p) const = 0;
 };

@@ -29,16 +29,16 @@ v3f _Texture_checker::value(float u, float v, const v3f &p) const
 
 struct _Texture_img : Texture {
 
-    _Texture_img(buffer_t *buf, const rect &r);
+    _Texture_img(buffer_t *buf, const rect_t &r);
     ~_Texture_img();
 
     v3f value(float, float, const v3f &) const;
 
     buffer_t *m_buf;
-    rect      m_rect;
+    rect_t    m_rect;
 };
 
-_Texture_img::_Texture_img(buffer_t *buf, const rect &r)
+_Texture_img::_Texture_img(buffer_t *buf, const rect_t &r)
 {
     assert(buf);
     assert(buf->data);

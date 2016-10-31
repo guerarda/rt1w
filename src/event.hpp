@@ -5,9 +5,9 @@
 #include "sptr.hpp"
 #include "wqueue.hpp"
 
-struct event : Object {
+struct Event : Object {
 
-    static sptr<event> create(int32_t);
+    static sptr<Event> create(int32_t);
 
     virtual int32_t notify(wqueue *wqueue,
                            wqueue_func func,

@@ -43,9 +43,9 @@ static float schlick(float cos, float ri)
 
 #pragma mark - Lambertian
 
-struct _lambertian : lambertian {
+struct _Lambertian : Lambertian {
 
-    _lambertian(const sptr<Texture> &tex) : m_albedo(tex) { }
+    _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) { }
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
@@ -55,7 +55,7 @@ struct _lambertian : lambertian {
     sptr<Texture>  m_albedo;
 };
 
-bool _lambertian::scatter(__unused const sptr<ray> &r_in,
+bool _Lambertian::scatter(__unused const sptr<ray> &r_in,
                           const hit_record &rec,
                           v3f &attenuation,
                           sptr<ray> &scattered) const
@@ -69,9 +69,9 @@ bool _lambertian::scatter(__unused const sptr<ray> &r_in,
 
 #pragma mark - Metal
 
-struct _metal : metal {
+struct _Metal : Metal {
 
-    _metal(const sptr<Texture> &tex, float f);
+    _Metal(const sptr<Texture> &tex, float f);
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
@@ -82,13 +82,13 @@ struct _metal : metal {
     float         m_fuzz;
 };
 
-_metal::_metal(const sptr<Texture> &tex, float f)
+_Metal::_Metal(const sptr<Texture> &tex, float f)
 {
     m_albedo = tex;
     m_fuzz = fminf(1.0f, f);
 }
 
-bool _metal::scatter(const sptr<ray> &r_in,
+bool _Metal::scatter(const sptr<ray> &r_in,
                      const hit_record &rec,
                      v3f &attenuation,
                      sptr<ray> &scattered) const
@@ -102,9 +102,9 @@ bool _metal::scatter(const sptr<ray> &r_in,
 
 #pragma mark - Dieletric
 
-struct _dielectric : dielectric {
+struct _Dielectric : Dielectric {
 
-    _dielectric(float ri) : m_ref_idx(ri) { }
+    _Dielectric(float ri) : m_ref_idx(ri) { }
 
     bool scatter(const sptr<ray> &r_in,
                  const hit_record &rec,
@@ -114,7 +114,7 @@ struct _dielectric : dielectric {
     float m_ref_idx;
 };
 
-bool _dielectric::scatter(const sptr<ray> &r_in,
+bool _Dielectric::scatter(const sptr<ray> &r_in,
                           const hit_record &rec,
                           v3f &attenuation,
                           sptr<ray> &scattered) const
@@ -153,17 +153,17 @@ bool _dielectric::scatter(const sptr<ray> &r_in,
 
 #pragma mark - Static constructors
 
-sptr<lambertian> lambertian::create(const sptr<Texture> &tex)
+sptr<Lambertian> Lambertian::create(const sptr<Texture> &tex)
 {
-    return std::make_shared<_lambertian>(tex);
+    return std::make_shared<_Lambertian>(tex);
 }
 
-sptr<metal> metal::create(const sptr<Texture> &tex, float f)
+sptr<Metal> Metal::create(const sptr<Texture> &tex, float f)
 {
-    return std::make_shared<_metal>(tex, f);
+    return std::make_shared<_Metal>(tex, f);
 }
 
-sptr<dielectric> dielectric::create(float ri)
+sptr<Dielectric> Dielectric::create(float ri)
 {
-    return std::make_shared<_dielectric>(ri);
+    return std::make_shared<_Dielectric>(ri);
 }

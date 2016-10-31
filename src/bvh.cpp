@@ -6,7 +6,7 @@
 #include <math.h>
 #include <assert.h>
 
-bool box_hit(const box &b, const sptr<ray> &r, float tmin, float tmax)
+bool box_hit(const box_t &b, const sptr<ray> &r, float tmin, float tmax)
 {
     v3f dir = r->direction();
     v3f org = r->origin();
@@ -28,31 +28,31 @@ bool box_hit(const box &b, const sptr<ray> &r, float tmin, float tmax)
     return true;
 }
 
-struct _bvh_node : bvh_node {
+struct _BVH_node : BVH_node {
 
-    _bvh_node(size_t count, sptr<hitable> *l);
-    ~_bvh_node() { }
+    _BVH_node(size_t count, sptr<Hitable> *l);
+    ~_BVH_node() { }
 
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    box bounding_box() const { return m_box; }
+    box_t bounding_box() const { return m_box; }
 
-    box           m_box;
-    sptr<hitable> m_left;
-    sptr<hitable> m_right;
+    box_t         m_box;
+    sptr<Hitable> m_left;
+    sptr<Hitable> m_right;
 };
 
-static bool bvh_x_cmp(const sptr<hitable> &a, const sptr<hitable> &b)
+static bool bvh_x_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
 {
     return a->bounding_box().lo.x < b->bounding_box().lo.x;
 }
 
-static bool bvh_y_cmp(const sptr<hitable> &a, const sptr<hitable> &b)
+static bool bvh_y_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
 {
     return a->bounding_box().lo.y < b->bounding_box().lo.y;
 }
 
-static bool bvh_z_cmp(const sptr<hitable> &a, const sptr<hitable> &b)
+static bool bvh_z_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
 {
     return a->bounding_box().lo.z < b->bounding_box().lo.z;
 }
@@ -66,7 +66,7 @@ static int32_t f32_cmp(float x, float y)
     }
 }
 
-static bool box_eq(const box &a, const box &b)
+static bool box_eq(const box_t &a, const box_t &b)
 {
     return f32_cmp(a.lo.x, b.lo.x) == 0
         && f32_cmp(a.lo.y, b.lo.y) == 0
@@ -76,13 +76,13 @@ static bool box_eq(const box &a, const box &b)
         && f32_cmp(a.hi.z, b.hi.z) == 0;
 }
 
-static float box_area(const box &box)
+static float box_area(const box_t &box)
 {
     v3f d = v3f_sub(box.hi, box.lo);
     return 2 * (d.x * d.y + d.y * d.z + d.x * d.z);
 }
 
-static box box_merge(const box &a, const box &b)
+static box box_merge(const box_t &a, const box_t &b)
 {
     if (box_eq(a, b)) {
         return a;
@@ -105,14 +105,14 @@ static box box_merge(const box &a, const box &b)
     }
 }
 
-_bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
+_BVH_node::_BVH_node(size_t n, sptr<Hitable> *ptr)
 {
     assert(ptr);
     assert(n > 0);
 
-    std::vector<sptr<hitable>> best_v;
+    std::vector<sptr<Hitable>> best_v;
     std::vector<float> left_area(n), right_area(n);
-    box b;
+    box_t b;
     size_t idx = 0;
     float min_sha = FLT_MAX;
 
@@ -122,8 +122,8 @@ _bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
      */
     if (n > 2) {
         for (size_t axis = 0; axis < 3; axis++) {
-            std::vector<sptr<hitable>> v(n);
-            std::function<bool(const sptr<hitable> &, const sptr<hitable> &)> cmp_fn;
+            std::vector<sptr<Hitable>> v(n);
+            std::function<bool(const sptr<Hitable> &, const sptr<Hitable> &)> cmp_fn;
 
             v.assign(ptr, ptr + n);
             cmp_fn = axis == 0 ? bvh_x_cmp : (axis == 1 ? bvh_y_cmp : bvh_z_cmp);
@@ -157,12 +157,12 @@ _bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
         if (idx == 0) {
             m_left = best_v[0];
         } else {
-            m_left = bvh_node::create(idx + 1, &best_v[0]);
+            m_left = BVH_node::create(idx + 1, &best_v[0]);
         }
         if (idx == n - 2) {
             m_right = best_v[n - 1];
         } else {
-            m_right = bvh_node::create(n - 1 - idx, &best_v[idx + 1]);
+            m_right = BVH_node::create(n - 1 - idx, &best_v[idx + 1]);
         }
     } else if (n == 2) {
         m_left = ptr[0];
@@ -174,7 +174,7 @@ _bvh_node::_bvh_node(size_t n, sptr<hitable> *ptr)
     m_box = box_merge(m_left->bounding_box(), m_right->bounding_box());
 }
 
-bool _bvh_node::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _BVH_node::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
     if (box_hit(m_box, r, min, max)) {
         hit_record lrec, rrec;
@@ -199,7 +199,7 @@ bool _bvh_node::hit(const sptr<ray> &r, float min, float max, hit_record &rec) c
 
 #pragma mark - Static constructor
 
-sptr<bvh_node> bvh_node::create(size_t count, sptr<hitable> *l)
+sptr<BVH_node> BVH_node::create(size_t count, sptr<Hitable> *l)
 {
-    return std::make_shared<_bvh_node>(count, l);
+    return std::make_shared<_BVH_node>(count, l);
 }

@@ -34,12 +34,12 @@ typedef struct v3f {
 typedef struct rect {
     v2i org;
     v2u size;
-} rect;
+} rect_t;
 
 typedef struct box {
     v3f lo;
     v3f hi;
-} box;
+} box_t;
 
 typedef enum {
     TYPE_VOID,
@@ -74,7 +74,7 @@ typedef struct buffer_format {
 typedef struct buffer {
     void            *data;
     size_t           bpr;
-    rect             rect;
+    rect_t           rect;
     buffer_format_t  format;
 } buffer_t;
 
