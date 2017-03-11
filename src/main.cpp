@@ -14,9 +14,7 @@
 #include "wqueue.hpp"
 #include "event.hpp"
 #include "bvh.hpp"
-
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "imageio.h"
 
 #define MAX_RECURSION_DEPTH 50
 
@@ -313,12 +311,11 @@ int main(int argc, char *argv[])
     if (!options.flags & OPTION_QUIET) {
         fprintf(stderr, "Saving output to %s\n", options.outfile);
     }
-    stbi_write_png(options.outfile,
-                   (int32_t)img_size.x,
-                   (int32_t)img_size.y,
-                   3,
+    image_write_png(options.outfile,
+                   img_size.x,
+                   img_size.y,
                    img,
-                   (int32_t)bpr);
+                   bpr);
     free(img);
 
     return 0;
