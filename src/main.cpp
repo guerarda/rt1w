@@ -229,6 +229,10 @@ static void progress(const sptr<Object> &obj, const sptr<Object> &)
     snprintf(&buf[offset], 256- offset, "]");
     fprintf(stderr, "%s", buf);
     fflush(stderr);
+
+    if ((uint32_t)done == ctx->m_ntiles) {
+        fprintf(stderr, "\nDone!\n");
+    }
 }
 
 int main(int argc, char *argv[])
@@ -317,12 +321,7 @@ int main(int argc, char *argv[])
         e->notify(nullptr, progress, ctx, std::shared_ptr<Object>());
     }
     ctx->m_event->wait();
-    if (!options.flags & OPTION_QUIET) {
-        fprintf(stderr, "\nDone!\n");
-    }
-    if (!options.flags & OPTION_QUIET) {
-        fprintf(stderr, "Saving output to %s\n", options.outfile);
-    }
+
     image_write_png(options.outfile,
                    img_size.x,
                    img_size.y,
