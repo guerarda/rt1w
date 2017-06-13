@@ -28,7 +28,6 @@ struct wqueue {
     uint32_t                 m_concurrency;
     void * volatile          m_head;
     void * volatile          m_queue;
-    void * volatile          m_waiting;
     std::mutex               m_mutex;
     std::condition_variable  m_cv;
     std::vector<std::thread> m_threads;
@@ -39,7 +38,6 @@ wqueue::wqueue(uint32_t concurrency)
     m_concurrency = concurrency;
     m_head        = nullptr;
     m_queue       = nullptr;
-    m_waiting     = nullptr;
 
     for (size_t i = 0; i < m_concurrency; i++) {
         m_threads.emplace_back(std::thread(work));
@@ -50,10 +48,7 @@ void wqueue::enqueue(_job *job)
 {
     _job *q = (_job *)sync_lock_ptr(&m_queue);
     job->m_next = q;
-    if (m_waiting) {
-        sync_xchg_ptr(&m_waiting, this);
-        m_cv.notify_all();
-    }
+    m_cv.notify_one();
     sync_unlock_ptr(&m_queue, job);
 }
 
@@ -79,7 +74,6 @@ _job *wqueue::dequeue()
                 }
                 sync_unlock_ptr(&m_head, head);
             } else {
-                sync_cmpxchg_ptr(&m_waiting, this, nullptr);
                 sync_unlock_ptr(&m_queue, nullptr);
                 sync_unlock_ptr(&m_head, nullptr);
                 std::unique_lock<std::mutex> lk(m_mutex);
