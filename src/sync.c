@@ -2,9 +2,9 @@
 
 #define SYNC_MARKER ((void *)-1)
 
-void * sync_lock_ptr(void * volatile * loc)
+void *sync_lock_ptr(void * volatile *loc)
 {
-    void * ptr;
+    void *ptr;
     if (loc) {
         do {
             ptr = *loc;
@@ -20,7 +20,7 @@ void * sync_lock_ptr(void * volatile * loc)
     return ptr;
 }
 
-void sync_unlock_ptr(void * volatile *loc, void * ptr)
+void sync_unlock_ptr(void * volatile *loc, void *ptr)
 {
     if (loc) {
         while (!sync_cmpxchg_ptr(loc, ptr, SYNC_MARKER)) {
