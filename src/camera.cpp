@@ -12,7 +12,7 @@ static v3f random_in_unit_disk()
     do {
         p.x = dist(mt);
         p.y = dist(mt);
-    } while (v3f_dot(p ,p) >= 1.0f);
+    } while (Dot(p, p) >= 1.0f);
     return p;
 }
 
@@ -49,25 +49,25 @@ _Camera::_Camera(const v3f &eye,
 
     m_lens_radius = aperture;
     m_org = eye;
-    w = v3f_normalize(v3f_sub(m_org, lookat));
-    u = v3f_normalize(v3f_cross(up, w));
-    v = v3f_cross(w, u);
+    w = (m_org - lookat).normalized();
+    u = Cross(up, w).normalized();
+    v = Cross(w, u);
 
-    m_bl = v3f_sub(m_org, v3f_add(v3f_add(v3f_smul(half_w * focus_dist, u),
-                                          v3f_smul(half_h * focus_dist, v)),
-                                  v3f_smul(focus_dist, w)));
-    m_h = v3f_smul(2.0f * half_w * focus_dist, u);
-    m_v = v3f_smul(2.0f * half_h * focus_dist, v);
+    m_bl = m_org;
+    m_bl -= half_w * focus_dist * u;
+    m_bl -= half_h * focus_dist * v;
+    m_bl -= focus_dist * w;
+
+    m_h = 2.0f * half_w * focus_dist * u;
+    m_v = 2.0f * half_h * focus_dist * v;
 }
 
 sptr<ray> _Camera::make_ray(float u, float v) const
 {
-    v3f rd = v3f_smul(m_lens_radius, random_in_unit_disk());
-    v3f offset = v3f_vmul({ u, v, 0.0f }, rd);
-    v3f org = v3f_add(m_org, offset);
-    v3f dir = v3f_sub(v3f_add(v3f_add(m_bl, v3f_smul(u, m_h)),
-                              v3f_smul(v, m_v)),
-                      org);
+    v3f rd = m_lens_radius * random_in_unit_disk();
+    v3f offset = v3f{ u, v, 0.0f } * rd;
+    v3f org = m_org + offset;
+    v3f dir = m_bl + u * m_h + v * m_v - org;
     return ray::create(org, dir);
 }
 

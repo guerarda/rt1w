@@ -14,20 +14,20 @@ static v3f random_sphere_point()
         p.x = dist(__prng);
         p.y = dist(__prng);
         p.z = dist(__prng);
-    } while (v3f_norm_sq(p) >= 1.0f);
+    } while (p.length_sq() >= 1.0f);
 
     return p;
 }
 
 static bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refract)
 {
-    v3f uv = v3f_normalize(v);
-    float dt = v3f_dot(uv, n);
+    v3f uv = v.normalized();
+    float dt = Dot(uv, n);
     float delta = 1.0f - ni_over_nt * ni_over_nt * ( 1.0f - dt * dt);
 
     if (delta > 0.0f) {
-        refract = v3f_smul(ni_over_nt, v3f_sub(uv, v3f_smul(dt, n)));
-        refract = v3f_sub(refract, v3f_smul(sqrtf(delta), n));
+        refract = ni_over_nt * (uv - dt * n);
+        refract = refract - sqrtf(delta) * n;
         return true;
     } else {
         return false;
@@ -60,9 +60,8 @@ bool _Lambertian::scatter(__unused const sptr<ray> &r_in,
                           v3f &attenuation,
                           sptr<ray> &scattered) const
 {
-    v3f target = v3f_add(v3f_add(rec.p, rec.normal),
-                         random_sphere_point());
-    scattered = ray::create(rec.p, v3f_sub(target, rec.p));
+    v3f target = rec.p + rec.normal + random_sphere_point();
+    scattered = ray::create(rec.p, target - rec.p);
     attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
     return true;
 }
@@ -93,11 +92,11 @@ bool _Metal::scatter(const sptr<ray> &r_in,
                      v3f &attenuation,
                      sptr<ray> &scattered) const
 {
-    v3f reflected = v3f_reflect(r_in->direction(), rec.normal);
-    v3f fuzz = v3f_smul(m_fuzz, random_sphere_point());
-    scattered = ray::create(rec.p, v3f_add(fuzz, reflected));
+    v3f reflected = Reflect(r_in->direction(), rec.normal);
+    v3f fuzz = m_fuzz * random_sphere_point();
+    scattered = ray::create(rec.p, fuzz + reflected);
     attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
-    return v3f_dot(scattered->direction(), rec.normal) > 0.0f;
+    return Dot(scattered->direction(), rec.normal) > 0.0f;
 }
 
 #pragma mark - Dieletric
@@ -127,14 +126,14 @@ bool _Dielectric::scatter(const sptr<ray> &r_in,
     v3f rdir = r_in->direction();
 
     attenuation = { 1.0f, 1.0f, 1.0f };
-    if (v3f_dot(r_in->direction(), rec.normal) > 0.0f) {
-        norm_out = v3f_smul(-1.0f, rec.normal);
+    if (Dot(r_in->direction(), rec.normal) > 0.0f) {
+        norm_out = -rec.normal;
         ni_over_nt = m_ref_idx;
-        cosine = m_ref_idx * v3f_dot(rdir, rec.normal) / v3f_norm(rdir);
+        cosine = m_ref_idx * Dot(rdir, rec.normal) / rdir.length();
     } else {
         norm_out = rec.normal;
         ni_over_nt = 1.0f / m_ref_idx;
-        cosine = - v3f_dot(rdir, rec.normal) / v3f_norm(rdir);
+        cosine = -Dot(rdir, rec.normal) / rdir.length();
     }
     if (refract(r_in->direction(), norm_out, ni_over_nt, refracted)) {
         p_reflected = schlick(cosine, m_ref_idx);
@@ -143,7 +142,7 @@ bool _Dielectric::scatter(const sptr<ray> &r_in,
     }
     static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     if (dist(__prng) < p_reflected) {
-        v3f reflected = v3f_reflect(rdir, rec.normal);
+        v3f reflected = Reflect(rdir, rec.normal);
         scattered = ray::create(rec.p, reflected);
     } else {
         scattered = ray::create(rec.p, refracted);

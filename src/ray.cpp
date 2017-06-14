@@ -14,7 +14,7 @@ struct _ray : ray {
 
 v3f _ray::point(float t) const
 {
-    return v3f_add(m_org, v3f_smul(t, m_dir));
+    return m_org + t * m_dir;
 }
 
 #pragma mark - Static constructors

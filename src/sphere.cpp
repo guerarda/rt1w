@@ -39,16 +39,16 @@ _Sphere::_Sphere(const v3f &c, float r, const sptr<Material> &m)
     m_center = c;
     m_radius = r;
     m_material = m;
-    m_box = { v3f_sub(c, { r, r, r }), v3f_add(c, { r, r, r }) };
+    m_box = { c - v3f{ r, r, r }, c + v3f{ r, r, r } };
 }
 
 bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
     v3f rdir = r->direction();
-    v3f oc = v3f_sub(r->origin(), m_center);
-    float a = v3f_dot(rdir, rdir);
-    float b = 2 * v3f_dot(rdir, oc);
-    float c = v3f_dot(oc, oc) - m_radius * m_radius;
+    v3f oc = r->origin() - m_center;
+    float a = Dot(rdir, rdir);
+    float b = 2 * Dot(rdir, oc);
+    float c = Dot(oc, oc) - m_radius * m_radius;
     float delta = b * b - 4 * a * c;
 
     if (delta >= 0.0f) {
@@ -59,9 +59,9 @@ bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
         if (t > min && t < max) {
             rec.t = t;
             rec.p = r->point(t);
-            rec.normal = v3f_normalize(v3f_sub(rec.p, m_center));
+            rec.normal = (rec.p - m_center).normalized();
             rec.mat = m_material;
-            v3f v = v3f_smul(1.0f / m_radius, v3f_sub(rec.p, m_center));
+            v3f v = 1.0f / m_radius * (rec.p - m_center);
             rec.uv = sphere_uv(v);
             return true;
         }

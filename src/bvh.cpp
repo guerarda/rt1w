@@ -78,7 +78,7 @@ static bool box_eq(const box_t &a, const box_t &b)
 
 static float box_area(const box_t &box)
 {
-    v3f d = v3f_sub(box.hi, box.lo);
+    v3f d = box.hi - box.lo;
     return 2 * (d.x * d.y + d.y * d.z + d.x * d.z);
 }
 

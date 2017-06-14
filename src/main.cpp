@@ -30,16 +30,16 @@ static v3f color(const sptr<ray> &r, const sptr<Hitable> &world, size_t depth)
 
         if (depth < MAX_RECURSION_DEPTH
             && rec.mat->scatter(r, rec, attenuation, scattered)) {
-            return v3f_vmul(attenuation, color(scattered, world, depth + 1));
+            return attenuation * color(scattered, world, depth + 1);
         }
         return { 0.0f, 0.0f, 0.0f };
     } else {
-        v3f udir = v3f_normalize(r->direction());
+        v3f udir = r->direction().normalized();
         v3f white = { 1.0f, 1.0f, 1.0f };
         v3f blue = { 0.5f, 0.7f, 1.0f };
 
         float t = 0.5f * (udir.y + 1.0f);
-        return v3f_lerp(t, white, blue);
+        return Lerp(t, white, blue);
     }
 }
 
@@ -64,7 +64,7 @@ static sptr<Hitable> random_scene()
                 0.2f,
                 (float)b + 0.9f * dist(mt)
             };
-            if ((v3f_norm(v3f_sub(center,{ 4.0f, 0.2f, 0.0f }))) > 0.9f) {
+            if ((center - v3f{ 4.0f, 0.2f, 0.0f }).length() > 0.9f) {
                 if (choose_mat < 0.8f) {  // diffuse
                     v3f albedo = {
                         dist(mt) * dist(mt),
@@ -167,9 +167,9 @@ static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
                 float v = 1.0f - (float(orgy + (int32_t)i) - dist(mt)) / float(ctx->m_img_size.y);
                 sptr<ray> r = ctx->m_camera->make_ray(u, v);
 
-                c = v3f_add(c, color(r, ctx->m_scene, 0));
+                c = c + color(r, ctx->m_scene, 0);
             }
-            c = v3f_smul(1.0f / ctx->m_ns, c);
+            c = 1.0f / ctx->m_ns * c;
             /* Approx Gamma correction */
             c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
 

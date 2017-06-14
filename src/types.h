@@ -25,21 +25,10 @@ typedef struct v2f {
     float y;
 } v2f;
 
-typedef struct v3f {
-    float x;
-    float y;
-    float z;
-} v3f;
-
 typedef struct rect {
     v2i org;
     v2u size;
 } rect_t;
-
-typedef struct box {
-    v3f lo;
-    v3f hi;
-} box_t;
 
 typedef enum {
     TYPE_VOID,
