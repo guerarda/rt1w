@@ -6,7 +6,7 @@
 #include <math.h>
 #include <assert.h>
 
-bool box_hit(const box_t &b, const sptr<ray> &r, float tmin, float tmax)
+static bool box_hit(const bounds3f &b, const sptr<ray> &r, float tmin, float tmax)
 {
     v3f dir = r->direction();
     v3f org = r->origin();
@@ -35,74 +35,26 @@ struct _BVH_node : BVH_node {
 
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    box_t bounding_box() const { return m_box; }
+    bounds3f bounds() const { return m_box; }
 
-    box_t         m_box;
+    bounds3f      m_box;
     sptr<Hitable> m_left;
     sptr<Hitable> m_right;
 };
 
 static bool bvh_x_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
 {
-    return a->bounding_box().lo.x < b->bounding_box().lo.x;
+    return a->bounds().lo.x < b->bounds().lo.x;
 }
 
 static bool bvh_y_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
 {
-    return a->bounding_box().lo.y < b->bounding_box().lo.y;
+    return a->bounds().lo.y < b->bounds().lo.y;
 }
 
 static bool bvh_z_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
 {
-    return a->bounding_box().lo.z < b->bounding_box().lo.z;
-}
-
-static int32_t f32_cmp(float x, float y)
-{
-    if (fabs(x - y) <= fmaxf(fabsf(x), fabsf(y)) * FLT_EPSILON) {
-        return 0;
-    } else {
-        return x < y ? -1 : + 1;
-    }
-}
-
-static bool box_eq(const box_t &a, const box_t &b)
-{
-    return f32_cmp(a.lo.x, b.lo.x) == 0
-        && f32_cmp(a.lo.y, b.lo.y) == 0
-        && f32_cmp(a.lo.z, b.lo.z) == 0
-        && f32_cmp(a.hi.x, b.hi.x) == 0
-        && f32_cmp(a.hi.y, b.hi.y) == 0
-        && f32_cmp(a.hi.z, b.hi.z) == 0;
-}
-
-static float box_area(const box_t &box)
-{
-    v3f d = box.hi - box.lo;
-    return 2 * (d.x * d.y + d.y * d.z + d.x * d.z);
-}
-
-static box box_merge(const box_t &a, const box_t &b)
-{
-    if (box_eq(a, b)) {
-        return a;
-    } else if (box_eq(b, __zero_box)) {
-        return a;
-    } else if (box_eq(a, __zero_box)) {
-        return b;
-    } else {
-        v3f lo = {
-            fminf(a.lo.x, b.lo.x),
-            fminf(a.lo.y, b.lo.y),
-            fminf(a.lo.z, b.lo.z)
-        };
-        v3f hi = {
-            fmaxf(a.hi.x, b.hi.x),
-            fmaxf(a.hi.y, b.hi.y),
-            fmaxf(a.hi.z, b.hi.z)
-        };
-        return { lo, hi };
-    }
+    return a->bounds().lo.z < b->bounds().lo.z;
 }
 
 _BVH_node::_BVH_node(size_t n, sptr<Hitable> *ptr)
@@ -112,7 +64,7 @@ _BVH_node::_BVH_node(size_t n, sptr<Hitable> *ptr)
 
     std::vector<sptr<Hitable>> best_v;
     std::vector<float> left_area(n), right_area(n);
-    box_t b;
+    bounds3f b;
     size_t idx = 0;
     float min_sha = FLT_MAX;
 
@@ -130,15 +82,15 @@ _BVH_node::_BVH_node(size_t n, sptr<Hitable> *ptr)
 
             std::sort(v.begin(), v.end(), cmp_fn);
 
-            b = __zero_box;
+            b = bounds3f();
             for (size_t i = 0; i < n - 1; i++) {
-                b = box_merge(b, v[i]->bounding_box());
-                left_area[i] = box_area(b);
+                b = Union(b, v[i]->bounds());
+                left_area[i] = b.area();
             }
-            b = __zero_box;
+            b = bounds3f();
             for (size_t i = n; i-- > 1;) {
-                b = box_merge(b, v[i]->bounding_box());
-                right_area[i] = box_area(b);
+                b = Union(b, v[i]->bounds());
+                right_area[i] = b.area();
             }
 
             bool best = false;
@@ -171,7 +123,7 @@ _BVH_node::_BVH_node(size_t n, sptr<Hitable> *ptr)
         m_left = ptr[0];
         m_right = ptr[0];
     }
-    m_box = box_merge(m_left->bounding_box(), m_right->bounding_box());
+    m_box = Union(m_left->bounds(), m_right->bounds());
 }
 
 bool _BVH_node::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const

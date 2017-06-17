@@ -9,7 +9,7 @@ struct Hitable_list : Hitable {
     static sptr<Hitable_list> create(size_t count, sptr<Hitable> *l);
 
     virtual bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
-    virtual box_t bounding_box() const = 0;
+    virtual bounds3f bounds() const = 0;
 };
 
 #endif

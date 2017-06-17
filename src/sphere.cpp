@@ -23,14 +23,14 @@ struct _Sphere : Sphere {
 
     _Sphere(const v3f &c, float r, const sptr<Material> &m);
 
-    bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    box_t   bounding_box() const { return m_box; }
-    v3f   center() const { return m_center; }
-    float radius() const { return m_radius; }
+    bool     hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
+    bounds3f bounds() const { return m_box; }
+    v3f      center() const { return m_center; }
+    float    radius() const { return m_radius; }
 
-    v3f   m_center;
-    float m_radius;
-    box_t m_box;
+    v3f            m_center;
+    float          m_radius;
+    bounds3f       m_box;
     sptr<Material> m_material;
 };
 

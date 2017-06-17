@@ -12,7 +12,7 @@ struct _XY_Rect : XY_Rect {
              const sptr<Material> &mat);
 
     bool  hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    box_t bounding_box() const { return m_box; }
+    bounds3f bounds() const { return m_box; }
 
 
     box_t m_box;

@@ -8,8 +8,6 @@
 
 __BEGIN_DECLS
 
-#define __zero_box { { 0.0, 0.0, 0.0 }, { 0.0, 0.0, 0.0 } }
-
 typedef struct v2i {
     int32_t x;
     int32_t y;
