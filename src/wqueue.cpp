@@ -20,7 +20,6 @@ struct _job {
 struct wqueue {
 
     wqueue(uint32_t concurrency);
-    ~wqueue();
 
     void  enqueue(_job *);
     _job *dequeue();
@@ -86,10 +85,13 @@ _job *wqueue::dequeue()
 
 #pragma mark - Static
 
-static wqueue *global_wqueue = new wqueue(std::thread::hardware_concurrency() + 1);
+static wqueue *global_wqueue = new wqueue(std::thread::hardware_concurrency());
 
 __attribute__((noreturn)) static void work()
 {
+    while (!global_wqueue) {
+        _mm_pause();
+    }
     while (1) {
         _job *job = global_wqueue->dequeue();
         if (job->m_func) {
