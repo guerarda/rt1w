@@ -49,6 +49,7 @@ SET(RT1W_SOURCES
   src/bvh.cpp
   src/camera.cpp
   src/event.cpp
+  src/geometry.cpp
   src/hitablelist.cpp
   src/imageio.c
   src/material.cpp
@@ -56,7 +57,6 @@ SET(RT1W_SOURCES
   src/sphere.cpp
   src/sync.c
   src/texture.cpp
-  src/vec.cpp
   src/wqueue.cpp
 )
 

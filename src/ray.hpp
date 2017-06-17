@@ -1,7 +1,7 @@
 #ifndef RAY_H
 #define RAY_H
 
-#include "vec.hpp"
+#include "geometry.hpp"
 #include "sptr.hpp"
 
 struct ray : Object {

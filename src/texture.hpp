@@ -3,7 +3,7 @@
 
 #include "types.h"
 #include "sptr.hpp"
-#include "vec.hpp"
+#include "geometry.hpp"
 
 struct Texture : Object {
     static sptr<Texture> create_color(const v3f &);

@@ -6,7 +6,7 @@
 #include <float.h>
 #include <string>
 
-#include "vec.hpp"
+#include "geometry.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
 #include "hitablelist.hpp"
