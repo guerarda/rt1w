@@ -1,24 +1,16 @@
-#include "hitablelist.hpp"
+#include "hitable.hpp"
 #include <assert.h>
 #include <vector>
-#include <math.h>
-#include <cfloat>
 
-struct _Hitable_list : Hitable_list {
+struct _Hitable_list : Hitable {
 
-    _Hitable_list(size_t count, sptr<Hitable> *l);
+    _Hitable_list(const std::vector<sptr<Hitable>> &v) : m_hitables(v) { }
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
     bounds3f bounds() const;
 
     std::vector<sptr<Hitable>> m_hitables;
 };
-
-_Hitable_list::_Hitable_list(size_t count, sptr<Hitable> *list)
-{
-    assert(list);
-    m_hitables.assign(list, list + count);
-}
 
 bool _Hitable_list::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
@@ -47,7 +39,7 @@ bounds3f _Hitable_list::bounds() const
 
 #pragma mark - Static constructors
 
-sptr<Hitable_list> Hitable_list::create(size_t count, sptr<Hitable> *l)
+sptr<Hitable> Hitable::create(const std::vector<sptr<Hitable>> &v)
 {
-    return std::make_shared<_Hitable_list>(count, l);
+    return std::make_shared<_Hitable_list>(v);
 }

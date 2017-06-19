@@ -9,7 +9,6 @@
 #include "geometry.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
-#include "hitablelist.hpp"
 #include "camera.hpp"
 #include "material.hpp"
 #include "wqueue.hpp"
@@ -105,7 +104,7 @@ static sptr<Hitable> random_scene()
                                1.0f, Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }),
                                                    0.0f)));
 
-    return BVH_node::create(v.size(), v.data());
+    return BVH_node::create(v);
 }
 
 struct _tile : Object {
