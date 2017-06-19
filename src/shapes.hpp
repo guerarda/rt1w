@@ -1,7 +1,7 @@
 #ifndef SHAPES_H
 #define SHAPES_H
 
-#include "hitable.hpp"
+#include "primitive.hpp"
 
 struct XY_Rect : Hitable {
     static sptr<Hitable> create(float x0, float x1,

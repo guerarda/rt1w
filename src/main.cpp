@@ -19,7 +19,7 @@
 
 #define MAX_RECURSION_DEPTH 50
 
-static v3f color(const sptr<ray> &r, const sptr<Hitable> &world, size_t depth)
+static v3f color(const sptr<ray> &r, const sptr<Primitive> &world, size_t depth)
 {
     hit_record rec;
 
@@ -42,13 +42,13 @@ static v3f color(const sptr<ray> &r, const sptr<Hitable> &world, size_t depth)
     }
 }
 
-static sptr<Hitable> random_scene()
+static sptr<Primitive> random_scene()
 {
     std::random_device rd;
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    std::vector<sptr<Hitable>> v;
+    std::vector<sptr<Primitive>> v;
     sptr<Shape> shape;
     sptr<Material> mat;
 
@@ -58,7 +58,7 @@ static sptr<Hitable> random_scene()
 
     shape = Sphere::create({ 0.0f, -1000.0f, 0.0f }, 1000.0f);
     mat = Lambertian::create(tex);
-    v.push_back(Hitable::create(shape, mat));
+    v.push_back(Primitive::create(shape, mat));
 
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
@@ -79,7 +79,7 @@ static sptr<Hitable> random_scene()
                     tex = Texture::create_color(albedo);
                     mat = Lambertian::create(tex);
 
-                    v.push_back(Hitable::create(shape, mat));
+                    v.push_back(Primitive::create(shape, mat));
                 }
                 else if (choose_mat < 0.95f) { // metal
                     v3f albedo = {
@@ -89,26 +89,26 @@ static sptr<Hitable> random_scene()
                     };
                     tex = Texture::create_color(albedo);
                     mat = Metal::create(tex, 0.5f * dist(mt));
-                    v.push_back(Hitable::create(shape, mat));
+                    v.push_back(Primitive::create(shape, mat));
                 }
                 else {  // glass
                     mat = Dielectric::create(1.5f);
-                    v.push_back(Hitable::create(shape, mat));
+                    v.push_back(Primitive::create(shape, mat));
                 }
             }
         }
     }
     shape = Sphere::create({ 0.0f, 1.0f, 0.0 }, 1.0f);
     mat = Dielectric::create(1.5f);
-    v.push_back(Hitable::create(shape, mat));
+    v.push_back(Primitive::create(shape, mat));
 
     shape = Sphere::create({ -4.0f, 1.0f, 0.0f }, 1.0f);
     mat = Lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }));
-    v.push_back(Hitable::create(shape, mat));
+    v.push_back(Primitive::create(shape, mat));
 
     shape = Sphere::create({ 4.0f, 1.0f, 0.0f }, 1.0f);
     mat = Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }), 0.0f);
-    v.push_back(Hitable::create(shape, mat));
+    v.push_back(Primitive::create(shape, mat));
 
     return BVHNode::create(v);
 }
@@ -127,11 +127,11 @@ struct _tile : Object {
 
 struct _ctx : Object {
     static sptr<_ctx> create(const sptr<Camera> c,
-                             sptr<Hitable> s,
+                             sptr<Primitive> s,
                              uint32_t n,
                              v2u size) { return std::make_shared<_ctx>(c, s, n, size); }
 
-    _ctx(const sptr<Camera> c, sptr<Hitable> s, uint32_t n, v2u size) {
+    _ctx(const sptr<Camera> c, sptr<Primitive> s, uint32_t n, v2u size) {
         m_camera = c;
         m_scene = s;
         m_ns = n;
@@ -139,12 +139,12 @@ struct _ctx : Object {
     }
     ~_ctx() { }
 
-    sptr<Camera>  m_camera;
-    sptr<Hitable> m_scene;
-    uint32_t      m_ns;
-    size_t        m_ntiles;
-    v2u           m_img_size;
-    sptr<Event>   m_event;
+    sptr<Camera>    m_camera;
+    sptr<Primitive> m_scene;
+    uint32_t        m_ns;
+    size_t          m_ntiles;
+    v2u             m_img_size;
+    sptr<Event>     m_event;
 };
 
 static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
@@ -311,7 +311,7 @@ int main(int argc, char *argv[])
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    sptr<Hitable> scene = random_scene();
+    sptr<Primitive> scene = random_scene();
 
     /* Actual rendering */
     sptr<_ctx> ctx = _ctx::create(camera, scene, ns, img_size);

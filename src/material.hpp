@@ -1,7 +1,7 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include "hitable.hpp"
+#include "primitive.hpp"
 #include "texture.hpp"
 
 struct Material : Object {

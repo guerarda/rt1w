@@ -50,9 +50,9 @@ SET(RT1W_SOURCES
   src/camera.cpp
   src/event.cpp
   src/geometry.cpp
-  src/hitable.cpp
   src/imageio.c
   src/material.cpp
+  src/primitive.cpp
   src/ray.cpp
   src/sphere.cpp
   src/sync.c

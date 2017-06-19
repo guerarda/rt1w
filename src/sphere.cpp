@@ -1,5 +1,5 @@
 #include "sphere.hpp"
-#include "hitable.hpp"
+#include "primitive.hpp"
 #include <assert.h>
 #include <math.h>
 
@@ -28,9 +28,9 @@ struct _Sphere : Sphere {
     v3f      center() const { return m_center; }
     float    radius() const { return m_radius; }
 
-    v3f            m_center;
-    float          m_radius;
-    bounds3f       m_box;
+    v3f      m_center;
+    float    m_radius;
+    bounds3f m_box;
 };
 
 _Sphere::_Sphere(const v3f &c, float r)

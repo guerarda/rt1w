@@ -30,36 +30,36 @@ static bool box_hit(const bounds3f &b, const sptr<ray> &r, float tmin, float tma
 
 struct _BVHNode : BVHNode {
 
-    _BVHNode(const std::vector<sptr<Hitable>> &);
+    _BVHNode(const std::vector<sptr<Primitive>> &);
     ~_BVHNode() { }
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
     bounds3f bounds() const { return m_box; }
 
-    bounds3f      m_box;
-    sptr<Hitable> m_left;
-    sptr<Hitable> m_right;
+    bounds3f        m_box;
+    sptr<Primitive> m_left;
+    sptr<Primitive> m_right;
 };
 
-static bool bvh_x_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
+static bool bvh_x_cmp(const sptr<Primitive> &a, const sptr<Primitive> &b)
 {
     return a->bounds().lo.x < b->bounds().lo.x;
 }
 
-static bool bvh_y_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
+static bool bvh_y_cmp(const sptr<Primitive> &a, const sptr<Primitive> &b)
 {
     return a->bounds().lo.y < b->bounds().lo.y;
 }
 
-static bool bvh_z_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
+static bool bvh_z_cmp(const sptr<Primitive> &a, const sptr<Primitive> &b)
 {
     return a->bounds().lo.z < b->bounds().lo.z;
 }
 
-_BVHNode::_BVHNode(const std::vector<sptr<Hitable>> &hitables)
+_BVHNode::_BVHNode(const std::vector<sptr<Primitive>> &primitives)
 {
-    size_t n = hitables.size();
-    std::vector<sptr<Hitable>> best_v;
+    size_t n = primitives.size();
+    std::vector<sptr<Primitive>> best_v;
     std::vector<float> left_area(n), right_area(n);
     bounds3f b;
     size_t idx = 0;
@@ -70,8 +70,8 @@ _BVHNode::_BVHNode(const std::vector<sptr<Hitable>> &hitables)
      */
     if (n > 2) {
         for (size_t axis = 0; axis < 3; axis++) {
-            std::vector<sptr<Hitable>> v = hitables;
-            std::function<bool(const sptr<Hitable> &, const sptr<Hitable> &)> cmp_fn;
+            std::vector<sptr<Primitive>> v = primitives;
+            std::function<bool(const sptr<Primitive> &, const sptr<Primitive> &)> cmp_fn;
 
             cmp_fn = axis == 0 ? bvh_x_cmp : (axis == 1 ? bvh_y_cmp : bvh_z_cmp);
             std::sort(v.begin(), v.end(), cmp_fn);
@@ -103,21 +103,21 @@ _BVHNode::_BVHNode(const std::vector<sptr<Hitable>> &hitables)
         if (idx == 0) {
             m_left = best_v[0];
         } else {
-            std::vector<sptr<Hitable>> sub(&best_v[0], &best_v[idx + 1]);
+            std::vector<sptr<Primitive>> sub(&best_v[0], &best_v[idx + 1]);
             m_left = BVHNode::create(sub);
         }
         if (idx == n - 2) {
             m_right = best_v[n - 1];
         } else {
-            std::vector<sptr<Hitable>> sub(&best_v[idx +1], &best_v[n]);
+            std::vector<sptr<Primitive>> sub(&best_v[idx +1], &best_v[n]);
             m_right = BVHNode::create(sub);
         }
     } else if (n == 2) {
-        m_left = hitables[0];
-        m_right = hitables[1];
+        m_left = primitives[0];
+        m_right = primitives[1];
     } else if (n == 1) {
-        m_left = hitables[0];
-        m_right = hitables[0];
+        m_left = primitives[0];
+        m_right = primitives[0];
     }
     m_box = Union(m_left->bounds(), m_right->bounds());
 }
@@ -147,7 +147,7 @@ bool _BVHNode::hit(const sptr<ray> &r, float min, float max, hit_record &rec) co
 
 #pragma mark - Static constructor
 
-sptr<BVHNode> BVHNode::create(const std::vector<sptr<Hitable>> &v)
+sptr<BVHNode> BVHNode::create(const std::vector<sptr<Primitive>> &v)
 {
     return std::make_shared<_BVHNode>(v);
 }
