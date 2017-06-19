@@ -1,5 +1,5 @@
 #include "sphere.hpp"
-#include "material.hpp"
+#include "hitable.hpp"
 #include <assert.h>
 #include <math.h>
 
@@ -21,7 +21,7 @@ static v2f sphere_uv(const v3f &p)
 
 struct _Sphere : Sphere {
 
-    _Sphere(const v3f &c, float r, const sptr<Material> &m);
+    _Sphere(const v3f &c, float r);
 
     bool     hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
     bounds3f bounds() const { return m_box; }
@@ -31,14 +31,12 @@ struct _Sphere : Sphere {
     v3f            m_center;
     float          m_radius;
     bounds3f       m_box;
-    sptr<Material> m_material;
 };
 
-_Sphere::_Sphere(const v3f &c, float r, const sptr<Material> &m)
+_Sphere::_Sphere(const v3f &c, float r)
 {
     m_center = c;
     m_radius = r;
-    m_material = m;
     m_box = { c - v3f{ r, r, r }, c + v3f{ r, r, r } };
 }
 
@@ -60,7 +58,6 @@ bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
             rec.t = t;
             rec.p = r->point(t);
             rec.normal = (rec.p - m_center).normalized();
-            rec.mat = m_material;
             v3f v = 1.0f / m_radius * (rec.p - m_center);
             rec.uv = sphere_uv(v);
             return true;
@@ -71,7 +68,7 @@ bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
 
 #pragma mark - Static constructors
 
-sptr<Sphere> Sphere::create(const v3f &c, float r, const sptr<Material> &m)
+sptr<Sphere> Sphere::create(const v3f &c, float r)
 {
-    return std::make_shared<_Sphere>(c, r, m);
+    return std::make_shared<_Sphere>(c, r);
 }

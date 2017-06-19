@@ -2,6 +2,36 @@
 #include <assert.h>
 #include <vector>
 
+#pragma mark - Hitable
+
+struct _Hitable : Hitable {
+
+    _Hitable(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s), m_material(m) { }
+
+    bool     hit(const sptr<ray> &, float, float, hit_record &) const;
+    bounds3f bounds() const;
+
+    sptr<Shape>    m_shape;
+    sptr<Material> m_material;
+};
+
+bool _Hitable::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+{
+    if (m_shape->hit(r, min, max, rec)) {
+        rec.mat = m_material;
+        return true;
+    }
+    return false;
+}
+
+
+bounds3f _Hitable::bounds() const
+{
+    return m_shape->bounds();
+}
+
+#pragma mark - Hitable List
+
 struct _Hitable_list : Hitable {
 
     _Hitable_list(const std::vector<sptr<Hitable>> &v) : m_hitables(v) { }
@@ -38,6 +68,11 @@ bounds3f _Hitable_list::bounds() const
 }
 
 #pragma mark - Static constructors
+
+sptr<Hitable> Hitable::create(const sptr<Shape> &s, const sptr<Material> &m)
+{
+    return std::make_shared<_Hitable>(s, m);
+}
 
 sptr<Hitable> Hitable::create(const std::vector<sptr<Hitable>> &v)
 {

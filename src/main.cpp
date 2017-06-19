@@ -49,12 +49,17 @@ static sptr<Hitable> random_scene()
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
     std::vector<sptr<Hitable>> v;
+    sptr<Shape> shape;
+    sptr<Material> mat;
+
     sptr<Texture> tex = Texture::create_checker(Texture::create_color({ 0.2f, 0.3f, 0.2f }),
                                                 Texture::create_color({ 0.9f, 0.9f, 0.9f }));
 
-    v.push_back(Sphere::create({ 0.0f, -1000.0f, 0.0f },
-                               1000.0f,
-                               Lambertian::create(tex)));
+
+    shape = Sphere::create({ 0.0f, -1000.0f, 0.0f }, 1000.0f);
+    mat = Lambertian::create(tex);
+    v.push_back(Hitable::create(shape, mat));
+
     for (int a = -11; a < 11; a++) {
         for (int b = -11; b < 11; b++) {
             float choose_mat = dist(mt);
@@ -63,6 +68,7 @@ static sptr<Hitable> random_scene()
                 0.2f,
                 (float)b + 0.9f * dist(mt)
             };
+            shape = Sphere::create(center, 0.2f);
             if ((center - v3f{ 4.0f, 0.2f, 0.0f }).length() > 0.9f) {
                 if (choose_mat < 0.8f) {  // diffuse
                     v3f albedo = {
@@ -71,9 +77,9 @@ static sptr<Hitable> random_scene()
                         dist(mt) * dist(mt)
                     };
                     tex = Texture::create_color(albedo);
-                    v.push_back(Sphere::create(center,
-                                               0.2f,
-                                               Lambertian::create(tex)));
+                    mat = Lambertian::create(tex);
+
+                    v.push_back(Hitable::create(shape, mat));
                 }
                 else if (choose_mat < 0.95f) { // metal
                     v3f albedo = {
@@ -82,27 +88,27 @@ static sptr<Hitable> random_scene()
                         0.5f * (1 + dist(mt))
                     };
                     tex = Texture::create_color(albedo);
-                    v.push_back(Sphere::create(center,
-                                               0.2f,
-                                               Metal::create(tex, 0.5f * dist(mt))));
+                    mat = Metal::create(tex, 0.5f * dist(mt));
+                    v.push_back(Hitable::create(shape, mat));
                 }
                 else {  // glass
-                    v.push_back(Sphere::create(center,
-                                               0.2f,
-                                               Dielectric::create(1.5f)));
+                    mat = Dielectric::create(1.5f);
+                    v.push_back(Hitable::create(shape, mat));
                 }
             }
         }
     }
-    v.push_back(Sphere::create({ 0.0f, 1.0f, 0.0 },
-                               1.0f,
-                               Dielectric::create(1.5f)));
-    v.push_back(Sphere::create({ -4.0f, 1.0f, 0.0f },
-                               1.0f,
-                               Lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }))));
-    v.push_back(Sphere::create({ 4.0f, 1.0f, 0.0f },
-                               1.0f, Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }),
-                                                   0.0f)));
+    shape = Sphere::create({ 0.0f, 1.0f, 0.0 }, 1.0f);
+    mat = Dielectric::create(1.5f);
+    v.push_back(Hitable::create(shape, mat));
+
+    shape = Sphere::create({ -4.0f, 1.0f, 0.0f }, 1.0f);
+    mat = Lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }));
+    v.push_back(Hitable::create(shape, mat));
+
+    shape = Sphere::create({ 4.0f, 1.0f, 0.0f }, 1.0f);
+    mat = Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }), 0.0f);
+    v.push_back(Hitable::create(shape, mat));
 
     return BVH_node::create(v);
 }
