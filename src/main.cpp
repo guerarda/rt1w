@@ -110,7 +110,7 @@ static sptr<Hitable> random_scene()
     mat = Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }), 0.0f);
     v.push_back(Hitable::create(shape, mat));
 
-    return BVH_node::create(v);
+    return BVHNode::create(v);
 }
 
 struct _tile : Object {

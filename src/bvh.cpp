@@ -28,11 +28,10 @@ static bool box_hit(const bounds3f &b, const sptr<ray> &r, float tmin, float tma
     return true;
 }
 
-struct _BVH_node : BVH_node {
+struct _BVHNode : BVHNode {
 
-    _BVH_node(const std::vector<sptr<Hitable>> &);
-    ~_BVH_node() { }
-
+    _BVHNode(const std::vector<sptr<Hitable>> &);
+    ~_BVHNode() { }
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
     bounds3f bounds() const { return m_box; }
@@ -57,7 +56,7 @@ static bool bvh_z_cmp(const sptr<Hitable> &a, const sptr<Hitable> &b)
     return a->bounds().lo.z < b->bounds().lo.z;
 }
 
-_BVH_node::_BVH_node(const std::vector<sptr<Hitable>> &hitables)
+_BVHNode::_BVHNode(const std::vector<sptr<Hitable>> &hitables)
 {
     size_t n = hitables.size();
     std::vector<sptr<Hitable>> best_v;
@@ -105,13 +104,13 @@ _BVH_node::_BVH_node(const std::vector<sptr<Hitable>> &hitables)
             m_left = best_v[0];
         } else {
             std::vector<sptr<Hitable>> sub(&best_v[0], &best_v[idx + 1]);
-            m_left = BVH_node::create(sub);
+            m_left = BVHNode::create(sub);
         }
         if (idx == n - 2) {
             m_right = best_v[n - 1];
         } else {
             std::vector<sptr<Hitable>> sub(&best_v[idx +1], &best_v[n]);
-            m_right = BVH_node::create(sub);
+            m_right = BVHNode::create(sub);
         }
     } else if (n == 2) {
         m_left = hitables[0];
@@ -123,7 +122,7 @@ _BVH_node::_BVH_node(const std::vector<sptr<Hitable>> &hitables)
     m_box = Union(m_left->bounds(), m_right->bounds());
 }
 
-bool _BVH_node::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _BVHNode::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
     if (box_hit(m_box, r, min, max)) {
         hit_record lrec, rrec;
@@ -148,7 +147,7 @@ bool _BVH_node::hit(const sptr<ray> &r, float min, float max, hit_record &rec) c
 
 #pragma mark - Static constructor
 
-sptr<BVH_node> BVH_node::create(const std::vector<sptr<Hitable>> &v)
+sptr<BVHNode> BVHNode::create(const std::vector<sptr<Hitable>> &v)
 {
-    return std::make_shared<_BVH_node>(v);
+    return std::make_shared<_BVHNode>(v);
 }
