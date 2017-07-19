@@ -32,6 +32,7 @@ struct Vector3 {
     T x, y, z;
 };
 typedef Vector3<float> v3f;
+typedef Vector3<double> v3d;
 
 template <typename T>
 Vector3<T> Vector3<T>::normalized() const
