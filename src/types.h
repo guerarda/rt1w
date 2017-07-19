@@ -29,7 +29,7 @@ typedef struct rect {
 } rect_t;
 
 typedef enum {
-    TYPE_VOID,
+    TYPE_VOID = 0x0,
     TYPE_INT8,
     TYPE_INT16,
     TYPE_INT32,
@@ -38,9 +38,10 @@ typedef enum {
     TYPE_UINT16,
     TYPE_UINT32,
     TYPE_UINT64,
-    TYPE_FLOAT16,
     TYPE_FLOAT32,
     TYPE_FLOAT64,
+    TYPE_STRING,
+    TYPE_OBJECT
 } buffer_type_t;
 
 typedef enum {
@@ -96,7 +97,6 @@ inline size_t buffer_type_sizeof(buffer_type_t t)
 
     case TYPE_INT16:
     case TYPE_UINT16:
-    case TYPE_FLOAT16:
         return 16;
 
     case TYPE_INT32:

@@ -58,6 +58,7 @@ SET(RT1W_SOURCES
   src/sync.c
   src/texture.cpp
   src/wqueue.cpp
+  src/value.cpp
 )
 
 FIND_PACKAGE(PNG REQUIRED)
