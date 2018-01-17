@@ -57,6 +57,7 @@ SET(RT1W_SOURCES
   src/params.cpp
   src/primitive.cpp
   src/ray.cpp
+  src/scene.cpp
   src/shape.cpp
   src/sphere.cpp
   src/sync.c
