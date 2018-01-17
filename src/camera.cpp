@@ -3,6 +3,9 @@
 #include <random>
 
 #include "ray.hpp"
+#include "params.hpp"
+#include "value.hpp"
+
 static v3f random_in_unit_disk()
 {
     static std::random_device rd;
@@ -88,4 +91,44 @@ sptr<Camera> Camera::create(const v3f &eye,
 {
     return std::make_shared<_Camera>(eye, lookat, up, res,
                                      fov, aperture, focus_dist);
+}
+
+sptr<Camera> Camera::create(const sptr<Params> &p)
+{
+    sptr<Value> pos = p->value("position");
+    if (!pos) {
+        // LOG
+    }
+    sptr<Value> lookat = p->value("lookat");
+    if (!lookat) {
+        // LOG
+    }
+    sptr<Value> up = p->value("up");
+    if (!up) {
+        // LOG
+    }
+    sptr<Value> res = p->value("resolution");
+    if (!res) {
+        // LOG
+    }
+    sptr<Value> fov = p->value("fov");
+    if (!fov) {
+        // LOG
+    }
+    sptr<Value> aperture = p->value("aperture");
+    if (!aperture) {
+        //LOG
+    }
+    sptr<Value> fdist = p->value("focusdistance");
+    if (!fdist) {
+        // LOG
+    }
+
+    return Camera::create(pos->vector3f(),
+                          lookat->vector3f(),
+                          up->vector3f(),
+                          res->vector2u(),
+                          fov->f32(),
+                          aperture->f32(),
+                          fdist->f32());
 }

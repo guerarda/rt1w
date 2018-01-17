@@ -1,5 +1,7 @@
 #include "sphere.hpp"
+#include "params.hpp"
 #include "primitive.hpp"
+#include "value.hpp"
 #include <assert.h>
 #include <math.h>
 
@@ -71,4 +73,16 @@ bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
 sptr<Sphere> Sphere::create(const v3f &c, float r)
 {
     return std::make_shared<_Sphere>(c, r);
+}
+
+sptr<Sphere> Sphere::create(const sptr<Params> &p)
+{
+    sptr<Value> org = p->value("center");
+    sptr<Value> rad = p->value("radius");
+
+    if (org && rad) {
+        return Sphere::create(org->vector3f(), rad->f32());
+    }
+    // LOG
+    return nullptr;
 }

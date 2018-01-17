@@ -5,8 +5,14 @@
 
 struct ray;
 struct hit_record;
+struct Params;
 
 struct Shape : Object {
-    virtual bool      hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
+    static sptr<Shape> create(const sptr<Params> &p);
+
+    virtual bool      hit(const sptr<ray> &r,
+                          float min,
+                          float max,
+                          hit_record &rec) const = 0;
     virtual bounds3f  bounds() const = 0;
  };

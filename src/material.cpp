@@ -1,6 +1,11 @@
 #include "material.hpp"
 #include <random>
 #include <math.h>
+#include <assert.h>
+
+#include "params.hpp"
+#include "value.hpp"
+
 
 static std::random_device rd;
 static std::mt19937 __prng(rd());
@@ -157,12 +162,63 @@ sptr<Lambertian> Lambertian::create(const sptr<Texture> &tex)
     return std::make_shared<_Lambertian>(tex);
 }
 
+sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
+{
+    if (sptr<Texture> tex = p->texture("texture")) {
+        return Lambertian::create(tex);
+    }
+    // LOG
+    return nullptr;
+}
+
 sptr<Metal> Metal::create(const sptr<Texture> &tex, float f)
 {
     return std::make_shared<_Metal>(tex, f);
 }
 
+sptr<Metal> Metal::create(const sptr<Params> &p)
+{
+    sptr<Texture> tex = p->texture("texture");
+    sptr<Value> fuzz = p->value("fuzz");
+
+    if (tex && fuzz) {
+        return Metal::create(tex, fuzz->f32());
+    }
+    //LOG
+    return nullptr;
+}
+
 sptr<Dielectric> Dielectric::create(float ri)
 {
     return std::make_shared<_Dielectric>(ri);
+}
+
+sptr<Dielectric> Dielectric::create(const sptr<Params> &p)
+{
+    sptr<Value> ri = p->value("refraction");
+    if (ri) {
+        return Dielectric::create(ri->f32());
+    }
+    // LOG
+
+    return nullptr;
+}
+
+sptr<Material> Material::create(const sptr<Params> &p)
+{
+    std::string type = p->string("type");
+    assert(!type.empty());
+
+    if (type == "dielectric") {
+        return Dielectric::create(p);
+    }
+    else if (type == "lambertian") {
+        return Lambertian::create(p);
+    }
+    else if (type == "metal") {
+        return Metal::create(p);
+    }
+    // LOG
+
+    return nullptr;
 }

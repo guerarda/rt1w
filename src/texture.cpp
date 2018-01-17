@@ -1,6 +1,8 @@
 #include "texture.hpp"
 #include <assert.h>
 #include <math.h>
+#include "value.hpp"
+#include "params.hpp"
 
 struct _Texture_const : Texture {
     _Texture_const(const v3f &c) : m_color(c) { };
@@ -89,4 +91,30 @@ sptr<Texture> Texture::create_checker(const sptr<Texture> &a, const sptr<Texture
 sptr<Texture> Texture::create_image(buffer_t *b, const rect &r)
 {
     return std::make_shared<_Texture_img>(b, r);
+}
+
+sptr<Texture> Texture::create(const sptr<Params> &p)
+{
+    std::string type = p->string("type");
+    assert(!type.empty());
+
+    if (type == "color") {
+        if (sptr<Value> v = p->value("color")) {
+            return Texture::create_color(v->vector3f());
+        }
+        // LOG
+    }
+    else if (type == "checker") {
+        sptr<Texture> ta = p->texture("texa");
+        sptr<Texture> tb = p->texture("texb");
+
+        if (ta && tb) {
+            return Texture::create_checker(ta, tb);
+        }
+    }
+    else if (type == "image") {
+
+    }
+    // LOG
+    return nullptr;
 }
