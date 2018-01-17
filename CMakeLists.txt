@@ -52,6 +52,7 @@ SET(RT1W_SOURCES
   src/geometry.cpp
   src/imageio.c
   src/material.cpp
+  src/params.cpp
   src/primitive.cpp
   src/ray.cpp
   src/sphere.cpp
