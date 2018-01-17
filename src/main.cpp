@@ -16,6 +16,8 @@
 #include "bvh.hpp"
 #include "imageio.h"
 #include "sync.h"
+#include "params.hpp"
+#include "scene.hpp"
 
 #define MAX_RECURSION_DEPTH 50
 
@@ -192,7 +194,7 @@ __attribute__((noreturn)) static void usage(const char *msg = nullptr)
     if (msg) {
         fprintf(stderr, "rt1w: %s\n\n", msg);
     }
-    fprintf(stderr, R"(usage: rt1w [<options>] <outfile>
+    fprintf(stderr, R"(usage: rt1w [<options>] <scene file>
 --help               Print this help text.
 --quality=<num>      log2 of the number of ray traced for each pixel.
                      Set to zero by default, so only one ray per pixel.
@@ -209,7 +211,7 @@ enum {
 };
 
 struct options {
-    char     outfile[256];
+    char     file[256];
     uint32_t quality;
     uint32_t flags;
 };
@@ -269,10 +271,12 @@ int main(int argc, char *argv[])
             usage();
             return 0;
         } else {
-            strncpy(options.outfile, argv[i], 255);
+            strncpy(options.file, argv[i], 255);
         }
     }
-    v2u img_size = { 800, 400 };
+    sptr<Scene> scene = Scene::create_json(options.file);
+
+    v2u img_size = scene->camera()->resolution();
     uint32_t ns = 1 << options.quality;
     uint8_t *img = (uint8_t *)malloc(img_size.x * img_size.y * 3 * sizeof(*img));
     size_t bpr = img_size.x * 3 * sizeof(*img);
@@ -297,23 +301,8 @@ int main(int argc, char *argv[])
         }
     }
 
-    /* Camera */
-    v3f eye = { 13.0f, 2.0f, 3.0f };
-    v3f lookat = { 0.0f, 0.0f, 0.0f };
-    v3f up = { 0.0f, 1.0f, 0.0f };
-    float aperture = 0.1f;
-    float focus_dist = 10.0f;
-
-    sptr<Camera> camera = Camera::create(eye, lookat, up, img_size, 20.0f,
-                                         aperture, focus_dist);
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
-    sptr<Primitive> scene = random_scene();
-
     /* Actual rendering */
-    sptr<_ctx> ctx = _ctx::create(camera, scene, ns, img_size);
+    sptr<_ctx> ctx = _ctx::create(scene->camera(), scene->primitive(), ns, img_size);
     ctx->m_ntiles = tiles.size();
     ctx->m_event = Event::create((int32_t)tiles.size());
 
@@ -326,11 +315,15 @@ int main(int argc, char *argv[])
     }
     ctx->m_event->wait();
 
-    image_write_png(options.outfile,
-                   img_size.x,
-                   img_size.y,
-                   img,
-                   bpr);
+    std::string output = scene->options()->string("output");
+    if (!output.empty()) {
+        image_write_png(output.c_str(),
+                        img_size.x,
+                        img_size.y,
+                        img,
+                        bpr);
+    }
+
     free(img);
 
     return 0;
