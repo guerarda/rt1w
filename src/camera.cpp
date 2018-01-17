@@ -2,6 +2,7 @@
 #include <math.h>
 #include <random>
 
+#include "ray.hpp"
 static v3f random_in_unit_disk()
 {
     static std::random_device rd;
@@ -20,13 +21,15 @@ struct _Camera : Camera {
     _Camera(const v3f &eye,
             const v3f &lookat,
             const v3f &up,
-            float vfov,
-            float aspect,
+            v2u resolution,
+            float fov,
             float aperture,
             float focus_dist);
 
+    v2u       resolution() const { return m_resolution; }
     sptr<ray> make_ray(float u, float v) const;
 
+    v2u m_resolution;
     v3f m_bl;
     v3f m_h;
     v3f m_v;
@@ -37,16 +40,18 @@ struct _Camera : Camera {
 _Camera::_Camera(const v3f &eye,
                  const v3f &lookat,
                  const v3f &up,
-                 float vfov,
-                 float aspect,
+                 v2u res,
+                 float fov,
                  float aperture,
                  float focus_dist)
 {
     v3f u, v, w;
-    float theta = vfov * float(M_PI) / 180.0f;
+    float aspect = (float)res.x / res.y;
+    float theta = fov * float(M_PI) / 180.0f;
     float half_h = tanf(theta/ 2.0f);
     float half_w = aspect * half_h;
 
+    m_resolution = res;
     m_lens_radius = aperture;
     m_org = eye;
     w = (m_org - lookat).normalized();
@@ -76,11 +81,11 @@ sptr<ray> _Camera::make_ray(float u, float v) const
 sptr<Camera> Camera::create(const v3f &eye,
                             const v3f &lookat,
                             const v3f &up,
-                            float vfov,
-                            float aspect,
+                            v2u res,
+                            float fov,
                             float aperture,
                             float focus_dist)
 {
-    return std::make_shared<_Camera>(eye, lookat, up, vfov, aspect,
-                                     aperture, focus_dist);
+    return std::make_shared<_Camera>(eye, lookat, up, res,
+                                     fov, aperture, focus_dist);
 }

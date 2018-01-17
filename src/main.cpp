@@ -301,11 +301,10 @@ int main(int argc, char *argv[])
     v3f eye = { 13.0f, 2.0f, 3.0f };
     v3f lookat = { 0.0f, 0.0f, 0.0f };
     v3f up = { 0.0f, 1.0f, 0.0f };
-    float aspect = (float)img_size.x / (float)img_size.y;
     float aperture = 0.1f;
     float focus_dist = 10.0f;
 
-    sptr<Camera> camera = Camera::create(eye, lookat, up, 20.0f, aspect,
+    sptr<Camera> camera = Camera::create(eye, lookat, up, img_size, 20.0f,
                                          aperture, focus_dist);
     std::random_device rd;
     std::mt19937 mt(rd());
