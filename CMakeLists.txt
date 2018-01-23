@@ -51,6 +51,7 @@ SET(RT1W_SOURCES
   src/bvh.cpp
   src/camera.cpp
   src/event.cpp
+  src/error.cpp
   src/geometry.cpp
   src/imageio.c
   src/material.cpp

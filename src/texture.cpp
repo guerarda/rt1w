@@ -3,6 +3,7 @@
 #include <math.h>
 #include "value.hpp"
 #include "params.hpp"
+#include "error.h"
 
 struct _Texture_const : Texture {
     _Texture_const(const v3f &c) : m_color(c) { };
@@ -83,7 +84,8 @@ sptr<Texture> Texture::create_color(const v3f &c)
     return std::make_shared<_Texture_const>(c);
 }
 
-sptr<Texture> Texture::create_checker(const sptr<Texture> &a, const sptr<Texture> &b)
+sptr<Texture> Texture::create_checker(const sptr<Texture> &a,
+                                      const sptr<Texture> &b)
 {
     return std::make_shared<_Texture_checker>(a, b);
 }
@@ -96,25 +98,30 @@ sptr<Texture> Texture::create_image(buffer_t *b, const rect &r)
 sptr<Texture> Texture::create(const sptr<Params> &p)
 {
     std::string type = p->string("type");
-    assert(!type.empty());
+    WARNING_IF(type.empty(), "Texture parameter \"type\" not specified");
 
     if (type == "color") {
         if (sptr<Value> v = p->value("color")) {
             return Texture::create_color(v->vector3f());
         }
-        // LOG
+        warning("Texture parameter \"color\" not specified");
     }
     else if (type == "checker") {
-        sptr<Texture> ta = p->texture("texa");
-        sptr<Texture> tb = p->texture("texb");
+        sptr<Texture> even = p->texture("even");
+        sptr<Texture> odd = p->texture("odd");
 
-        if (ta && tb) {
-            return Texture::create_checker(ta, tb);
+        if (even && odd) {
+            return Texture::create_checker(even, odd);
         }
+        WARNING_IF(!even, "Texture parameter \"even\" not specified");
+        WARNING_IF(!odd, "Texture parameter \"odd\" not specified");
     }
     else if (type == "image") {
 
     }
-    // LOG
+    else {
+        warning("Texture parameter \"type\" not recognized");
+    }
+
     return nullptr;
 }

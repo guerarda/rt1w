@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <vector>
 
+#include "error.h"
+
 #pragma mark - Primitive
 
 struct _Primitive : Primitive {
@@ -34,13 +36,23 @@ bounds3f _Primitive::bounds() const
 
 struct _Primitive_list : Primitive {
 
-    _Primitive_list(const std::vector<sptr<Primitive>> &v) : m_primitives(v) { }
+    _Primitive_list(const std::vector<sptr<Primitive>> &v);
 
     bool hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    bounds3f bounds() const;
+    bounds3f bounds() const { return m_bounds; }
 
     std::vector<sptr<Primitive>> m_primitives;
+    bounds3f m_bounds;
 };
+
+_Primitive_list::_Primitive_list(const std::vector<sptr<Primitive>> &v)
+{
+    m_primitives = v;
+    for (auto &p : m_primitives) {
+        ASSERT(p);
+        m_bounds = Union(m_bounds, p->bounds());
+    }
+}
 
 bool _Primitive_list::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
 {
@@ -58,20 +70,17 @@ bool _Primitive_list::hit(const sptr<ray> &r, float min, float max, hit_record &
     return hit;
 }
 
-bounds3f _Primitive_list::bounds() const
-{
-    bounds3f rbox = bounds3f();
-    for (size_t i = 0; i < m_primitives.size(); i++) {
-        rbox = Union(rbox, m_primitives[i]->bounds());
-    }
-    return rbox;
-}
-
 #pragma mark - Static constructors
 
 sptr<Primitive> Primitive::create(const sptr<Shape> &s, const sptr<Material> &m)
 {
-    return std::make_shared<_Primitive>(s, m);
+    if (s && m) {
+        return std::make_shared<_Primitive>(s, m);
+    }
+    WARNING_IF(!s, "Primitive has no shape");
+    WARNING_IF(!m, "Primitive has no material");
+
+    return nullptr;
 }
 
 sptr<Primitive> Primitive::create(const std::vector<sptr<Primitive>> &v)

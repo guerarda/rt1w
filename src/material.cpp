@@ -5,7 +5,7 @@
 
 #include "params.hpp"
 #include "value.hpp"
-
+#include "error.h"
 
 static std::random_device rd;
 static std::mt19937 __prng(rd());
@@ -167,7 +167,7 @@ sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
     if (sptr<Texture> tex = p->texture("texture")) {
         return Lambertian::create(tex);
     }
-    // LOG
+    warning("Lambertian parameter \"texture\" not specified");
     return nullptr;
 }
 
@@ -184,7 +184,9 @@ sptr<Metal> Metal::create(const sptr<Params> &p)
     if (tex && fuzz) {
         return Metal::create(tex, fuzz->f32());
     }
-    //LOG
+    WARNING_IF(!tex, "Metal parameter \"texture\" not specified");
+    WARNING_IF(!fuzz, "Metal parameter \"fuzz\" not specified");
+
     return nullptr;
 }
 
@@ -199,7 +201,7 @@ sptr<Dielectric> Dielectric::create(const sptr<Params> &p)
     if (ri) {
         return Dielectric::create(ri->f32());
     }
-    // LOG
+    warning("Dielectric parameter \"refraction\" not specified");
 
     return nullptr;
 }
@@ -207,7 +209,7 @@ sptr<Dielectric> Dielectric::create(const sptr<Params> &p)
 sptr<Material> Material::create(const sptr<Params> &p)
 {
     std::string type = p->string("type");
-    assert(!type.empty());
+    WARNING_IF(type.empty(), "Material parameter \"type\" not specified");
 
     if (type == "dielectric") {
         return Dielectric::create(p);
@@ -218,7 +220,7 @@ sptr<Material> Material::create(const sptr<Params> &p)
     else if (type == "metal") {
         return Metal::create(p);
     }
-    // LOG
+    warning("Material parameter \"type\" not recognized");
 
     return nullptr;
 }

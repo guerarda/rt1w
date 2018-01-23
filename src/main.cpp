@@ -6,6 +6,7 @@
 #include <float.h>
 #include <string>
 
+#include "error.h"
 #include "geometry.hpp"
 #include "ray.hpp"
 #include "sphere.hpp"
@@ -276,6 +277,8 @@ int main(int argc, char *argv[])
     }
     sptr<Scene> scene = Scene::create_json(options.file);
 
+    DIE_IF(!scene, "No scene to render");
+
     v2u img_size = scene->camera()->resolution();
     uint32_t ns = 1 << options.quality;
     uint8_t *img = (uint8_t *)malloc(img_size.x * img_size.y * 3 * sizeof(*img));
@@ -302,11 +305,14 @@ int main(int argc, char *argv[])
     }
 
     /* Actual rendering */
-    sptr<_ctx> ctx = _ctx::create(scene->camera(), scene->primitive(), ns, img_size);
+    sptr<_ctx> ctx = _ctx::create(scene->camera(),
+                                  scene->primitive(),
+                                  ns,
+                                  img_size);
     ctx->m_ntiles = tiles.size();
     ctx->m_event = Event::create((int32_t)tiles.size());
 
-    if (!options.flags & OPTION_QUIET) {
+    if (!(options.flags & OPTION_QUIET)) {
         progress(ctx, std::shared_ptr<Object>());
     }
     for (sptr<_tile> t : tiles) {

@@ -15,9 +15,13 @@ struct hit_record {
 };
 
 struct Primitive : Object {
-    static sptr<Primitive> create(const sptr<Shape> &s, const sptr<Material> &m);
+    static sptr<Primitive> create(const sptr<Shape> &s,
+                                  const sptr<Material> &m);
     static sptr<Primitive> create(const std::vector<sptr<Primitive>> &v);
 
-    virtual bool      hit(const sptr<ray> &r, float min, float max, hit_record &rec) const = 0;
+    virtual bool      hit(const sptr<ray> &r,
+                          float min,
+                          float max,
+                          hit_record &rec) const = 0;
     virtual bounds3f  bounds() const = 0;
  };

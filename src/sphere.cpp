@@ -2,6 +2,8 @@
 #include "params.hpp"
 #include "primitive.hpp"
 #include "value.hpp"
+#include "error.h"
+
 #include <assert.h>
 #include <math.h>
 
@@ -83,6 +85,8 @@ sptr<Sphere> Sphere::create(const sptr<Params> &p)
     if (org && rad) {
         return Sphere::create(org->vector3f(), rad->f32());
     }
-    // LOG
+    WARNING_IF(!org, "Sphere parameter \"center\" not specified");
+    WARNING_IF(!rad, "Sphere parameter \"radius\" not specified");
+
     return nullptr;
 }

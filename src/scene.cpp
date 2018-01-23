@@ -6,6 +6,7 @@
 #include <map>
 #include <vector>
 
+#include "error.h"
 #include "primitive.hpp"
 #include "camera.hpp"
 #include "params.hpp"
@@ -24,7 +25,7 @@ struct _Scene : Scene {
     sptr<Camera>       camera() const    { return m_camera; }
     sptr<const Params> options() const   { return m_options; }
 
-    void init_with_json(const std::string &path);
+    int32_t init_with_json(const std::string &path);
 
     sptr<Primitive> m_primitive;
     sptr<Camera>    m_camera;
@@ -85,7 +86,8 @@ static sptr<Params> read_params(const rapidjson::Value &v)
 }
 
 static sptr<Texture> read_texture(const rapidjson::Value &v,
-                                  std::map<const std::string, const sptr<Texture>> &textures)
+                                  std::map<const std::string,
+                                  const sptr<Texture>> &textures)
 {
     sptr<Params> p = read_params(v);
     p->merge(textures);
@@ -93,7 +95,8 @@ static sptr<Texture> read_texture(const rapidjson::Value &v,
 }
 
 static sptr<Material> read_material(const rapidjson::Value &v,
-                                    std::map<const std::string, const sptr<Texture>> &textures)
+                                    std::map<const std::string,
+                                    const sptr<Texture>> &textures)
 {
     sptr<Params> p = read_params(v);
     p->merge(textures);
@@ -110,7 +113,7 @@ static sptr<Camera> read_camera(const rapidjson::Value &v)
     return Camera::create(read_params(v));
 }
 
-void _Scene::init_with_json(const std::string &path)
+int32_t _Scene::init_with_json(const std::string &path)
 {
     FILE *fp = fopen(path.c_str(), "r");
     char readBuffer[65536];
@@ -121,13 +124,12 @@ void _Scene::init_with_json(const std::string &path)
 
     /* Check that the file was parsed without error */
     if (!ok) {
-        // LOG
-        fprintf(stderr,
-                "JSON parse error: %s (%lu)\n",
-                GetParseError_En(ok.Code()), ok.Offset());
-        return;
+        error("JSON parse error: %s (%lu)\n",
+              GetParseError_En(ok.Code()), ok.Offset());
+        return -1;
     }
 
+    int32_t err = 0;
     rapidjson::Value::ConstMemberIterator it;
 
     /* Scene */
@@ -137,10 +139,10 @@ void _Scene::init_with_json(const std::string &path)
             // Check object
             std::string k = v.GetObject()["name"].GetString();
             sptr<Texture> tex = read_texture(v, m_textures);
+
+            WARNING_IF(!tex, "Couldn't create texture \"%s\"", k.c_str());
             m_textures.insert(std::make_pair(k, tex));
         }
-    } else {
-        // LOG
     }
 
     it = d.FindMember("materials");
@@ -148,12 +150,11 @@ void _Scene::init_with_json(const std::string &path)
         for (auto &v : it->value.GetArray()) {
             // Check object
             std::string k = v.GetObject()["name"].GetString();
-
             sptr<Material> mat = read_material(v, m_textures);
+
+            WARNING_IF(!mat, "Couldn't create material \"%s\"", k.c_str());
             m_materials.insert(std::make_pair(k, mat));
         }
-    } else {
-        // LOG
     }
 
     it = d.FindMember("shapes");
@@ -162,10 +163,10 @@ void _Scene::init_with_json(const std::string &path)
             // Check object
             std::string k = v.GetObject()["name"].GetString();
             sptr<Shape> shape = read_shape(v);
+
+            WARNING_IF(!shape, "Couldn't create shape \"%s\"", k.c_str());
             m_shapes.insert(std::make_pair(k, shape));
         }
-    } else {
-        // LOG
     }
 
     it = d.FindMember("primitives");
@@ -176,13 +177,18 @@ void _Scene::init_with_json(const std::string &path)
             std::string shape = v.GetObject()["shape"].GetString();
             std::string mat = v.GetObject()["material"].GetString();
 
-            cmds.emplace_back(Primitive::create(m_shapes[shape],
-                                                m_materials[mat]));
+            sptr<Primitive> prm = Primitive::create(m_shapes[shape],
+                                                    m_materials[mat]);
+            if (prm) {
+                cmds.push_back(prm);
+            } else {
+                error("Couldn't create primitive");
+            }
         }
         m_primitive = Primitive::create(cmds);
     } else {
-        // LOG ERROR
-        // FAIL
+        error("Couldn't find a primitive in %s", path.c_str());
+        err = -1;
     }
 
     /* Camera */
@@ -190,8 +196,8 @@ void _Scene::init_with_json(const std::string &path)
     if (it != d.MemberEnd()) {
         m_camera = read_camera(it->value);
     } else {
-        // LOG ERROR
-        // FAIL
+        error("Missing \"camera\" in %s", path.c_str());
+        err = -1;
     }
 
     /* Rendering options */
@@ -199,12 +205,19 @@ void _Scene::init_with_json(const std::string &path)
     if (it != d.MemberEnd()) {
         m_options = read_params(it->value);
     }
+    return err;
 }
 
 sptr<Scene> Scene::create_json(const std::string &path)
 {
     sptr<_Scene> scene = std::make_shared<_Scene>();
-    scene->init_with_json(path);
+    int32_t err = scene->init_with_json(path);
 
-    return scene;
+    if (!err) {
+        return scene;
+    }
+
+    error("Couldn't extract a valid scene from %s", path.c_str());
+
+    return nullptr;
 }
