@@ -1,22 +1,21 @@
-#ifndef WQUEUE_H
-#define WQUEUE_H
+#pragma once
 
 #include "types.h"
 #include "sptr.hpp"
 
-struct wqueue;
+struct workq;
 struct Event;
 
-typedef void (*wqueue_func)(const sptr<Object> &, const sptr<Object> &);
+typedef void (*workq_func)(const sptr<Object> &, const sptr<Object> &);
 
 /*!
  * @brief Returns an unspecified work queue.
  */
-struct wqueue *wqueue_get_queue();
+struct workq *workq_get_queue();
 
 /*!
  * @brief Request the function func to be called on the specified
- * work queue. If wqueue is NULL then the function will be called
+ * work queue. If workq is NULL then the function will be called
  * immediately on the current thread. Both obj & arg are retained
  * until the command is executed.
  * @param wqeue The work queue on which the function will be executed.
@@ -25,8 +24,7 @@ struct wqueue *wqueue_get_queue();
  * @param arg The second argument to func.
  * @returns An event that signals when the func has been executed.
  */
-sptr<Event> wqueue_execute(struct wqueue *wqueue,
-                           wqueue_func func,
-                           const sptr<Object> &obj,
-                           const sptr<Object> &arg);
-#endif
+sptr<Event> workq_execute(struct workq *workq,
+                          workq_func func,
+                          const sptr<Object> &obj,
+                          const sptr<Object> &arg);

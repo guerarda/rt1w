@@ -1,6 +1,7 @@
 #include "event.hpp"
 #include "sync.h"
-#include "wqueue.hpp"
+#include "workq.hpp"
+
 #include <mutex>
 #include <assert.h>
 
@@ -24,31 +25,31 @@ static uptr<_lock> create_lock(std::mutex *mutex)
 
 struct _notif {
 
-    _notif(wqueue *q,
-           wqueue_func f,
+    _notif(workq *q,
+           workq_func f,
            const sptr<Object> &obj,
            const sptr<Object> &arg);
     ~_notif();
 
-    wqueue       *m_queue;
-    wqueue_func   m_func;
-    sptr<Object>  m_obj;
-    sptr<Object>  m_arg;
-    uptr<_notif>  m_next;
+    workq       *m_queue;
+    workq_func   m_func;
+    sptr<Object> m_obj;
+    sptr<Object> m_arg;
+    uptr<_notif> m_next;
 };
 
-static uptr<_notif> create_notif(wqueue *wqueue,
-                                               wqueue_func func,
-                                               const sptr<Object> &obj,
-                                               const sptr<Object> &arg)
+static uptr<_notif> create_notif(workq *workq,
+                                 workq_func func,
+                                 const sptr<Object> &obj,
+                                 const sptr<Object> &arg)
 {
-    return make_unique<_notif>(wqueue, func, obj, arg);
+    return make_unique<_notif>(workq, func, obj, arg);
 }
 
-_notif::_notif(wqueue *q,
-                  wqueue_func f,
-                  const sptr<Object> &obj,
-                  const sptr<Object> &arg)
+_notif::_notif(workq *q,
+               workq_func f,
+               const sptr<Object> &obj,
+               const sptr<Object> &arg)
 {
     m_queue = q;
     m_func = f;
@@ -61,7 +62,7 @@ _notif::~_notif()
 {
     if (m_func) {
         if (m_queue) {
-            wqueue_execute(m_queue, m_func, m_obj, m_arg);
+            workq_execute(m_queue, m_func, m_obj, m_arg);
         } else {
             m_func(m_obj, m_arg);
         }
@@ -73,8 +74,8 @@ struct _Event : Event {
     _Event(int32_t n);
     virtual ~_Event();
 
-    int32_t notify(wqueue *,
-                   wqueue_func,
+    int32_t notify(workq *,
+                   workq_func,
                    const sptr<Object> &,
                    const sptr<Object> &);
     int32_t signal();
@@ -101,15 +102,15 @@ _Event::~_Event()
     }
 }
 
-int32_t _Event::notify(wqueue *wqueue,
-                    wqueue_func func,
+int32_t _Event::notify(workq *workq,
+                    workq_func func,
                     const sptr<Object> &obj,
                     const sptr<Object> &arg)
 {
     if (m_token) {
         void *token = sync_lock_ptr(&m_token);
         if (token) {
-            uptr<_notif> notif = create_notif(wqueue, func, obj, arg);
+            uptr<_notif> notif = create_notif(workq, func, obj, arg);
 
             notif->m_next = std::move(m_notif);
             m_notif = std::move(notif);

@@ -12,7 +12,7 @@
 #include "sphere.hpp"
 #include "camera.hpp"
 #include "material.hpp"
-#include "wqueue.hpp"
+#include "workq.hpp"
 #include "event.hpp"
 #include "bvh.hpp"
 #include "imageio.h"
@@ -316,7 +316,7 @@ int main(int argc, char *argv[])
         progress(ctx, std::shared_ptr<Object>());
     }
     for (sptr<_tile> t : tiles) {
-        sptr<Event> e = wqueue_execute(wqueue_get_queue(), pixel_func, ctx, t);
+        sptr<Event> e = workq_execute(workq_get_queue(), pixel_func, ctx, t);
         e->notify(nullptr, progress, ctx, std::shared_ptr<Object>());
     }
     ctx->m_event->wait();

@@ -1,25 +1,27 @@
-#include "wqueue.hpp"
+#include "workq.hpp"
 #include "event.hpp"
 #include "sync.h"
+#include "error.h"
 
 #include <vector>
 #include <mutex>
 #include <thread>
 #include <condition_variable>
 
-static void work();
-
 struct _job {
-    sptr<Object>  m_obj;
-    sptr<Object>  m_arg;
-    wqueue_func   m_func;
-    sptr<Event>   m_event;
-    _job         *m_next;
+    sptr<Object> m_obj;
+    sptr<Object> m_arg;
+    workq_func   m_func;
+    sptr<Event>  m_event;
+    _job        *m_next;
 };
 
-struct wqueue {
+struct workq {
 
-    wqueue(uint32_t concurrency);
+    workq(uint32_t concurrency);
+
+    void init();
+    void work() NORETURN;
 
     void  enqueue(_job *);
     _job *dequeue();
@@ -32,18 +34,34 @@ struct wqueue {
     std::vector<std::thread> m_threads;
 };
 
-wqueue::wqueue(uint32_t concurrency)
+workq::workq(uint32_t concurrency)
 {
     m_concurrency = concurrency;
     m_head        = nullptr;
     m_queue       = nullptr;
+}
 
+void workq::init()
+{
     for (size_t i = 0; i < m_concurrency; i++) {
-        m_threads.emplace_back(std::thread(work));
+        m_threads.emplace_back(std::thread(&workq::work, this));
     }
 }
 
-void wqueue::enqueue(_job *job)
+void workq::work()
+{
+    while (1) {
+        _job *job = dequeue();
+        if (job->m_func) {
+            job->m_func(job->m_obj, job->m_arg);
+        }
+        job->m_event->signal();
+        delete job;
+    }
+}
+
+
+void workq::enqueue(_job *job)
 {
     _job *q = (_job *)sync_lock_ptr(&m_queue);
     job->m_next = q;
@@ -51,7 +69,7 @@ void wqueue::enqueue(_job *job)
     sync_unlock_ptr(&m_queue, job);
 }
 
-_job *wqueue::dequeue()
+_job *workq::dequeue()
 {
     _job *job = nullptr;
     do {
@@ -85,42 +103,32 @@ _job *wqueue::dequeue()
 
 #pragma mark - Static
 
-static wqueue *global_wqueue = new wqueue(std::thread::hardware_concurrency());
+static workq *global_workq = []() -> workq *{
+                                 workq *queue = new workq(std::thread::hardware_concurrency());
+                                 queue->init();
 
-__attribute__((noreturn)) static void work()
+                                 return queue;
+                             } ();
+
+workq *workq_get_queue()
 {
-    while (!global_wqueue) {
-        _mm_pause();
-    }
-    while (1) {
-        _job *job = global_wqueue->dequeue();
-        if (job->m_func) {
-            job->m_func(job->m_obj, job->m_arg);
-        }
-        job->m_event->signal();
-        delete job;
-    }
+    return global_workq;
 }
 
-wqueue *wqueue_get_queue()
-{
-    return global_wqueue;
-}
-
-sptr<Event> wqueue_execute(wqueue *wqueue,
-                    wqueue_func func,
-                    const sptr<Object> &obj,
-                    const sptr<Object> &arg)
+sptr<Event> workq_execute(workq *workq,
+                          workq_func func,
+                          const sptr<Object> &obj,
+                          const sptr<Object> &arg)
 {
     sptr<Event> event;
-    if (wqueue) {
+    if (workq) {
         _job *job = new _job;
         event = Event::create(1);
         job->m_arg = arg;
         job->m_obj = obj;
         job->m_func = func;
         job->m_event = event;
-        wqueue->enqueue(job);
+        workq->enqueue(job);
     } else if (func) {
         func(obj, arg);
         event = Event::create(0);
