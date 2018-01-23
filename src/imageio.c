@@ -151,13 +151,14 @@ int32_t image_read_png(const char *filename, struct buffer *buf)
 
     /* Alloc buffers */
     size_t bpr = png_get_rowbytes(png_ptr, info_ptr);
-    uint8_t *ptr = (uint8_t *)malloc(height * bpr);
-    png_bytep *row_ptr = (png_bytep *)malloc(height * sizeof(png_bytep));
 
+    uint8_t *ptr = (uint8_t *)malloc(height * bpr);
     if (!ptr) {
         err = 1;
         goto clean;
     }
+
+    png_bytep *row_ptr = (png_bytep *)malloc(height * sizeof(png_bytep));
     if (!row_ptr) {
         err = 1;
         free(ptr);
