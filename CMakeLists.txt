@@ -24,7 +24,6 @@ SET(NO_WARNING_FLAGS
   ""
   "c++98-compat"
   "old-style-cast"
-  "padded"
   "pragma-once-outside-header"
   "weak-vtables"
 )
