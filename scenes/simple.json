@@ -1,0 +1,111 @@
+{
+    "textures": [
+        {
+            "name": "foo",
+            "type": "color",
+            "color": [
+                1.0,
+                0.0,
+                0.0
+            ]
+        },
+        {
+            "name": "checka",
+            "type": "color",
+            "color": [
+                0.2,
+                0.3,
+                0.2
+            ]
+        },
+        {
+            "name": "checkb",
+            "type": "color",
+            "color": [
+                0.9,
+                0.8,
+                0.9
+            ]
+        },
+        {
+            "name": "groundtex",
+            "type": "checker",
+            "odd": "checka",
+            "even": "checkb"
+        }
+    ],
+    "materials": [
+        {
+            "name": "bar",
+            "type": "lambertian",
+            "texture": "foo"
+        },
+        {
+            "name": "ground",
+            "type": "lambertian",
+            "texture": "groundtex"
+        }
+    ],
+    "shapes" : [
+        {
+            "name": "ball",
+            "type": "sphere",
+            "center": [
+                0.0,
+                3.0,
+                0.0
+            ],
+            "radius": 3.0
+        },
+        {
+            "name": "earth",
+            "type": "sphere",
+            "center": [
+                0.0,
+                -1000,
+                0.0
+            ],
+            "radius": 1000
+
+        }
+    ],
+    "primitives" : [
+
+        {
+            "shape": "earth",
+            "material": "ground"
+        },
+        {
+            "shape": "ball",
+            "material": "bar"
+        }
+
+    ],
+    "camera": {
+        "position" : [
+            13.0,
+            2.0,
+            3.0
+        ],
+        "lookat": [
+            0.0,
+            0.0,
+            0.0
+        ],
+        "up": [
+            0.0,
+            1.0,
+            0.0
+        ],
+        "resolution": [
+            1920,
+            1080
+        ],
+        "fov": 20.0,
+        "aperture": 0.1,
+        "focusdistance": 10.0
+    },
+    "options": {
+        "output": "test.png"
+    }
+}

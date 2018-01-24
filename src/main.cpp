@@ -40,77 +40,6 @@ static v3f color(const sptr<ray> &r, const sptr<Primitive> &world, size_t depth)
     return v3f();
 }
 
-static sptr<Primitive> random_scene()
-{
-    std::random_device rd;
-    std::mt19937 mt(rd());
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-
-    std::vector<sptr<Primitive>> v;
-    sptr<Shape> shape;
-    sptr<Material> mat;
-
-    sptr<Texture> tex = Texture::create_checker(Texture::create_color({ 0.2f, 0.3f, 0.2f }),
-                                                Texture::create_color({ 0.9f, 0.9f, 0.9f }));
-
-
-    shape = Sphere::create({ 0.0f, -1000.0f, 0.0f }, 1000.0f);
-    mat = Lambertian::create(tex);
-    v.push_back(Primitive::create(shape, mat));
-
-    for (int a = -11; a < 11; a++) {
-        for (int b = -11; b < 11; b++) {
-            float choose_mat = dist(mt);
-            v3f center = {
-                (float)a + 0.9f * dist(mt),
-                0.2f,
-                (float)b + 0.9f * dist(mt)
-            };
-            shape = Sphere::create(center, 0.2f);
-            if ((center - v3f{ 4.0f, 0.2f, 0.0f }).length() > 0.9f) {
-                if (choose_mat < 0.8f) {  // diffuse
-                    v3f albedo = {
-                        dist(mt) * dist(mt),
-                        dist(mt) * dist(mt),
-                        dist(mt) * dist(mt)
-                    };
-                    tex = Texture::create_color(albedo);
-                    mat = Lambertian::create(tex);
-
-                    v.push_back(Primitive::create(shape, mat));
-                }
-                else if (choose_mat < 0.95f) { // metal
-                    v3f albedo = {
-                        0.5f * (1 + dist(mt)),
-                        0.5f * (1 + dist(mt)),
-                        0.5f * (1 + dist(mt))
-                    };
-                    tex = Texture::create_color(albedo);
-                    mat = Metal::create(tex, 0.5f * dist(mt));
-                    v.push_back(Primitive::create(shape, mat));
-                }
-                else {  // glass
-                    mat = Dielectric::create(1.5f);
-                    v.push_back(Primitive::create(shape, mat));
-                }
-            }
-        }
-    }
-    shape = Sphere::create({ 0.0f, 1.0f, 0.0 }, 1.0f);
-    mat = Dielectric::create(1.5f);
-    v.push_back(Primitive::create(shape, mat));
-
-    shape = Sphere::create({ -4.0f, 1.0f, 0.0f }, 1.0f);
-    mat = Lambertian::create(Texture::create_color({ 0.4f, 0.2f, 0.1f }));
-    v.push_back(Primitive::create(shape, mat));
-
-    shape = Sphere::create({ 4.0f, 1.0f, 0.0f }, 1.0f);
-    mat = Metal::create(Texture::create_color({ 0.7f, 0.6f, 0.5f }), 0.0f);
-    v.push_back(Primitive::create(shape, mat));
-
-    return BVHNode::create(v);
-}
-
 struct _tile : Object {
     static sptr<_tile> create(rect_t r, uint8_t *dp, size_t bpr) {
         return std::make_shared<_tile>(r, dp, bpr);
@@ -330,7 +259,6 @@ int main(int argc, char *argv[])
                         img,
                         bpr);
     }
-
     free(img);
 
     return 0;
