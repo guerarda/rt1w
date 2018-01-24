@@ -3,6 +3,7 @@
 #include <math.h>
 #include <assert.h>
 
+#include "light.hpp"
 #include "params.hpp"
 #include "value.hpp"
 #include "error.h"
@@ -56,6 +57,7 @@ struct _Lambertian : Lambertian {
                  const hit_record &rec,
                  v3f &attenuation,
                  sptr<ray> &scattered) const;
+    v3f emitted(float, float, v3f) const { return v3f(); }
 
     sptr<Texture>  m_albedo;
 };
@@ -81,6 +83,8 @@ struct _Metal : Metal {
                  const hit_record &rec,
                  v3f &attenuation,
                  sptr<ray> &scattered) const;
+
+    v3f emitted(float, float, v3f) const { return v3f(); }
 
     sptr<Texture> m_albedo;
     float         m_fuzz;
@@ -114,6 +118,8 @@ struct _Dielectric : Dielectric {
                  const hit_record &rec,
                  v3f &attenuation,
                  sptr<ray> &scattered) const;
+
+    v3f emitted(float, float, v3f) const { return v3f(); }
 
     float m_ref_idx;
 };
@@ -219,6 +225,9 @@ sptr<Material> Material::create(const sptr<Params> &p)
     }
     else if (type == "metal") {
         return Metal::create(p);
+    }
+    else if (type == "diffuse_light") {
+        return DiffuseLight::create(p);
     }
     warning("Material parameter \"type\" not recognized");
 

@@ -28,21 +28,16 @@ static v3f color(const sptr<ray> &r, const sptr<Primitive> &world, size_t depth)
 
     if (world->hit(r, 0.001f, FLT_MAX, rec)) {
         v3f attenuation;
+        v3f emitted = rec.mat->emitted(rec.uv.x, rec.uv.y, rec.p);
         sptr<ray> scattered;
 
-        if (depth < MAX_RECURSION_DEPTH
+        if (   depth < MAX_RECURSION_DEPTH
             && rec.mat->scatter(r, rec, attenuation, scattered)) {
-            return attenuation * color(scattered, world, depth + 1);
+            return emitted + attenuation * color(scattered, world, depth + 1);
         }
-        return { 0.0f, 0.0f, 0.0f };
-    } else {
-        v3f udir = r->direction().normalized();
-        v3f white = { 1.0f, 1.0f, 1.0f };
-        v3f blue = { 0.5f, 0.7f, 1.0f };
-
-        float t = 0.5f * (udir.y + 1.0f);
-        return Lerp(t, white, blue);
+        return emitted;
     }
+    return v3f();
 }
 
 static sptr<Primitive> random_scene()
