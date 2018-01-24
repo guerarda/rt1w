@@ -303,10 +303,12 @@ int main(int argc, char *argv[])
             tiles.push_back(tile);
         }
     }
+    /* Create BVH */
+    sptr<Primitive> bvh = BVHNode::create(scene->primitives());
 
     /* Actual rendering */
     sptr<_ctx> ctx = _ctx::create(scene->camera(),
-                                  scene->primitive(),
+                                  bvh,
                                   ns,
                                   img_size);
     ctx->m_ntiles = tiles.size();

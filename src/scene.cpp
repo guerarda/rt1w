@@ -21,15 +21,15 @@
 
 struct _Scene : Scene {
 
-    sptr<Primitive>    primitive() const { return m_primitive; }
-    sptr<Camera>       camera() const    { return m_camera; }
-    sptr<const Params> options() const   { return m_options; }
+    std::vector<sptr<Primitive>> primitives() const { return m_primitives; }
+    sptr<Camera>                 camera() const     { return m_camera; }
+    sptr<const Params>           options() const    { return m_options; }
 
     int32_t init_with_json(const std::string &path);
 
-    sptr<Primitive> m_primitive;
-    sptr<Camera>    m_camera;
-    sptr<Params>    m_options;
+    std::vector<sptr<Primitive>> m_primitives;
+    sptr<Camera>                 m_camera;
+    sptr<Params>                 m_options;
 
     std::map<const std::string, const sptr<Texture>>  m_textures;
     std::map<const std::string, const sptr<Material>> m_materials;
@@ -171,7 +171,6 @@ int32_t _Scene::init_with_json(const std::string &path)
 
     it = d.FindMember("primitives");
     if (it != d.MemberEnd()) {
-        std::vector<sptr<Primitive>> cmds;
         for (auto &v : it->value.GetArray()) {
             // Check object
             std::string shape = v.GetObject()["shape"].GetString();
@@ -180,12 +179,11 @@ int32_t _Scene::init_with_json(const std::string &path)
             sptr<Primitive> prm = Primitive::create(m_shapes[shape],
                                                     m_materials[mat]);
             if (prm) {
-                cmds.push_back(prm);
+                m_primitives.push_back(prm);
             } else {
                 error("Couldn't create primitive");
             }
         }
-        m_primitive = Primitive::create(cmds);
     } else {
         error("Couldn't find a primitive in %s", path.c_str());
         err = -1;
