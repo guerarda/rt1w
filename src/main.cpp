@@ -179,7 +179,11 @@ static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
             }
             c = 1.0f / ctx->m_ns * c;
             /* Approx Gamma correction */
-            c = { sqrtf(c.x), sqrtf(c.y), sqrtf(c.z) };
+            c = {
+                 fminf(1.0f, sqrtf(c.x)),
+                 fminf(1.0f, sqrtf(c.y)),
+                 fminf(1.0f, sqrtf(c.z))
+            };
 
             dp[0] = (uint8_t)(255.99 * c.x);
             dp[1] = (uint8_t)(255.99 * c.y);
