@@ -52,6 +52,7 @@ SET(RT1W_SOURCES
   src/event.cpp
   src/error.cpp
   src/geometry.cpp
+  src/image.cpp
   src/imageio.c
   src/light.cpp
   src/material.cpp

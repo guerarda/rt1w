@@ -33,6 +33,7 @@ struct Value : Object {
     static sptr<Value> f32(float v)    { return create<float>(&v, 1); }
     static sptr<Value> f64(double v)   { return create<double>(&v, 1); }
 
+    static sptr<Value> vector2i(v2i v) { return create<int32_t>(&v.x, 2); }
     static sptr<Value> vector2u(v2u v) { return create<uint32_t>(&v.x, 2); }
     static sptr<Value> vector3f(v3f v) { return create<float>(&v.x, 3); }
 
@@ -46,6 +47,7 @@ struct Value : Object {
     float    f32() const { return scalar<float>(this); }
     double   f64() const { return scalar<double>(this); }
 
+    v2i vector2i() const { return vector<int32_t, v2i>(this); }
     v2u vector2u() const { return vector<uint32_t, v2u>(this); }
     v3f vector3f() const { return vector<float, v3f>(this); }
     v3d vector3d() const { return vector<double, v3d>(this); }

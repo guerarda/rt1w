@@ -1,9 +1,9 @@
 #include "texture.hpp"
-#include <assert.h>
 #include <math.h>
 #include "value.hpp"
 #include "params.hpp"
 #include "error.h"
+#include "image.hpp"
 
 struct _Texture_const : Texture {
     _Texture_const(const v3f &c) : m_color(c) { };
@@ -32,42 +32,44 @@ v3f _Texture_checker::value(float u, float v, const v3f &p) const
 
 struct _Texture_img : Texture {
 
-    _Texture_img(buffer_t *buf, const rect_t &r);
-    ~_Texture_img();
+    _Texture_img(const sptr<Image> &img, rect_t r);
 
     v3f value(float, float, const v3f &) const;
 
-    buffer_t *m_buf;
-    rect_t    m_rect;
+    sptr<Image> m_img;
+    rect_t      m_rect;
 };
 
-_Texture_img::_Texture_img(buffer_t *buf, const rect_t &r)
+_Texture_img::_Texture_img(const sptr<Image> &img, rect_t r)
 {
-    assert(buf);
-    assert(buf->data);
-
-    m_buf = buf;
+    ASSERT(img);
+    m_img = img;
     m_rect = r;
-}
-
-_Texture_img::~_Texture_img()
-{
-    if (m_buf->data) {
-        free(m_buf->data);
-    }
 }
 
 v3f _Texture_img::value(float u, float v, const v3f &) const
 {
-    uint32_t x, y;
+    buffer_t buf = m_img->buffer();
 
     u = fminf(1.0f, fmaxf(0.0f, u));
     v = fminf(1.0f, fmaxf(0.0f, v));
-    x = (uint32_t)lrint(u * (float)(m_rect.size.x - 1));
-    y = (uint32_t)lrint((1.0f - v) * (float)(m_rect.size.y - 1));
 
-    size_t pix_size = m_buf->format.size;
-    uint8_t *sp = (uint8_t *)m_buf->data + y * m_buf->bpr + x * pix_size;
+    /* Convert (u, v) to (x, y) in m_rect */
+    int64_t x = lrint((double)u * (double)(m_rect.size.x - 1));
+    int64_t y = lrint((1.0 - (double)v) * (double)(m_rect.size.y - 1));
+
+    /* Convert coordinated from m_rect to buf.rect */
+    x += m_rect.org.x;
+    y += m_rect.org.y;
+
+    /* Convert from buf.rect to offset in buffer.data */
+    x += buf.rect.org.x;
+    y += buf.rect.org.y;
+
+    ASSERT(x >= 0 && y >= 0);
+
+    size_t pix_size = buf.format.size;
+    uint8_t *sp = (uint8_t *)buf.data + (size_t)y * buf.bpr + (size_t)x * pix_size;
     v3f color = {
         sp[0] / 255.0f,
         sp[1] / 255.0f,
@@ -90,9 +92,9 @@ sptr<Texture> Texture::create_checker(const sptr<Texture> &a,
     return std::make_shared<_Texture_checker>(a, b);
 }
 
-sptr<Texture> Texture::create_image(buffer_t *b, const rect &r)
+sptr<Texture> Texture::create_image(const sptr<Image> &img, rect_t r)
 {
-    return std::make_shared<_Texture_img>(b, r);
+    return std::make_shared<_Texture_img>(img, r);
 }
 
 sptr<Texture> Texture::create(const sptr<Params> &p)
@@ -117,7 +119,18 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
         WARNING_IF(!odd, "Texture parameter \"odd\" not specified");
     }
     else if (type == "image") {
+        sptr<Image> img = Image::create(p);
+        sptr<Value> org = p->value("origin");
+        sptr<Value> size = p->value("size");
 
+        if (img) {
+            rect_t rect = {
+                org ? org->vector2i() : v2i(),
+                size ? size->vector2u() : img->size()
+            };
+            return Texture::create_image(img, rect);
+        }
+        WARNING_IF(!img, "Texture parameter \"image\" not specified");
     }
     else {
         warning("Texture parameter \"type\" not recognized");

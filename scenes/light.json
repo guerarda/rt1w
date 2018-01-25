@@ -10,6 +10,19 @@
             ]
         },
         {
+            "name": "map",
+            "type": "image",
+            "filename": "map.png",
+            "origin": [
+                0.0,
+                0.0
+            ],
+            "size": [
+                1400,
+                787
+            ]
+        },
+        {
             "name": "checka",
             "type": "color",
             "color": [
@@ -47,7 +60,7 @@
         {
             "name": "bar",
             "type": "lambertian",
-            "texture": "foo"
+            "texture": "map"
         },
         {
             "name": "ground",
