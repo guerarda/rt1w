@@ -73,10 +73,10 @@ static sptr<Params> read_params(const rapidjson::Value &v)
             p->insert(name, num);
         }
         else if (m.value.IsBool()) {
-
+            warning("Bool values are not supported");
         }
         else if (m.value.IsObject()) {
-
+            p->insert(name, read_params(m.value));
         }
         else {
 
@@ -136,55 +136,94 @@ int32_t _Scene::init_with_json(const std::string &path)
     it = d.FindMember("textures");
     if (it != d.MemberEnd()) {
         for (auto &v : it->value.GetArray()) {
-            // Check object
-            std::string k = v.GetObject()["name"].GetString();
-            sptr<Texture> tex = read_texture(v, m_textures);
+            auto itn = v.FindMember("name");
+            if (itn != v.MemberEnd()) {
+                std::string k = itn->value.GetString();
+                sptr<Texture> tex = read_texture(v, m_textures);
 
-            WARNING_IF(!tex, "Couldn't create texture \"%s\"", k.c_str());
-            m_textures.insert(std::make_pair(k, tex));
+                WARNING_IF(!tex, "Couldn't create texture \"%s\"", k.c_str());
+                m_textures.insert(std::make_pair(k, tex));
+            } else {
+                warning("Found unamed texture, skipping");
+            }
         }
     }
 
     it = d.FindMember("materials");
     if (it != d.MemberEnd()) {
         for (auto &v : it->value.GetArray()) {
-            // Check object
-            std::string k = v.GetObject()["name"].GetString();
-            sptr<Material> mat = read_material(v, m_textures);
+            auto itn  = v.FindMember("name");
+            if (itn != v.MemberEnd()) {
+                std::string k = itn->value.GetString();
+                sptr<Material> mat = read_material(v, m_textures);
 
-            WARNING_IF(!mat, "Couldn't create material \"%s\"", k.c_str());
-            m_materials.insert(std::make_pair(k, mat));
+                WARNING_IF(!mat, "Couldn't create material \"%s\"", k.c_str());
+                m_materials.insert(std::make_pair(k, mat));
+            } else {
+                warning("Found unamed material, skipping");
+            }
         }
     }
 
     it = d.FindMember("shapes");
     if (it != d.MemberEnd()) {
         for (auto &v : it->value.GetArray()) {
-            // Check object
-            std::string k = v.GetObject()["name"].GetString();
-            sptr<Shape> shape = read_shape(v);
+            auto itn  = v.FindMember("name");
+            if (itn != v.MemberEnd()) {
+                std::string k = itn->value.GetString();
+                sptr<Shape> shape = read_shape(v);
 
-            WARNING_IF(!shape, "Couldn't create shape \"%s\"", k.c_str());
-            m_shapes.insert(std::make_pair(k, shape));
+                WARNING_IF(!shape, "Couldn't create shape \"%s\"", k.c_str());
+                m_shapes.insert(std::make_pair(k, shape));
+            }
         }
     }
 
     it = d.FindMember("primitives");
     if (it != d.MemberEnd()) {
+        size_t ix = 0;
         for (auto &v : it->value.GetArray()) {
-            // Check object
-            std::string shape = v.GetObject()["shape"].GetString();
-            std::string mat = v.GetObject()["material"].GetString();
+            auto its = v.FindMember("shape");
+            auto itm = v.FindMember("material");
 
-            sptr<Primitive> prm = Primitive::create(m_shapes[shape],
-                                                    m_materials[mat]);
-            if (prm) {
-                m_primitives.push_back(prm);
-            } else {
-                error("Couldn't create primitive");
+            WARNING_IF(its == v.MemberEnd(),
+                       "Primitive at index %lu, no shape found", ix);
+            WARNING_IF(itm == v.MemberEnd(),
+                       "Primitive at index %lu, no material found", ix);
+
+            if (its != v.MemberEnd() && itm != v.MemberEnd()) {
+                sptr<Shape> shape;
+                if (its->value.IsObject()) {
+                    shape = read_shape(its->value);
+                }
+                else if (its->value.IsString()) {
+                    std::string name = its->value.GetString();
+                    shape = m_shapes[name];
+                    WARNING_IF(!shape, "Couldn't find shape named \"%s\"", name.c_str())
+                }
+                WARNING_IF(!shape, "Primitive at index %lu, invalid shape", ix);
+
+                sptr<Material> mat;
+                if (itm->value.IsObject()) {
+                    mat = read_material(itm->value, m_textures);
+                }
+                else if (itm->value.IsString()) {
+                    std::string name = itm->value.GetString();
+                    mat = m_materials[name];
+                    WARNING_IF(!mat, "Couldn't find material named \"%s\"", name.c_str())
+                }
+                WARNING_IF(!mat, "Primitive at index %lu, invalid material", ix);
+
+                if (shape && mat) {
+                    m_primitives.emplace_back(Primitive::create(shape, mat));
+                } else {
+                    warning("Couldnt create Primitive at index %lu", ix);
+                }
             }
+            ix++;
         }
-    } else {
+    }
+    if (m_primitives.empty()) {
         error("Couldn't find a primitive in %s", path.c_str());
         err = -1;
     }
