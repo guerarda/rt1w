@@ -15,7 +15,7 @@ $ make
 ## Running
 This will render a predefined scene and export it to render.png:
 ```bash
-$ ./rt1w --quality=5 render.png
+$ ./rt1w --quality=5 scene.json
 ```
 The argument `quality=n` means that 2^n rays are traced for each
 pixel. More rays mean higher quality but slower rendering. The image
