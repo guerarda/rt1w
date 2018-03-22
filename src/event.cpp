@@ -20,7 +20,7 @@ struct _lock {
 
 static uptr<_lock> create_lock(std::mutex *mutex)
 {
-    return make_unique<_lock>(mutex);
+    return std::make_unique<_lock>(mutex);
 }
 
 struct _notif {
@@ -43,7 +43,7 @@ static uptr<_notif> create_notif(workq *workq,
                                  const sptr<Object> &obj,
                                  const sptr<Object> &arg)
 {
-    return make_unique<_notif>(workq, func, obj, arg);
+    return std::make_unique<_notif>(workq, func, obj, arg);
 }
 
 _notif::_notif(workq *q,
