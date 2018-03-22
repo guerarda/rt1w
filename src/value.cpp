@@ -1,5 +1,5 @@
 #include "value.hpp"
-#include <assert.h>
+#include "error.h"
 
 #pragma mark - Scalar Value
 
@@ -41,8 +41,8 @@ struct _Scalar : Value {
 template <typename T>
 void _Scalar<T>::value(vtype_t type, void *v, size_t off, size_t len) const
 {
-    assert(v);
-    assert(len > 0);
+    ASSERT(v);
+    ASSERT(len > 0);
 
     if (off == 0) {
         scalar_store<T>()(type, v, m_value);
@@ -57,8 +57,6 @@ void _Scalar<T>::value(vtype_t type, void *v, size_t off, size_t len) const
 }
 
 #pragma mark - Vector Value
-
-#define VECTOR_MAX_SIZE 32
 
 template <typename T>
 struct vector_store {
@@ -87,6 +85,9 @@ struct vector_store {
     }
 };
 
+#pragma mark Vector
+#define VECTOR_MAX_SIZE 32
+
 template <typename T>
 struct _Vector : Value {
 
@@ -109,11 +110,53 @@ struct _Vector : Value {
 template <typename T>
 void _Vector<T>::value(vtype_t type, void *v, size_t off, size_t len) const
 {
-    assert(v);
-    assert(len > 0);
+    ASSERT(v);
+    ASSERT(len > 0);
 
     if (off < N) {
         size_t n = N - off;
+        if (n > len) {
+            n = len;
+        }
+        vector_store<T>()(type, v, &m_data[off], n);
+        off = n;
+    } else {
+        off = 0;
+    }
+    if (off < len) {
+        size_t sz = buffer_type_sizeof(type);
+        memset((uint8_t *)v + off * sz, 0, (len - off) * sz);
+    }
+}
+
+#pragma mark Big Vector
+
+template <typename T>
+struct _BigVector : Value {
+
+    _BigVector(const void *v, size_t n) : m_count(n) {
+        m_data = std::make_unique<T[]>(n);
+        for (size_t i = 0; i < n; i++) {
+            m_data[i] = ((T *)v)[i];
+        }
+    }
+
+    size_t count() const       { return m_count; }
+    vtype_t type() const       { return vtype_from_type<T>::value(); }
+    void value(vtype_t type, void *v, size_t off, size_t len) const;
+
+    uptr<T[]> m_data;
+    size_t    m_count;
+};
+
+template <typename T>
+void _BigVector<T>::value(vtype_t type, void *v, size_t off, size_t len) const
+{
+    ASSERT(v);
+    ASSERT(len > 0);
+
+    if (off < m_count) {
+        size_t n = m_count - off;
         if (n > len) {
             n = len;
         }
@@ -140,11 +183,14 @@ sptr<Value> create_value(const void *v, size_t n)
     if (n * sizeof(T) <= VECTOR_MAX_SIZE) {
         return std::make_shared<_Vector<T>>(v, n);
     }
-    return nullptr;
+    return std::make_shared<_BigVector<T>>(v, n);
 }
 
 sptr<Value> Value::create(vtype_t t, void *v, size_t n)
 {
+    ASSERT(v);
+    ASSERT(n > 0);
+
     switch (t) {
     case TYPE_INT8:    return create_value<int8_t>(v, n);
     case TYPE_INT16:   return create_value<int16_t>(v, n);

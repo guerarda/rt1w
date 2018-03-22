@@ -37,7 +37,7 @@ struct Value : Object {
     static sptr<Value> vector2u(v2u v) { return create<uint32_t>(&v.x, 2); }
     static sptr<Value> vector3f(v3f v) { return create<float>(&v.x, 3); }
 
-    static sptr<Value> vector2u(uint32_t x, uint32_t y) { return vector2u({ x, y });}
+    static sptr<Value> vector2u(uint32_t x, uint32_t y)    { return vector2u({ x, y });}
     static sptr<Value> vector3f(float x, float y, float z) { return vector3f({ x, y, z }); }
 
     int32_t  i32() const { return scalar<int32_t>(this); }
