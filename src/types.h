@@ -18,11 +18,6 @@ typedef struct v2u {
     uint32_t y;
 } v2u;
 
-typedef struct v2f {
-    float x;
-    float y;
-} v2f;
-
 typedef struct rect {
     v2i org;
     v2u size;

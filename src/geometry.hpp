@@ -6,6 +6,160 @@
 
 #if defined(__cplusplus)
 
+#pragma mark - Vector 2 Declaration
+template <typename T>
+struct Vector2 {
+    Vector2() { x = 0; y = 0; }
+    Vector2(T x, T y) : x(x), y(y) { }
+
+    Vector2<T> normalized() const;
+    T          length() const;
+    T          length_sq() const;
+
+    Vector2<T>   operator +  (const Vector2<T> &v) const;
+    Vector2<T> & operator += (const Vector2<T> &v);
+    Vector2<T>   operator -  () const;
+    Vector2<T>   operator -  (const Vector2<T> &v) const;
+    Vector2<T> & operator -= (const Vector2<T> &v);
+    Vector2<T>   operator *  (T f) const;
+    Vector2<T>   operator *  (const Vector2<T> &v) const;
+    Vector2<T> & operator *= (T f);
+    Vector2<T> & operator *= (const Vector2<T> &v);
+    Vector2<T>   operator /  (T f) const;
+    Vector2<T> & operator /= (T f);
+
+    T x, y;
+};
+
+typedef Vector2<float> v2f;
+typedef Vector2<double> v2d;
+
+template <typename T>
+Vector2<T> Vector2<T>::normalized() const
+{
+    return *this / length();
+}
+
+template <typename T>
+T Vector2<T>::length() const
+{
+    return std::sqrt(length_sq());
+}
+
+template <typename T>
+T Vector2<T>::length_sq() const
+{
+    return x * x + y * y;
+}
+
+template <typename T>
+Vector2<T> Vector2<T>::operator + (const Vector2<T> &v) const
+{
+    return { x + v.x, y + v.y };
+}
+
+template <typename T>
+Vector2<T> & Vector2<T>::operator += (const Vector2<T> &v)
+{
+    x += v.x;
+    y += v.y;
+
+    return *this;
+}
+
+template <typename T>
+Vector2<T> Vector2<T>::operator - () const
+{
+    return { -x, -y };
+}
+
+template <typename T>
+Vector2<T> Vector2<T>::operator - (const Vector2<T> &v) const
+{
+    return { x - v.x, y - v.y };
+}
+
+template <typename T>
+Vector2<T> & Vector2<T>::operator -= (const Vector2<T> &v)
+{
+    x -= v.x;
+    y -= v.y;
+
+    return *this;
+}
+
+template <typename T>
+Vector2<T> Vector2<T>::operator * (T f) const
+{
+    return { x * f, y * f };
+}
+
+template <typename T>
+Vector2<T> Vector2<T>::operator * (const Vector2<T> &v) const
+{
+    return { x * v.x, y * v.y };
+}
+
+template <typename T>
+Vector2<T> & Vector2<T>::operator *= (T f)
+{
+    x *= f;
+    y *= f;
+
+    return *this;
+}
+
+template <typename T>
+Vector2<T> & Vector2<T>::operator *= (const Vector2<T> &v)
+{
+    x *= v.x;
+    y *= v.y;
+
+    return *this;
+}
+
+template <typename T>
+Vector2<T> Vector2<T>::operator / (T f) const
+{
+    T inv = 1 / f;
+    return { x * inv, y * inv };
+}
+
+template <typename T>
+Vector2<T> & Vector2<T>::operator /= (T f)
+{
+    T inv = 1 / f;
+    x *= inv;
+    y *= inv;
+
+    return *this;
+}
+
+#pragma mark Inline Functions
+
+template <typename T, typename U>
+inline Vector2<T> operator * (U s, const Vector2<T> &v) {
+    return v * s;
+}
+
+template <typename T>
+inline T Dot(const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return va.x * vb.x + va.y * vb.y;
+}
+
+template <typename T>
+inline Vector2<T> Lerp(T t, const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return (1 - t) * va + t * vb;
+}
+
+template <typename T>
+inline Vector2<T> Reflect(const Vector2<T> &v, const Vector2<T> &n)
+{
+    return v - 2 * Dot(v, n) * n;
+}
+
 #pragma mark - Vector 3 Declaration
 
 template <typename T>
@@ -31,6 +185,7 @@ struct Vector3 {
 
     T x, y, z;
 };
+
 typedef Vector3<float> v3f;
 typedef Vector3<double> v3d;
 
@@ -262,11 +417,27 @@ inline Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2)
 
 #else
 
+typedef struct v2f {
+    float x;
+    float y;
+} v2f;
+
+typedef struct v2d {
+    double x;
+    double y;
+} v2d;
+
 typedef struct v3f {
     float x;
     float y;
     float z;
 } v3f;
+
+typedef struct v3d {
+    double x;
+    double y;
+    double z;
+} v3d;
 
 typedef struct bounds3f {
     v3f lo;
