@@ -57,8 +57,8 @@ _Camera::_Camera(const v3f &eye,
     m_resolution = res;
     m_lens_radius = aperture;
     m_org = eye;
-    w = (m_org - lookat).normalized();
-    u = Cross(up, w).normalized();
+    w = Normalize(m_org - lookat);
+    u = Normalize(Cross(up, w));
     v = Cross(w, u);
 
     m_bl = m_org;

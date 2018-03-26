@@ -27,7 +27,7 @@ static v3f random_sphere_point()
 
 static bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refract)
 {
-    v3f uv = v.normalized();
+    v3f uv = Normalize(v);
     float dt = Dot(uv, n);
     float delta = 1.0f - ni_over_nt * ni_over_nt * ( 1.0f - dt * dt);
 

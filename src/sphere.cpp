@@ -61,7 +61,7 @@ bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) con
         if (t > min && t < max) {
             rec.t = t;
             rec.p = r->point(t);
-            rec.normal = (rec.p - m_center).normalized();
+            rec.normal = Normalize((rec.p - m_center));
             v3f v = 1.0f / m_radius * (rec.p - m_center);
             rec.uv = sphere_uv(v);
             return true;

@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include "error.h"
 
 #if defined(__cplusplus)
 
@@ -12,7 +13,6 @@ struct Vector2 {
     Vector2() { x = 0; y = 0; }
     Vector2(T x, T y) : x(x), y(y) { }
 
-    Vector2<T> normalized() const;
     T          length() const;
     T          length_sq() const;
 
@@ -27,18 +27,14 @@ struct Vector2 {
     Vector2<T> & operator *= (const Vector2<T> &v);
     Vector2<T>   operator /  (T f) const;
     Vector2<T> & operator /= (T f);
+    T            operator [] (size_t i) const;
+    T          & operator [] (size_t i);
 
     T x, y;
 };
 
 typedef Vector2<float> v2f;
 typedef Vector2<double> v2d;
-
-template <typename T>
-Vector2<T> Vector2<T>::normalized() const
-{
-    return *this / length();
-}
 
 template <typename T>
 T Vector2<T>::length() const
@@ -135,6 +131,20 @@ Vector2<T> & Vector2<T>::operator /= (T f)
     return *this;
 }
 
+template <typename T>
+T Vector2<T>::operator [] (size_t i) const
+{
+    ASSERT(i < 2);
+    return i == 0 ? x : y;
+}
+
+template <typename T>
+T & Vector2<T>::operator [] (size_t i)
+{
+    ASSERT(i < 2);
+    return i == 0 ? x : y;
+}
+
 #pragma mark Inline Functions
 
 template <typename T, typename U>
@@ -155,6 +165,12 @@ inline Vector2<T> Lerp(T t, const Vector2<T> &va, const Vector2<T> &vb)
 }
 
 template <typename T>
+inline Vector2<T> Normalize(const Vector2<T> &v)
+{
+    return v / v.length();
+}
+
+template <typename T>
 inline Vector2<T> Reflect(const Vector2<T> &v, const Vector2<T> &n)
 {
     return v - 2 * Dot(v, n) * n;
@@ -167,7 +183,6 @@ struct Vector3 {
     Vector3() { x = 0; y = 0; z = 0; }
     Vector3(T x, T y, T z) : x(x), y(y), z(z) { }
 
-    Vector3<T> normalized() const;
     T          length() const;
     T          length_sq() const;
 
@@ -182,18 +197,14 @@ struct Vector3 {
     Vector3<T> & operator *= (const Vector3<T> &v);
     Vector3<T>   operator /  (T f) const;
     Vector3<T> & operator /= (T f);
+    T            operator [] (size_t i) const;
+    T          & operator [] (size_t i);
 
     T x, y, z;
 };
 
 typedef Vector3<float> v3f;
 typedef Vector3<double> v3d;
-
-template <typename T>
-Vector3<T> Vector3<T>::normalized() const
-{
-    return *this / length();
-}
 
 template <typename T>
 T Vector3<T>::length() const
@@ -295,6 +306,20 @@ Vector3<T> & Vector3<T>::operator /= (T f)
     return *this;
 }
 
+template <typename T>
+T Vector3<T>::operator [] (size_t i) const
+{
+    ASSERT(i < 3);
+    return i == 0 ? x : (i == 1 ? y : z);
+}
+
+template <typename T>
+T & Vector3<T>::operator [] (size_t i)
+{
+    ASSERT(i < 3);
+    return i == 0 ? x : (i == 1 ? y : z);
+}
+
 #pragma mark Inline Functions
 
 template <typename T, typename U>
@@ -322,6 +347,12 @@ template <typename T>
 inline Vector3<T> Lerp(T t, const Vector3<T> &va, const Vector3<T> &vb)
 {
     return (1 - t) * va + t * vb;
+}
+
+template <typename T>
+inline Vector3<T> Normalize(const Vector3<T> &v)
+{
+    return v / v.length();
 }
 
 template <typename T>
