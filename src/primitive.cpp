@@ -1,7 +1,4 @@
 #include "primitive.hpp"
-#include <assert.h>
-#include <vector>
-
 #include "error.h"
 
 #pragma mark - Primitive

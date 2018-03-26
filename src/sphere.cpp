@@ -27,10 +27,10 @@ struct _Sphere : Sphere {
 
     _Sphere(const v3f &c, float r);
 
-    bool     hit(const sptr<ray> &r, float min, float max, hit_record &rec) const;
-    bounds3f bounds() const { return m_box; }
-    v3f      center() const { return m_center; }
-    float    radius() const { return m_radius; }
+    bool     hit(const sptr<ray> &, float, float, hit_record &) const override;
+    bounds3f bounds() const override { return m_box; }
+    v3f      center() const override { return m_center; }
+    float    radius() const override { return m_radius; }
 
     v3f      m_center;
     float    m_radius;
