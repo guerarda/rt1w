@@ -48,8 +48,18 @@ static sptr<Params> read_params(const rapidjson::Value &v)
         else if (m.value.IsArray()) {
             std::vector<double> a;
             for (auto &num : m.value.GetArray()) {
-                assert(num.IsNumber() && "Number expected\n");
-                a.push_back(num.GetDouble());
+                if (num.IsNumber()) {
+                    a.push_back(num.GetDouble());
+                }
+                else if (num.IsArray()) {
+                    for (auto &nnum : num.GetArray()) {
+                        ASSERT(nnum.IsNumber());
+                        a.push_back(nnum.GetDouble());
+                    }
+                }
+                else {
+                    warning("Unsuported array");
+                }
             }
             p->insert(name, Value::create(a.data(), a.size()));
         }
@@ -152,7 +162,7 @@ int32_t _Scene::init_with_json(const std::string &path)
     it = d.FindMember("materials");
     if (it != d.MemberEnd()) {
         for (auto &v : it->value.GetArray()) {
-            auto itn  = v.FindMember("name");
+            auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
                 sptr<Material> mat = read_material(v, m_textures);
@@ -168,7 +178,7 @@ int32_t _Scene::init_with_json(const std::string &path)
     it = d.FindMember("shapes");
     if (it != d.MemberEnd()) {
         for (auto &v : it->value.GetArray()) {
-            auto itn  = v.FindMember("name");
+            auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
                 sptr<Shape> shape = read_shape(v);

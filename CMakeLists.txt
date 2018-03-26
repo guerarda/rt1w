@@ -59,6 +59,7 @@ SET(RT1W_SOURCES
   src/imageio.c
   src/light.cpp
   src/material.cpp
+  src/mesh.cpp
   src/params.cpp
   src/primitive.cpp
   src/ray.cpp
