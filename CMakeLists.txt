@@ -67,6 +67,7 @@ SET(RT1W_SOURCES
   src/sphere.cpp
   src/sync.c
   src/texture.cpp
+  src/utils.cpp
   src/workq.cpp
   src/value.cpp
 )
