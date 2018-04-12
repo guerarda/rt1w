@@ -2,9 +2,9 @@
 
 #include "ray.hpp"
 #include "types.h"
-#include "shape.hpp"
 
 struct Material;
+struct Shape;
 
 struct hit_record {
     float t;

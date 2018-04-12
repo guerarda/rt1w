@@ -2,12 +2,15 @@
 
 #include "sptr.hpp"
 
+struct Camera;
 struct Params;
 struct Primitive;
-struct Camera;
 
 struct Scene : Object {
 
+    static sptr<Scene> create(const std::vector<sptr<Primitive>> &primitives,
+                              const sptr<Camera> &camera,
+                              const sptr<Params> &options);
     static sptr<Scene> create_json(const std::string &path);
 
     virtual std::vector<sptr<Primitive>> primitives() const = 0;
