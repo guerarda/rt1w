@@ -47,7 +47,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS}")
 SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 
-INCLUDE_DIRECTORIES(src/thirdparty)
+INCLUDE_DIRECTORIES(src src/thirdparty)
 
 SET(RT1W_SOURCES
   src/bvh.cpp
@@ -71,6 +71,7 @@ SET(RT1W_SOURCES
   src/utils.cpp
   src/workq.cpp
   src/value.cpp
+  src/tools/loader_obj.cpp
 )
 
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)

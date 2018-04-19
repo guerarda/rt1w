@@ -17,6 +17,7 @@ struct hit_record {
 struct Primitive : Object {
     static sptr<Primitive> create(const sptr<Shape> &s,
                                   const sptr<Material> &m);
+    static sptr<Primitive> load_obj(const std::string &path);
 
     virtual bool      hit(const sptr<ray> &r,
                           float min,
