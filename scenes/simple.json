@@ -38,7 +38,14 @@
         {
             "name": "bar",
             "type": "lambertian",
-            "texture": "foo"
+            "texture": {
+                "type": "color",
+                "color": [
+                    1.0,
+                    0.0,
+                    0.0
+                ]
+            }
         },
         {
             "name": "ground",
@@ -67,6 +74,21 @@
             ],
             "radius": 1000
 
+        },
+        {
+            "name": "tri",
+            "type": "mesh",
+            "count": 2,
+            "vertices": [
+                [0.0, 0.0, 0.0],
+                [5.0, 0.0, 0.0],
+                [5.0, 5.0, 0.0],
+                [0.0, 5.0, 0.0]
+            ],
+            "indices": [
+                0, 1, 2,
+                2, 3, 0
+            ]
         }
     ],
     "primitives" : [
@@ -76,10 +98,9 @@
             "material": "ground"
         },
         {
-            "shape": "ball",
+            "shape": "tri",
             "material": "bar"
         }
-
     ],
     "camera": {
         "position" : [
@@ -106,6 +127,7 @@
         "focusdistance": 10.0
     },
     "options": {
-        "output": "test.png"
+        "output": "test.png",
+        "background": [ 0.5, 0.7, 1 ]
     }
 }

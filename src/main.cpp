@@ -6,23 +6,27 @@
 #include <float.h>
 #include <string>
 
-#include "error.h"
-#include "geometry.hpp"
-#include "ray.hpp"
-#include "sphere.hpp"
-#include "camera.hpp"
-#include "material.hpp"
-#include "workq.hpp"
-#include "event.hpp"
 #include "bvh.hpp"
+#include "camera.hpp"
+#include "error.h"
+#include "event.hpp"
+#include "geometry.hpp"
 #include "imageio.h"
-#include "sync.h"
+#include "material.hpp"
 #include "params.hpp"
+#include "ray.hpp"
 #include "scene.hpp"
+#include "sphere.hpp"
+#include "sync.h"
+#include "value.hpp"
+#include "workq.hpp"
 
 #define MAX_RECURSION_DEPTH 50
 
-static v3f color(const sptr<ray> &r, const sptr<Primitive> &world, size_t depth)
+static v3f color(const sptr<ray> &r,
+                 const sptr<Primitive> &world,
+                 size_t depth,
+                 v3f bg)
 {
     hit_record rec;
 
@@ -33,11 +37,11 @@ static v3f color(const sptr<ray> &r, const sptr<Primitive> &world, size_t depth)
 
         if (   depth < MAX_RECURSION_DEPTH
             && rec.mat->scatter(r, rec, attenuation, scattered)) {
-            return emitted + attenuation * color(scattered, world, depth + 1);
+            return emitted + attenuation * color(scattered, world, depth + 1, bg);
         }
         return emitted;
     }
-    return v3f();
+    return bg;
 }
 
 struct _tile : Object {
@@ -55,12 +59,14 @@ struct _tile : Object {
 struct _ctx : Object {
     static sptr<_ctx> create(const sptr<Camera> c,
                              sptr<Primitive> s,
+                             v3f bg,
                              uint32_t n,
-                             v2u size) { return std::make_shared<_ctx>(c, s, n, size); }
+                             v2u size) { return std::make_shared<_ctx>(c, s, bg, n, size); }
 
-    _ctx(const sptr<Camera> c, sptr<Primitive> s, uint32_t n, v2u size) {
+    _ctx(const sptr<Camera> c, sptr<Primitive> s, v3f bg, uint32_t n, v2u size) {
         m_camera = c;
         m_scene = s;
+        m_bg = bg;
         m_ns = n;
         m_img_size = size;
     }
@@ -68,6 +74,7 @@ struct _ctx : Object {
 
     sptr<Camera>    m_camera;
     sptr<Primitive> m_scene;
+    v3f             m_bg;
     uint32_t        m_ns;
     size_t          m_ntiles;
     v2u             m_img_size;
@@ -99,7 +106,7 @@ static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
                 float v = 1.0f - (float(orgy + (int32_t)i) - dist(mt)) / float(ctx->m_img_size.y);
                 sptr<ray> r = ctx->m_camera->make_ray(u, v);
 
-                c = c + color(r, ctx->m_scene, 0);
+                c = c + color(r, ctx->m_scene, 0, ctx->m_bg);
             }
             c = 1.0f / ctx->m_ns * c;
             /* Approx Gamma correction */
@@ -234,9 +241,13 @@ int main(int argc, char *argv[])
     /* Create BVH */
     sptr<Primitive> bvh = BVHNode::create(scene->primitives());
 
+    /* Is there a background color specified ? */
+    v3f bg = scene->options()->value("background")->vector3f();
+
     /* Actual rendering */
     sptr<_ctx> ctx = _ctx::create(scene->camera(),
                                   bvh,
+                                  bg,
                                   ns,
                                   img_size);
     ctx->m_ntiles = tiles.size();
