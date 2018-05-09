@@ -50,6 +50,7 @@ SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
 INCLUDE_DIRECTORIES(src src/thirdparty)
 
 SET(RT1W_SOURCES
+  src/arena.cpp
   src/bvh.cpp
   src/camera.cpp
   src/event.cpp
