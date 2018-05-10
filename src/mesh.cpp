@@ -1,10 +1,11 @@
 #include "mesh.hpp"
-#include "params.hpp"
+
 #include "error.h"
-#include "value.hpp"
-#include "ray.hpp"
+#include "params.hpp"
 #include "primitive.hpp"
+#include "ray.hpp"
 #include "utils.h"
+#include "value.hpp"
 
 #pragma mark - Vertex Data
 

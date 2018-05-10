@@ -2,9 +2,12 @@
 
 #include <fstream>
 #include <iostream>
-#include <assert.h>
 #include <map>
 #include <vector>
+
+#include "rapidjson/document.h"
+#include "rapidjson/error/en.h"
+#include "rapidjson/filereadstream.h"
 
 #include "camera.hpp"
 #include "error.h"
@@ -14,10 +17,6 @@
 #include "shape.hpp"
 #include "texture.hpp"
 #include "value.hpp"
-
-#include "rapidjson/document.h"
-#include "rapidjson/filereadstream.h"
-#include "rapidjson/error/en.h"
 
 #pragma mark Utils
 

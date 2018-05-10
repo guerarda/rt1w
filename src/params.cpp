@@ -1,4 +1,5 @@
 #include "params.hpp"
+
 #include "texture.hpp"
 
 struct _Params : Params {

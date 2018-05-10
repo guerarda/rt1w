@@ -1,5 +1,4 @@
-#ifndef RAY_H
-#define RAY_H
+#pragma once
 
 #include "geometry.hpp"
 #include "sptr.hpp"
@@ -12,5 +11,3 @@ struct ray : Object {
 
     virtual v3f point(float t) const = 0;
 };
-
-#endif

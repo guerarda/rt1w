@@ -4,6 +4,7 @@
 #include "sptr.hpp"
 
 struct Params;
+struct Texture;
 
 struct DiffuseLight : Material {
 

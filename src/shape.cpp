@@ -1,9 +1,9 @@
 #include "shape.hpp"
 
+#include "error.h"
+#include "mesh.hpp"
 #include "params.hpp"
 #include "sphere.hpp"
-#include "mesh.hpp"
-#include "error.h"
 
 sptr<Shape> Shape::create(const sptr<Params> &p)
 {

@@ -3,9 +3,9 @@
 #include "sptr.hpp"
 #include "geometry.hpp"
 
-struct ray;
 struct hit_record;
 struct Params;
+struct ray;
 
 struct Shape : Object {
     static sptr<Shape> create(const sptr<Params> &p);

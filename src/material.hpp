@@ -1,10 +1,10 @@
-#ifndef MATERIAL_H
-#define MATERIAL_H
+#pragma once
 
 #include "primitive.hpp"
-#include "texture.hpp"
+
 
 struct Params;
+struct Texture;
 
 struct Material : Object {
     static sptr<Material> create(const sptr<Params> &p);
@@ -30,5 +30,3 @@ struct Dielectric : Material {
     static sptr<Dielectric> create(float ref_index);
     static sptr<Dielectric> create(const sptr<Params> &params);
 };
-
-#endif

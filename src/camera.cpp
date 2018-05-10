@@ -1,9 +1,10 @@
 #include "camera.hpp"
+
 #include <math.h>
 #include <random>
 
-#include "ray.hpp"
 #include "params.hpp"
+#include "ray.hpp"
 #include "value.hpp"
 
 static v3f random_in_unit_disk()

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "types.h"
-#include "sptr.hpp"
-#include "ray.hpp"
+#include "geometry.hpp"
 #include "primitive.hpp"
+#include "sptr.hpp"
+
+struct ray;
 
 struct BVHNode : Primitive {
 

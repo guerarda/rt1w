@@ -1,6 +1,8 @@
 #include "light.hpp"
-#include "params.hpp"
+
 #include "error.h"
+#include "texture.hpp"
+#include "params.hpp"
 
 struct _DiffuseLight : DiffuseLight {
 

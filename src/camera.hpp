@@ -1,9 +1,7 @@
-#ifndef CAMERA_H
-#define CAMERA_H
+#pragma once
 
 #include "sptr.hpp"
 #include "geometry.hpp"
-#include "types.h"
 
 struct Params;
 struct ray;
@@ -22,5 +20,3 @@ struct Camera : Object {
     virtual v2u resolution() const = 0;
     virtual sptr<ray> make_ray(float u, float v) const = 0;
 };
-
-#endif

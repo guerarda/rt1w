@@ -1,12 +1,13 @@
 #include "material.hpp"
+
 #include <random>
 #include <math.h>
-#include <assert.h>
 
+#include "error.h"
 #include "light.hpp"
 #include "params.hpp"
+#include "texture.hpp"
 #include "value.hpp"
-#include "error.h"
 
 static std::random_device rd;
 static std::mt19937 __prng(rd());
