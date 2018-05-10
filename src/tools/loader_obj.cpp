@@ -125,8 +125,5 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
 
         }
     }
-
-    return BVHNode::create(primitives);
-
-
+    return Aggregate::create(primitives);
 }

@@ -239,7 +239,7 @@ int main(int argc, char *argv[])
         }
     }
     /* Create BVH */
-    sptr<Primitive> bvh = BVHNode::create(scene->primitives());
+    sptr<Primitive> bvh = BVHAccelerator::create(scene->primitives());
 
     /* Is there a background color specified ? */
     v3f bg = scene->options()->value("background")->vector3f();
