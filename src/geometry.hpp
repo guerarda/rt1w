@@ -197,6 +197,8 @@ struct Vector3 {
     Vector3<T> & operator *= (const Vector3<T> &v);
     Vector3<T>   operator /  (T f) const;
     Vector3<T> & operator /= (T f);
+    Vector3<T>   operator /  (const Vector3<T> &v) const;
+    Vector3<T> & operator /  (const Vector3<T> &v);
     T            operator [] (size_t i) const;
     T          & operator [] (size_t i);
 
@@ -307,6 +309,23 @@ Vector3<T> & Vector3<T>::operator /= (T f)
 }
 
 template <typename T>
+Vector3<T> Vector3<T>::operator / (const Vector3<T> &v) const
+{
+    ASSERT(v.x )
+    return { x / v.x, y / v.y, z / v.z };
+}
+
+template <typename T>
+Vector3<T> & Vector3<T>::operator / (const Vector3<T> &v)
+{
+    x /= v.x;
+    y /= v.y;
+    z /= v.z;
+
+    return *this;
+}
+
+template <typename T>
 T Vector3<T>::operator [] (size_t i) const
 {
     ASSERT(i < 3);
@@ -361,7 +380,6 @@ inline Vector3<T> Reflect(const Vector3<T> &v, const Vector3<T> &n)
     return v - 2 * Dot(v, n) * n;
 }
 
-
 #pragma mark - Bounds 3 Declaration
 
 template <typename T>
@@ -382,15 +400,23 @@ template <typename T>
                                        std::max(p1.y, p2.y),
                                        std::max(p1.z, p2.z)) { }
 
+    Vector3<T> center() const;
     Vector3<T> diagonal() const;
     T          area() const;
     T          volume() const;
+    int32_t    maxAxis() const;
 
     Vector3<T> lo;
     Vector3<T> hi;
 };
 
 typedef Bounds3<float> bounds3f;
+
+template <typename T>
+Vector3<T> Bounds3<T>::center() const
+{
+    return T(0.5) * (lo + hi);
+}
 
 template <typename T>
 Vector3<T> Bounds3<T>::diagonal() const
@@ -412,7 +438,20 @@ T Bounds3<T>::volume() const
     return d.x * d.y * d.z;
 }
 
+template <typename T>
+int32_t Bounds3<T>::maxAxis() const
+{
+    Vector3<T> d = hi - lo;
+    return d.x > d.y ? (d.x > d.z ? 0 : 2) : (d.y > d.z ? 1 : 2);
+}
+
 #pragma mark Inline Functions;
+
+template <typename T>
+inline Vector3<T> Offset(const Bounds3<T> &b, const Vector3<T> &p)
+{
+    return (p - b.lo) / (b.hi - b.lo);
+}
 
 template <typename T>
 inline Bounds3<T> Union(const Bounds3<T> &b, const Vector3<T> &p)
