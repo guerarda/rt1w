@@ -30,7 +30,7 @@ __BEGIN_DECLS
 
 void warning(const char *fmt, ...) PRINTF_FUNC;
 void error(const char *fmt, ...) PRINTF_FUNC;
-void trap(const char *fmt, ...) PRINTF_FUNC;
+NORETURN void trap(const char *fmt, ...) PRINTF_FUNC;
 NORETURN void die(const char *fmt, ...) PRINTF_FUNC;
 
 __END_DECLS

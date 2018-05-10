@@ -65,4 +65,5 @@ void trap(const char *fmt, ...)
 #else
     __asm__ __volatile__ ("int3");
 #endif
+    exit(EXIT_FAILURE);
 }
