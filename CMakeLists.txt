@@ -65,6 +65,7 @@ SET(RT1W_SOURCES
   src/primitive.cpp
   src/ray.cpp
   src/rng.cpp
+  src/sampler.cpp
   src/scene.cpp
   src/shape.cpp
   src/sphere.cpp
