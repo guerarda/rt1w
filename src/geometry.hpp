@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 #include "error.h"
+#include "utils.h"
 
 #if defined(__cplusplus)
 
@@ -180,7 +181,7 @@ inline Vector2<T> Reflect(const Vector2<T> &v, const Vector2<T> &n)
 
 template <typename T>
 struct Vector3 {
-    Vector3() { x = 0; y = 0; z = 0; }
+    Vector3() : x(0), y(0), z(0) { }
     Vector3(T x, T y, T z) : x(x), y(y), z(z) { }
 
     T          length() const;
@@ -380,6 +381,152 @@ inline Vector3<T> Reflect(const Vector3<T> &v, const Vector3<T> &n)
     return v - 2 * Dot(v, n) * n;
 }
 
+#pragma mark - Vector 4 Declaration
+
+template <typename T>
+struct Vector4 {
+    Vector4() : x(0), y(0), z(0), w(0) { }
+    Vector4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) { }
+
+    T x, y, z, w;
+};
+
+typedef Vector4<float> v4f;
+typedef Vector4<double> v4d;
+
+#pragma mark - Matrix 4x4 Declaration
+
+template <typename T>
+struct Matrix4x4 {
+    Matrix4x4() { }
+    Matrix4x4(const Vector4<T> &vx,
+              const Vector4<T> &vy,
+              const Vector4<T> &vz,
+              const Vector4<T> &vw) : vx(vx), vy(vy), vz(vz), vw(vw) { }
+    Matrix4x4(T m[4][4]) {
+        vx = { m[0][0], m[0][1], m[0][2], m[0][3] };
+        vy = { m[1][0], m[1][1], m[1][2], m[1][3] };
+        vz = { m[2][0], m[2][1], m[2][2], m[2][3] };
+        vw = { m[3][0], m[3][1], m[3][2], m[3][3] };
+    }
+
+    Vector4<T> vx, vy, vz, vw;
+};
+
+typedef Matrix4x4<float> m44f;
+typedef Matrix4x4<double> m44d;
+
+#pragma mark Inline Functions
+
+template <typename T>
+inline Matrix4x4<T> Identity4x4()
+{
+    T m[4][4] = {
+        { 1.0f, 0.0f, 0.0f, 0.0f },
+        { 0.0f, 1.0f, 0.0f, 0.0f },
+        { 0.0f, 0.0f, 1.0f, 0.0f },
+        { 0.0f, 0.0f, 0.0f, 1.0f }
+    };
+    return Matrix4x4<T>(m);
+}
+
+template <typename T>
+inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
+{
+    size_t indxc[4], indxr[4];
+    size_t ipiv[4] = { 0, 0, 0, 0 };
+    T minv[4][4];
+    memcpy(minv, &m.vx.x, 4 * 4 * sizeof(T));
+    for (int i = 0; i < 4; i++) {
+        size_t irow = 0, icol = 0;
+        double big = 0;
+        // Choose pivot
+        for (size_t j = 0; j < 4; j++) {
+            if (ipiv[j] != 1) {
+                for (size_t k = 0; k < 4; k++) {
+                    if (ipiv[k] == 0) {
+                        if (std::abs(minv[j][k]) >= big) {
+                            big = double(std::abs(minv[j][k]));
+                            irow = j;
+                            icol = k;
+                        }
+                    } else ERROR_IF(ipiv[k] > 1, "Singular matrix in MatrixInvert");
+                }
+            }
+        }
+        ++ipiv[icol];
+        // Swap rows _irow_ and _icol_ for pivot
+        if (irow != icol) {
+            for (int k = 0; k < 4; ++k) std::swap(minv[irow][k], minv[icol][k]);
+        }
+        indxr[i] = irow;
+        indxc[i] = icol;
+        ERROR_IF(FloatEqual(minv[icol][icol], T{0.0}), "Singular matrix in MatrixInvert");
+
+        // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
+        double pivinv = 1 / minv[icol][icol];
+        minv[icol][icol] = 1.;
+        for (size_t j = 0; j < 4; j++) minv[icol][j] *= pivinv;
+
+        // Subtract this row from others to zero out their columns
+        for (size_t j = 0; j < 4; j++) {
+            if (j != icol) {
+                double save = minv[j][icol];
+                minv[j][icol] = 0;
+                for (size_t k = 0; k < 4; k++) minv[j][k] -= minv[icol][k] * save;
+            }
+        }
+    }
+    // Swap columns to reflect permutation
+    for (size_t j = 3; j--;) {
+        if (indxr[j] != indxc[j]) {
+            for (size_t k = 0; k < 4; k++)
+                std::swap(minv[k][indxr[j]], minv[k][indxc[j]]);
+        }
+    }
+    return Matrix4x4<T>(minv);
+}
+
+template <typename T>
+inline Matrix4x4<T> Transpose(const Matrix4x4<T> &m)
+{
+    T t[4][4] = {
+        { m.vx.x, m.vy.x, m.vz.x, m.vw.x },
+        { m.vx.y, m.vy.y, m.vz.y, m.vw.y },
+        { m.vx.z, m.vy.z, m.vz.z, m.vw.z },
+        { m.vx.w, m.vy.w, m.vz.w, m.vw.w }
+    };
+    return Matrix4x4<T>(t);
+}
+
+template <typename T>
+inline Matrix4x4<T> Mul(const Matrix4x4<T> &ma, const Matrix4x4<T> &mb)
+{
+    Matrix4x4<T> m;
+    const T *pa = &ma.vx.x;
+    const T *pb = &mb.vx.x;
+    T *pm = &m.vx.x;
+    for (size_t i = 0; i < 4; i++) {
+        for (size_t j = 0; j < 4; j++) {
+            pm[i * 4 + j] = pa[i * 4 + 0] * pb[0 * 4 + j] +
+                            pa[i * 4 + 1] * pb[1 * 4 + j] +
+                            pa[i * 4 + 2] * pb[2 * 4 + j] +
+                            pa[i * 4 + 3] * pb[3 * 4 + j];
+        }
+    }
+    return m;
+}
+
+inline m44f m44f_identity()
+{
+    return Identity4x4<float>();
+}
+
+inline m44d m44d_identity()
+{
+    return Identity4x4<double>();
+}
+
 #pragma mark - Bounds 3 Declaration
 
 template <typename T>
@@ -445,7 +592,7 @@ int32_t Bounds3<T>::maxAxis() const
     return d.x > d.y ? (d.x > d.z ? 0 : 2) : (d.y > d.z ? 1 : 2);
 }
 
-#pragma mark Inline Functions;
+#pragma mark Inline Functions
 
 template <typename T>
 inline Vector3<T> Offset(const Bounds3<T> &b, const Vector3<T> &p)
@@ -508,6 +655,34 @@ typedef struct v3d {
     double y;
     double z;
 } v3d;
+
+typedef struct v4f {
+    float x;
+    float y;
+    float z;
+    float w;
+};
+
+typedef struct v4d {
+    double x;
+    double y;
+    double z;
+    double w;
+};
+
+typedef struct m44f {
+    v4f vx;
+    v4f vy;
+    v4f vz;
+    v4f vw;
+};
+
+typedef struct m44d {
+    v4d vx;
+    v4d vy;
+    v4d vz;
+    v4d vw;
+};
 
 typedef struct bounds3f {
     v3f lo;

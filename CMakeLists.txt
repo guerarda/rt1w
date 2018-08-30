@@ -70,6 +70,7 @@ SET(RT1W_SOURCES
   src/shape.cpp
   src/sphere.cpp
   src/sync.c
+  src/transform.cpp
   src/texture.cpp
   src/utils.cpp
   src/workq.cpp
