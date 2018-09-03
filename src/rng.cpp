@@ -3,6 +3,8 @@
 #include <limits>
 #include <random>
 
+#include "error.h"
+
 struct _RNG : RNG {
 
     void init();
@@ -21,28 +23,37 @@ struct _RNG : RNG {
 void _RNG::init()
 {
     m_mt = std::mt19937(std::random_device()());
-    m_dist = std::uniform_real_distribution<float>(0.0f, 1.0f);
+    m_dist = std::uniform_real_distribution<float>(0.0, 1.0);
 }
 
 uint32_t _RNG::u32()
 {
     uint32_t max = std::numeric_limits<uint32_t>::max();
-    return (uint32_t)rint(f32() * max);
+    return (uint32_t)floor(f32() * max);
 }
 
 float _RNG::f32()
 {
-    return m_dist(m_mt);
+    float f;
+    do {
+        f = m_dist(m_mt);
+    } while (f >= 1.0f);
+    return f;
 }
 
 uint32_t _RNG::u32(uint32_t b)
 {
-    return (uint32_t)rint(f32() * b);
+    float f = f32();
+    uint32_t v = (uint32_t)floor(f * b);
+    ASSERT(v < b);
+    return v;
 }
 
 float _RNG::f32(float b)
 {
-    return f32() * b;
+    float v = f32() * b;
+    ASSERT(v < b);
+    return v;
 }
 
 #pragma mark - Static Constructor
