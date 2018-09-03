@@ -6,8 +6,6 @@
 #include "error.h"
 #include "rng.hpp"
 
-
-
 static void GenerateSamples1D(float *smp, size_t n, const sptr<RNG> &rng, bool jitter)
 {
     float inv_n = 1.0f / n;
@@ -23,13 +21,15 @@ static void GenerateSamples2D(v2f *smp, size_t nx, size_t ny, const sptr<RNG> &r
     float dx = 1.0f / nx;
     float dy = 1.0f/ ny;
 
+    size_t i = 0;
     for (size_t x = 0; x < nx; x++) {
         for (size_t y = 0; y < ny; y++) {
             float jx = jitter ? rng->f32() : 0.5f;
             float jy = jitter ? rng->f32() : 0.5f;
 
-            smp->x = std::min((x + jx) * dx, OneMinusEpsilon_f32);
-            smp->y = std::min((y + jy) * dy, OneMinusEpsilon_f32);
+            smp[i].x = std::min((x + jx) * dx, OneMinusEpsilon_f32);
+            smp[i].y = std::min((y + jy) * dy, OneMinusEpsilon_f32);
+            i++;
         }
     }
 }
@@ -53,6 +53,7 @@ struct _Sampler : Sampler {
 
     float sample1D() override;
     v2f   sample2D() override;
+    CameraSample cameraSample() override;
 
     void startPixel(v2i p) override;
     bool startNextSample() override;
@@ -97,6 +98,12 @@ v2f _Sampler::sample2D()
         return m_samples2D[m_2d_dim++][m_ix];
     }
     return { m_rng->f32(), m_rng->f32() };
+}
+
+CameraSample _Sampler::cameraSample()
+{
+    v2f p = v2f{ (float)m_pixel.x, (float)m_pixel.y };
+    return { p + sample2D(), sample2D() };
 }
 
 void _Sampler::startPixel(v2i p)

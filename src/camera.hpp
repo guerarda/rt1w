@@ -6,6 +6,11 @@
 struct Params;
 struct ray;
 
+struct CameraSample {
+    v2f pFilm;
+    v2f pLens;
+};
+
 struct Camera : Object {
     static sptr<Camera> create(const v3f &eye,
                                const v3f &lookat,
