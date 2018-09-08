@@ -2,6 +2,16 @@
 
 #include <stdint.h>
 
+#if defined(__cplusplus)
+
+int32_t FloatCompare(float, float);
+bool FloatEqual(float, float);
+
+int32_t FloatCompare(double, double);
+bool FloatEqual(double, double);
+
+#endif
+
 __BEGIN_DECLS
 
 int32_t f32_compare(float, float);
