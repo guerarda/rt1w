@@ -632,6 +632,11 @@ inline Bounds3<T> Union(const Bounds3<T> &b1, const Bounds3<T> &b2)
     return Bounds3<T>(lo, hi);
 }
 
+typedef struct rectf {
+    v2f org;
+    v2f size;
+} rectf;
+
 #else
 
 typedef struct v2f {
