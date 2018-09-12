@@ -2,6 +2,7 @@
 
 #include "sptr.hpp"
 #include "geometry.hpp"
+#include "transform.hpp"
 
 struct Params;
 struct ray;
@@ -12,16 +13,38 @@ struct CameraSample {
 };
 
 struct Camera : Object {
-    static sptr<Camera> create(const v3f &eye,
-                               const v3f &lookat,
-                               const v3f &up,
+    static sptr<Camera> create(const Transform &cameraToWorld,
+                               const Transform &projection,
+                               const rectf &bounds,
                                v2u resolution,
-                               float fov,
                                float aperture,
-                               float focus_dist);
+                               float focusDistance);
 
     static sptr<Camera> create(const sptr<Params> &p);
 
     virtual v2u resolution() const = 0;
-    virtual sptr<ray> make_ray(float u, float v) const = 0;
+    virtual sptr<ray> generateRay(const CameraSample &cs) const = 0;
+};
+
+struct PerspectiveCamera : Camera {
+    static sptr<Camera> create(const v3f &pos,
+                               const v3f &look,
+                               const v3f &up,
+                               const v2u &resolution,
+                               float fov,
+                               float aperture,
+                               float focusDistance,
+                               float zNear,
+                               float zFar);
+};
+
+struct OrthographicCamera : Camera {
+    static sptr<Camera> create(const v3f &pos,
+                               const v3f &look,
+                               const v3f &up,
+                               const v2u &resolution,
+                               float aperture,
+                               float focusDistance,
+                               float znear,
+                               float zFar);
 };

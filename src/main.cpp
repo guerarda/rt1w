@@ -15,6 +15,7 @@
 #include "material.hpp"
 #include "params.hpp"
 #include "ray.hpp"
+#include "sampler.hpp"
 #include "scene.hpp"
 #include "sphere.hpp"
 #include "sync.h"
@@ -90,25 +91,28 @@ static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
     std::mt19937 mt(rd());
     std::uniform_real_distribution<float> dist(0.0f, 1.0f);
 
-    uint32_t nx = smp->m_rect.size.x;
-    uint32_t ny = smp->m_rect.size.y;
+    size_t nx = smp->m_rect.size.x;
+    size_t ny = smp->m_rect.size.y;
     int32_t orgx = smp->m_rect.org.x;
     int32_t orgy = smp->m_rect.org.y;
 
-    for (uint32_t i = 0; i < ny; i++) {
-        uint8_t *dp = smp->m_dp + i * smp->m_bytes_per_row;
+    uint32_t ns = ctx->m_ns;
+    sptr<Sampler> sampler = Sampler::create(ns, ns, 4, true);
 
-        for (uint32_t j = 0; j < nx; j++) {
+    for (size_t y = 0; y < ny; y++) {
+        uint8_t *dp = smp->m_dp + (size_t)y * smp->m_bytes_per_row;
+
+        for (size_t x = 0; x < nx; x++) {
             v3f c = { 0.0f, 0.0f, 0.0f };
-
-            for (size_t k = 0; k < ctx->m_ns; k++) {
-                float u = (orgx + (int32_t)j + dist(mt)) / float(ctx->m_img_size.x);
-                float v = 1.0f - (float(orgy + (int32_t)i) - dist(mt)) / float(ctx->m_img_size.y);
-                sptr<ray> r = ctx->m_camera->make_ray(u, v);
+            sampler->startPixel({ orgx + (int32_t)x, orgy + (int32_t)y });
+            do {
+                CameraSample cs = sampler->cameraSample();
+                sptr<ray> r = ctx->m_camera->generateRay(cs);
 
                 c = c + color(r, ctx->m_scene, 0, ctx->m_bg);
-            }
-            c = 1.0f / ctx->m_ns * c;
+            } while (sampler->startNextSample());
+
+            c = 1.0f / (ns * ns) * c;
             /* Approx Gamma correction */
             c = {
                  fminf(1.0f, sqrtf(c.x)),
@@ -215,7 +219,7 @@ int main(int argc, char *argv[])
     DIE_IF(!scene, "No scene to render");
 
     v2u img_size = scene->camera()->resolution();
-    uint32_t ns = 1 << options.quality;
+    uint32_t ns = options.quality;
     uint8_t *img = (uint8_t *)malloc(img_size.x * img_size.y * 3 * sizeof(*img));
     size_t bpr = img_size.x * 3 * sizeof(*img);
 

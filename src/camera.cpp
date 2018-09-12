@@ -1,135 +1,184 @@
 #include "camera.hpp"
 
 #include <math.h>
-#include <random>
 
 #include "params.hpp"
 #include "ray.hpp"
 #include "value.hpp"
 
-static v3f random_in_unit_disk()
+static v2f UniformSampleDisk(const v2f &p)
 {
-    static std::random_device rd;
-    static std::mt19937 mt(rd());
-    static std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
-    v3f p = { 0.0f, 0.0f, 0.0f };
+    double r = std::sqrt(p.x);
+    double a = 2 * M_PI * p.y;
 
-    do {
-        p.x = dist(mt);
-        p.y = dist(mt);
-    } while (Dot(p, p) >= 1.0f);
-    return p;
+    return { (float)(r * std::cos(a)), (float)(r * std::sin(a)) };
 }
 
-struct _Camera : Camera {
-    _Camera(const v3f &eye,
-            const v3f &lookat,
-            const v3f &up,
-            v2u resolution,
-            float fov,
-            float aperture,
-            float focus_dist);
+struct _ProjectiveCamera : Camera
+{
+    _ProjectiveCamera(const Transform &cameraToWorld,
+                      const Transform &projection,
+                      const rectf &window,
+                      v2u resolution,
+                      float lensRadius,
+                      float focusDist);
 
-    v2u       resolution() const { return m_resolution; }
-    sptr<ray> make_ray(float u, float v) const;
+    sptr<ray> generateRay(const CameraSample &cs) const override;
+    v2u resolution() const override { return m_resolution; }
 
-    v2u m_resolution;
-    v3f m_bl;
-    v3f m_h;
-    v3f m_v;
-    v3f m_org;
-    float m_lens_radius;
+    Transform m_cameraToWorld;
+    Transform m_cameraToScreen; // Projection
+    Transform m_rasterToCamera;
+
+    rectf m_window;
+    v2u   m_resolution;
+
+    float m_lensRadius;
+    float m_focusDistance;
 };
 
-_Camera::_Camera(const v3f &eye,
-                 const v3f &lookat,
-                 const v3f &up,
-                 v2u res,
-                 float fov,
-                 float aperture,
-                 float focus_dist)
+_ProjectiveCamera::_ProjectiveCamera(const Transform &cameraToWorld,
+                                     const Transform &projection,
+                                     const rectf &window,
+                                     v2u resolution,
+                                     float lensRadius,
+                                     float focusDist) :
+    m_cameraToWorld(cameraToWorld), m_cameraToScreen(projection), m_window(window),
+    m_resolution(resolution), m_lensRadius(lensRadius), m_focusDistance(focusDist)
 {
-    v3f u, v, w;
-    float aspect = (float)res.x / res.y;
-    float theta = fov * float(M_PI) / 180.0f;
-    float half_h = tanf(theta/ 2.0f);
-    float half_w = aspect * half_h;
-
-    m_resolution = res;
-    m_lens_radius = aperture;
-    m_org = eye;
-    w = Normalize(m_org - lookat);
-    u = Normalize(Cross(up, w));
-    v = Cross(w, u);
-
-    m_bl = m_org;
-    m_bl -= half_w * focus_dist * u;
-    m_bl -= half_h * focus_dist * v;
-    m_bl -= focus_dist * w;
-
-    m_h = 2.0f * half_w * focus_dist * u;
-    m_v = 2.0f * half_h * focus_dist * v;
+    Transform screenToRaster = Transform::Scale(resolution.x, resolution.y, 1.0f) *
+        Transform::Scale(1.0f / window.size.x,
+                         -1.0f / window.size.y,
+                         1.0f) *
+        Transform::Translate({ -window.org.x, window.org.y, 0.0f });
+    m_rasterToCamera = Inverse(screenToRaster * m_cameraToScreen);
 }
 
-sptr<ray> _Camera::make_ray(float u, float v) const
+sptr<ray> _ProjectiveCamera::generateRay(const CameraSample &cs) const
 {
-    v3f rd = m_lens_radius * random_in_unit_disk();
-    v3f offset = v3f{ u, v, 0.0f } * rd;
-    v3f org = m_org + offset;
-    v3f dir = m_bl + u * m_h + v * m_v - org;
-    return ray::create(org, dir);
+    v3f pCamera = Mulp(m_rasterToCamera, v3f{ cs.pFilm.x, cs.pFilm.y, 0.0f });
+
+    v3f org = { 0.0f, 0.0f, 0.0f };
+    v3f dir = Normalize(pCamera);
+    sptr<ray> r = ray::create(org, dir);
+
+    if (m_lensRadius > 0.0f) {
+        v2f pLens = m_lensRadius * UniformSampleDisk(cs.pLens);
+        float t = m_focusDistance / std::abs(dir.z);
+        v3f pFocus = r->point(t);
+
+        org = { pLens.x, pLens.y, 0.0f };
+        dir = Normalize(pFocus - org);
+
+        r = ray::create(org, dir);
+    }
+    return m_cameraToWorld(r);
 }
 
 #pragma mark - Static constructors
 
-sptr<Camera> Camera::create(const v3f &eye,
-                            const v3f &lookat,
-                            const v3f &up,
-                            v2u res,
-                            float fov,
-                            float aperture,
-                            float focus_dist)
-{
-    return std::make_shared<_Camera>(eye, lookat, up, res,
-                                     fov, aperture, focus_dist);
-}
-
 sptr<Camera> Camera::create(const sptr<Params> &p)
 {
-    sptr<Value> pos = p->value("position");
-    if (!pos) {
-        // LOG
-    }
-    sptr<Value> lookat = p->value("lookat");
-    if (!lookat) {
-        // LOG
-    }
-    sptr<Value> up = p->value("up");
-    if (!up) {
-        // LOG
-    }
-    sptr<Value> res = p->value("resolution");
-    if (!res) {
-        // LOG
-    }
-    sptr<Value> fov = p->value("fov");
-    if (!fov) {
-        // LOG
-    }
-    sptr<Value> aperture = p->value("aperture");
-    if (!aperture) {
-        //LOG
-    }
-    sptr<Value> fdist = p->value("focusdistance");
-    if (!fdist) {
-        // LOG
-    }
+    std::string type = Params::string(p, "type", "perspective");
+    if (type == "custom") {
+        m44f pos = Params::matrix4x4f(p, "cameratoworld", m44f_identity());
+        m44f proj = Params::matrix4x4f(p, "projection", m44f_identity());
+        v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
+        float aperture = Params::f32(p, "aperture", 0.1f);
+        float fdist = Params::f32(p, "focusdistance", 1.0f);
 
-    return Camera::create(pos->vector3f(),
-                          lookat->vector3f(),
-                          up->vector3f(),
-                          res->vector2u(),
-                          fov->f32(),
-                          aperture->f32(),
-                          fdist->f32());
+        rectf bounds;
+        if (sptr<Value> vb = p->value("bounds")) {
+            vb->value(TYPE_FLOAT32, &bounds.org.x, 0, 4);
+        } else {
+            float ar = (float)res.x / res.y;
+            bounds = { { -ar, -1.0f }, v2f{ 2.0f * ar, 2.0f } };
+        }
+        return Camera::create(Transform(pos), Transform(proj), bounds, res, aperture, fdist);
+    }
+    if (type == "orthographic") {
+        v3f pos = Params::vector3f(p, "position", { 1.0f, 1.0f, 1.0f });
+        v3f look = Params::vector3f(p, "lookat", { 0.0f, 0.0f, 0.0f });
+        v3f up = Params::vector3f(p, "up", { 0.0f, 1.0f, 0.0f });
+        v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
+        float aperture = Params::f32(p, "aperture", 0.1f);
+        float fdist = Params::f32(p, "focusdistance", 1.0f);
+        float znear = Params::f32(p, "znear", -0.1f);
+        float zfar = Params::f32(p, "zfar", 1000.0f);
+
+        return OrthographicCamera::create(pos, look, up, res, aperture, fdist, znear, zfar);
+    }
+    v3f pos = Params::vector3f(p, "position", { 1.0f, 1.0f, 1.0f });
+    v3f look = Params::vector3f(p, "lookat", { 0.0f, 0.0f, 0.0f });
+    v3f up = Params::vector3f(p, "up", { 0.0f, 1.0f, 0.0f });
+    v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
+    float fov = Params::f32(p, "fov", 60.0f);
+    float aperture = Params::f32(p, "aperture", 0.1f);
+    float fdist = Params::f32(p, "focusdistance", 1.0f);
+    float znear = Params::f32(p, "znear", -0.1f);
+    float zfar = Params::f32(p, "zfar", 1000.0f);
+
+    return PerspectiveCamera::create(pos, look, up, res, fov, aperture, fdist, znear, zfar);
+}
+
+sptr<Camera> Camera::create(const Transform &cameraToWorld,
+                            const Transform &projection,
+                            const rectf &bounds,
+                            v2u resolution,
+                            float aperture,
+                            float focusDistance)
+{
+    return std::make_shared<_ProjectiveCamera>(cameraToWorld,
+                                               projection,
+                                               bounds,
+                                               resolution,
+                                               aperture,
+                                               focusDistance);
+}
+
+sptr<Camera> PerspectiveCamera::create(const v3f &pos,
+                               const v3f &look,
+                               const v3f &up,
+                               const v2u &resolution,
+                               float fov,
+                               float aperture,
+                               float focusDistance,
+                               float zNear,
+                               float zFar)
+{
+    Transform lookat = Transform::LookAt(pos, look, up);
+    Transform proj = Transform::Perspective(fov, zNear, zFar);
+
+    float ar = (float)resolution.x / resolution.y;
+    rectf screen = { { -ar, -1.0f }, { 2.0f * ar, 2.0f } };
+
+    return std::make_shared<_ProjectiveCamera>(lookat,
+                                               proj,
+                                               screen,
+                                               resolution,
+                                               aperture,
+                                               focusDistance);
+}
+
+sptr<Camera> OrthographicCamera::create(const v3f &pos,
+                                        const v3f &look,
+                                        const v3f &up,
+                                        const v2u &resolution,
+                                        float aperture,
+                                        float focusDistance,
+                                        float zNear,
+                                        float zFar)
+{
+    Transform lookat = Transform::LookAt(pos, look, up);
+    Transform proj = Transform::Orthographic(zNear, zFar);
+
+    float ar = (float)resolution.x / resolution.y;
+    rectf screen = { { -ar, -1.0f }, { 2.0f * ar, 2.0f } };
+
+    return std::make_shared<_ProjectiveCamera>(lookat,
+                                               proj,
+                                               screen,
+                                               resolution,
+                                               aperture,
+                                               focusDistance);
 }
