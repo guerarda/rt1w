@@ -5,7 +5,7 @@
 #include "arena.hpp"
 
 
-static bool box_hit(const bounds3f &b, const sptr<ray> &r, float tmin, float tmax)
+static bool box_hit(const bounds3f &b, const sptr<Ray> &r, float tmin, float tmax)
 {
     v3f dir = r->direction();
     v3f org = r->origin();
@@ -80,7 +80,7 @@ struct _BVHAccelerator : BVHAccelerator {
      _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
     ~_BVHAccelerator();
 
-    bool     hit(const sptr<ray> &r, float min, float max, hit_record &rec) const override;
+    bool     hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const override;
     bounds3f bounds() const override { return m_bounds; }
     const std::vector<sptr<Primitive>> &primitives() const override { return m_prims; }
 
@@ -265,7 +265,7 @@ int32_t _BVHAccelerator::flattenBVH(const BVHBuildNode *root, int32_t &offset)
     return savedOffset;
 }
 
-bool _BVHAccelerator::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
 {
     size_t index = 0;
     size_t next[64] = { 0 };

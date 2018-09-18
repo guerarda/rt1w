@@ -22,7 +22,7 @@ struct Primitive : Object {
                                   const sptr<Material> &m);
     static sptr<Primitive> load_obj(const std::string &path);
 
-    virtual bool      hit(const sptr<ray> &r,
+    virtual bool      hit(const sptr<Ray> &r,
                           float min,
                           float max,
                           hit_record &rec) const = 0;

@@ -5,12 +5,12 @@
 
 struct hit_record;
 struct Params;
-struct ray;
+struct Ray;
 
 struct Shape : Object {
     static sptr<Shape> create(const sptr<Params> &p);
 
-    virtual bool      hit(const sptr<ray> &r,
+    virtual bool      hit(const sptr<Ray> &r,
                           float min,
                           float max,
                           hit_record &rec) const = 0;

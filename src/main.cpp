@@ -24,7 +24,7 @@
 
 #define MAX_RECURSION_DEPTH 50
 
-static v3f color(const sptr<ray> &r,
+static v3f color(const sptr<Ray> &r,
                  const sptr<Primitive> &world,
                  size_t depth,
                  v3f bg)
@@ -34,7 +34,7 @@ static v3f color(const sptr<ray> &r,
     if (world->hit(r, 0.001f, FLT_MAX, rec)) {
         v3f attenuation;
         v3f emitted = rec.mat->emitted(rec.uv.x, rec.uv.y, rec.p);
-        sptr<ray> scattered;
+        sptr<Ray> scattered;
 
         if (   depth < MAX_RECURSION_DEPTH
             && rec.mat->scatter(r, rec, attenuation, scattered)) {
@@ -107,7 +107,7 @@ static void pixel_func(const sptr<Object> &obj, const sptr<Object> &arg)
             sampler->startPixel({ orgx + (int32_t)x, orgy + (int32_t)y });
             do {
                 CameraSample cs = sampler->cameraSample();
-                sptr<ray> r = ctx->m_camera->generateRay(cs);
+                sptr<Ray> r = ctx->m_camera->generateRay(cs);
 
                 c = c + color(r, ctx->m_scene, 0, ctx->m_bg);
             } while (sampler->startNextSample());

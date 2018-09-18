@@ -5,7 +5,7 @@
 #include "transform.hpp"
 
 struct Params;
-struct ray;
+struct Ray;
 
 struct CameraSample {
     v2f pFilm;
@@ -23,7 +23,7 @@ struct Camera : Object {
     static sptr<Camera> create(const sptr<Params> &p);
 
     virtual v2u resolution() const = 0;
-    virtual sptr<ray> generateRay(const CameraSample &cs) const = 0;
+    virtual sptr<Ray> generateRay(const CameraSample &cs) const = 0;
 };
 
 struct PerspectiveCamera : Camera {

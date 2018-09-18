@@ -54,22 +54,22 @@ struct _Lambertian : Lambertian {
 
     _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) { }
 
-    bool scatter(const sptr<ray> &r_in,
+    bool scatter(const sptr<Ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
-                 sptr<ray> &scattered) const;
+                 sptr<Ray> &scattered) const;
     v3f emitted(float, float, v3f) const { return v3f(); }
 
     sptr<Texture>  m_albedo;
 };
 
-bool _Lambertian::scatter(__unused const sptr<ray> &r_in,
+bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
                           const hit_record &rec,
                           v3f &attenuation,
-                          sptr<ray> &scattered) const
+                          sptr<Ray> &scattered) const
 {
     v3f target = rec.p + rec.normal + random_sphere_point();
-    scattered = ray::create(rec.p, target - rec.p);
+    scattered = Ray::create(rec.p, target - rec.p);
     attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
     return true;
 }
@@ -80,10 +80,10 @@ struct _Metal : Metal {
 
     _Metal(const sptr<Texture> &tex, float f);
 
-    bool scatter(const sptr<ray> &r_in,
+    bool scatter(const sptr<Ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
-                 sptr<ray> &scattered) const;
+                 sptr<Ray> &scattered) const;
 
     v3f emitted(float, float, v3f) const { return v3f(); }
 
@@ -97,14 +97,14 @@ _Metal::_Metal(const sptr<Texture> &tex, float f)
     m_fuzz = fminf(1.0f, f);
 }
 
-bool _Metal::scatter(const sptr<ray> &r_in,
+bool _Metal::scatter(const sptr<Ray> &r_in,
                      const hit_record &rec,
                      v3f &attenuation,
-                     sptr<ray> &scattered) const
+                     sptr<Ray> &scattered) const
 {
     v3f reflected = Reflect(r_in->direction(), rec.normal);
     v3f fuzz = m_fuzz * random_sphere_point();
-    scattered = ray::create(rec.p, fuzz + reflected);
+    scattered = Ray::create(rec.p, fuzz + reflected);
     attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
     return Dot(scattered->direction(), rec.normal) > 0.0f;
 }
@@ -115,20 +115,20 @@ struct _Dielectric : Dielectric {
 
     _Dielectric(float ri) : m_ref_idx(ri) { }
 
-    bool scatter(const sptr<ray> &r_in,
+    bool scatter(const sptr<Ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
-                 sptr<ray> &scattered) const;
+                 sptr<Ray> &scattered) const;
 
     v3f emitted(float, float, v3f) const { return v3f(); }
 
     float m_ref_idx;
 };
 
-bool _Dielectric::scatter(const sptr<ray> &r_in,
+bool _Dielectric::scatter(const sptr<Ray> &r_in,
                           const hit_record &rec,
                           v3f &attenuation,
-                          sptr<ray> &scattered) const
+                          sptr<Ray> &scattered) const
 {
     float ni_over_nt;
     float cosine;
@@ -155,9 +155,9 @@ bool _Dielectric::scatter(const sptr<ray> &r_in,
     static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     if (dist(__prng) < p_reflected) {
         v3f reflected = Reflect(rdir, rec.normal);
-        scattered = ray::create(rec.p, reflected);
+        scattered = Ray::create(rec.p, reflected);
     } else {
-        scattered = ray::create(rec.p, refracted);
+        scattered = Ray::create(rec.p, refracted);
     }
     return true;
 }

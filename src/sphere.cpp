@@ -27,7 +27,7 @@ struct _Sphere : Sphere {
 
     _Sphere(const v3f &c, float r);
 
-    bool     hit(const sptr<ray> &, float, float, hit_record &) const override;
+    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override { return m_box; }
     v3f      center() const override { return m_center; }
     float    radius() const override { return m_radius; }
@@ -44,7 +44,7 @@ _Sphere::_Sphere(const v3f &c, float r)
     m_box = { c - v3f{ r, r, r }, c + v3f{ r, r, r } };
 }
 
-bool _Sphere::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _Sphere::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
 {
     v3f rdir = r->direction();
     v3f oc = r->origin() - m_center;

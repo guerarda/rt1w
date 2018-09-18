@@ -45,7 +45,7 @@ struct Triangle : Shape {
     Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md),
                                                           m_v(&md->m_i[3 * ix]) { }
 
-    bool     hit(const sptr<ray> &, float, float, hit_record &) const override;
+    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override;
 
     sptr<const MeshData>   m_md;
@@ -62,7 +62,7 @@ static size_t max_dimension(const v3f &v)
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
 
-bool Triangle::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool Triangle::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -176,7 +176,7 @@ bounds3f Triangle::bounds() const
 struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
-    bool     hit(const sptr<ray> &, float, float, hit_record &) const override;
+    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override { return m_box; };
 
     std::vector<sptr<Shape>> faces() const override;
@@ -198,7 +198,7 @@ _Mesh::_Mesh(const sptr<MeshData> &md)
     }
 }
 
-bool _Mesh::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _Mesh::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
 {
     for (auto &t : m_tris) {
         if (t->hit(r, min, max, rec)) {

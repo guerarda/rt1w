@@ -9,14 +9,14 @@ struct _Primitive : Primitive {
     _Primitive(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s),
                                                                 m_material(m) { }
 
-    bool     hit(const sptr<ray> &, float, float, hit_record &) const;
+    bool     hit(const sptr<Ray> &, float, float, hit_record &) const;
     bounds3f bounds() const;
 
     sptr<Shape>    m_shape;
     sptr<Material> m_material;
 };
 
-bool _Primitive::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _Primitive::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
 {
     if (m_shape->hit(r, min, max, rec)) {
         rec.mat = m_material;
@@ -49,7 +49,7 @@ struct _Aggregate : Aggregate {
 
     _Aggregate(const std::vector<sptr<Primitive>> &prims);
 
-    bool     hit(const sptr<ray> &, float, float, hit_record &) const override;
+    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override { return m_bounds; }
 
     const std::vector<sptr<Primitive>> &primitives() const override { return m_primitives; }
@@ -66,7 +66,7 @@ _Aggregate::_Aggregate(const std::vector<sptr<Primitive>> &prims)
     }
 }
 
-bool _Aggregate::hit(const sptr<ray> &r, float min, float max, hit_record &rec) const
+bool _Aggregate::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
 {
     bool hit = false;
     rec.t = std::numeric_limits<float>::max();
