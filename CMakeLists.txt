@@ -53,11 +53,13 @@ SET(RT1W_SOURCES
   src/arena.cpp
   src/bvh.cpp
   src/camera.cpp
+  src/context.cpp
   src/event.cpp
   src/error.cpp
   src/geometry.cpp
   src/image.cpp
   src/imageio.c
+  src/integrator.cpp
   src/light.cpp
   src/material.cpp
   src/mesh.cpp
