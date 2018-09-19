@@ -51,6 +51,9 @@ struct _Sampler : Sampler {
                             m_dim(dim), m_jitter(jitter) { }
     void init();
 
+    uint64_t samplesPerPixel() const override { return m_spp; }
+    sptr<Sampler> clone() const override;
+
     float sample1D() override;
     v2f   sample2D() override;
     CameraSample cameraSample() override;
@@ -82,6 +85,11 @@ void _Sampler::init()
         m_samples1D.push_back(std::vector<float>(m_spp));
         m_samples2D.push_back(std::vector<v2f>(m_spp));
     }
+}
+
+sptr<Sampler> _Sampler::clone() const
+{
+    return Sampler::create(m_x, m_y, m_dim, m_jitter);
 }
 
 float _Sampler::sample1D()
