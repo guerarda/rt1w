@@ -36,7 +36,6 @@ typedef enum {
     TYPE_FLOAT32,
     TYPE_FLOAT64,
     TYPE_STRING,
-    TYPE_OBJECT
 } buffer_type_t;
 
 typedef enum {
@@ -88,25 +87,32 @@ inline size_t buffer_type_sizeof(buffer_type_t t)
     switch (t) {
     case TYPE_INT8:
     case TYPE_UINT8:
-        return 8;
+        return 1;
 
     case TYPE_INT16:
     case TYPE_UINT16:
-        return 16;
+        return 2;
 
     case TYPE_INT32:
     case TYPE_UINT32:
     case TYPE_FLOAT32:
-        return 32;
+        return 4;
 
     case TYPE_INT64:
     case TYPE_UINT64:
     case TYPE_FLOAT64:
-        return 64;
+        return 8;
 
     default:
         return 0;
     }
+}
+
+inline buffer_format_t buffer_format_init(buffer_type_t t, buffer_order_t o)
+{
+    uint16_t s = (uint16_t)(buffer_type_sizeof(t) * buffer_order_sizeof(o));
+    buffer_format_t f = { s, t, o};
+    return f;
 }
 
 __END_DECLS
