@@ -6,8 +6,8 @@
 
 struct Transform {
     Transform() : m_mat(m44f_identity()), m_inv(m44f_identity()) { }
-    Transform(const m44f &m) : m_mat(m), m_inv(Inverse(m)) { }
-    Transform(const m44f &m, const m44f &inv) : m_mat(m), m_inv(inv) { }
+    explicit Transform(const m44f &m) : m_mat(m), m_inv(Inverse(m)) { }
+    explicit Transform(const m44f &m, const m44f &inv) : m_mat(m), m_inv(inv) { }
 
     m44f mat() const { return m_mat; }
     m44f inv() const { return m_inv; }

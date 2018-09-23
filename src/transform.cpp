@@ -15,8 +15,8 @@ Transform Transform::operator * (const Transform &t) const
 
 sptr<Ray> Transform::operator () (const sptr<Ray> &r) const
 {
-    v3f o = Mulp(m_mat, r->origin());
-    v3f d = Mulv(m_mat, r->direction());
+    v3f o = Mulp(*this, r->origin());
+    v3f d = Mulv(*this, r->direction());
 
     return Ray::create(o, d);
 }
