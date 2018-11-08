@@ -4,6 +4,8 @@
 #include <iostream>
 #include <map>
 #include <vector>
+#include <climits>
+#include <libgen.h>
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
@@ -20,14 +22,46 @@
 
 #pragma mark Utils
 
-static sptr<Params> read_params(const rapidjson::Value &v)
+static bool is_absolute_path(const std::string &path)
+{
+    return path.size() > 0 && path[0] == '/';
+}
+
+static std::string absolute_path(const std::string &path)
+{
+    char full[PATH_MAX];
+    if (realpath(path.c_str(), full)) {
+        return std::string(full);
+    }
+    return path;
+}
+
+static std::string resolve_path(const std::string &dir, const std::string &path)
+{
+    ASSERT(!dir.empty());
+
+    if (path.empty()) {
+        return std::string();
+    }
+    if (is_absolute_path(path)) {
+        return path;
+    }
+    return absolute_path(dir + "/" + path);
+
+}
+
+static sptr<Params> read_params(const rapidjson::Value &v, const std::string &dir)
 {
     sptr<Params> p = Params::create();
 
     for (auto &m : v.GetObject()) {
         std::string name = m.name.GetString();
         if (m.value.IsString()) {
-            p->insert(name, m.value.GetString());
+            std::string s = m.value.GetString();
+            if (name == "filename") {
+                s = resolve_path(dir, s);
+            }
+            p->insert(name, s);
         }
         else if (m.value.IsArray()) {
             std::vector<double> a;
@@ -70,7 +104,7 @@ static sptr<Params> read_params(const rapidjson::Value &v)
             warning("Bool values are not supported");
         }
         else if (m.value.IsObject()) {
-            p->insert(name, read_params(m.value));
+            p->insert(name, read_params(m.value, dir));
         }
         else {
 
@@ -79,51 +113,49 @@ static sptr<Params> read_params(const rapidjson::Value &v)
     return p;
 }
 
-static sptr<Texture> read_texture(const rapidjson::Value &v,
-                                  const std::map<const std::string, const sptr<Texture>> &textures)
-{
-    sptr<Params> p = read_params(v);
-    p->merge(textures);
-    return Texture::create(p);
-}
-
-static sptr<Material> read_material(const rapidjson::Value &v,
-                                    const std::map<const std::string, const sptr<Texture>> &textures)
-{
-    sptr<Params> p = read_params(v);
-    p->merge(textures);
-    return Material::create(p);
-}
-
-static sptr<Shape> read_shape(const rapidjson::Value &v)
-{
-    return Shape::create(read_params(v));
-}
-
-static sptr<Camera> read_camera(const rapidjson::Value &v)
-{
-    return Camera::create(read_params(v));
-}
-
 #pragma mark - Scene
 
 struct _Scene : Scene {
 
-    std::vector<sptr<Primitive>> primitives() const { return m_primitives; }
-    sptr<Camera>                 camera() const     { return m_camera; }
-    sptr<const Params>           options() const    { return m_options; }
+    _Scene(const std::vector<sptr<Primitive>> &p,
+           const sptr<Camera> &c,
+           const sptr<Params> &o) : m_primitives(p), m_camera(c), m_options(o) { }
 
-    void    init(const std::vector<sptr<Primitive>> &primitives,
-                 const sptr<Camera> &camera,
-                 const sptr<Params> &options);
-    int32_t init_with_json(const std::string &path);
+    std::vector<sptr<Primitive>> primitives() const override { return m_primitives; }
+    sptr<Camera>                 camera() const override     { return m_camera; }
+    sptr<const Params>           options() const override    { return m_options; }
 
-    int32_t load_textures(const rapidjson::Document &d);
-    int32_t load_materials(const rapidjson::Document &d);
-    int32_t load_shapes(const rapidjson::Document &d);
-    int32_t load_camera(const rapidjson::Document &d);
-    int32_t load_options(const rapidjson::Document &d);
-    int32_t make_primitives(const rapidjson::Document &d);
+    std::vector<sptr<Primitive>> m_primitives;
+    sptr<Camera>                 m_camera;
+    sptr<Params>                 m_options;
+};
+
+#pragma mark - Scene From JSON
+
+struct _SceneFromJSON : Scene {
+
+    _SceneFromJSON(const std::string &path) : m_path(path) { }
+
+    std::vector<sptr<Primitive>> primitives() const override { return m_primitives; }
+    sptr<Camera>                 camera() const override     { return m_camera; }
+    sptr<const Params>           options() const override    { return m_options; }
+
+    int32_t init();
+
+    sptr<Material> read_material(const rapidjson::Value &v) const;
+    sptr<Shape> read_shape(const rapidjson::Value &v) const;
+    sptr<Texture> read_texture(const rapidjson::Value &v) const;
+
+    void load_camera();
+    void load_materials();
+    void load_options();
+    void load_primitives();
+    void load_shapes();
+    void load_textures();
+
+    std::string m_path;
+    std::string m_dir;
+    rapidjson::Document m_doc;
 
     std::vector<sptr<Primitive>> m_primitives;
     sptr<Camera>                 m_camera;
@@ -134,42 +166,90 @@ struct _Scene : Scene {
     std::map<const std::string, const sptr<Shape>>    m_shapes;
 };
 
-int32_t _Scene::load_textures(const rapidjson::Document &d)
+int32_t _SceneFromJSON::init()
 {
-    //FIXME: CHECKS
-    rapidjson::Value::ConstMemberIterator section = d.FindMember("textures");
+    FILE *fp = fopen(m_path.c_str(), "r");
+    char readBuffer[65536];
+    rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
+    rapidjson::ParseResult ok = m_doc.ParseStream(is);
+    fclose(fp);
 
-    if (section != d.MemberEnd()) {
+    /* Check that the file was parsed without error */
+    if (!ok) {
+        error("JSON parse error: %s (%lu)\n",
+              GetParseError_En(ok.Code()), ok.Offset());
+        return -1;
+    }
+    /* Get directory containing the json file that will be used to resolve
+     * relative paths */
+    char buf[PATH_MAX];
+    m_path.copy(buf, m_path.size());
+
+    m_dir = std::string(dirname(buf));
+
+    load_textures();
+    load_materials();
+    load_shapes();
+    load_camera();
+    load_options();
+    load_primitives();
+
+    if (m_primitives.size() > 0 && m_camera) {
+        return 0;
+    }
+    return -1;
+}
+
+sptr<Material> _SceneFromJSON::read_material(const rapidjson::Value &v) const
+{
+    sptr<Params> p = read_params(v, m_dir);
+    p->merge(m_textures);
+    return Material::create(p);
+}
+
+sptr<Shape> _SceneFromJSON::read_shape(const rapidjson::Value &v) const
+{
+    return Shape::create(read_params(v, m_dir));
+}
+
+sptr<Texture> _SceneFromJSON::read_texture(const rapidjson::Value &v) const
+{
+    sptr<Params> p = read_params(v, m_dir);
+    p->merge(m_textures);
+    return Texture::create(p);
+}
+
+void _SceneFromJSON::load_textures()
+{
+    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("textures");
+    if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
-                sptr<Texture> tex = read_texture(v, m_textures);
+                sptr<Texture> tex = read_texture(v);
 
                 if (!k.empty() && tex) {
                     m_textures.insert(std::make_pair(k, tex));
                 }
                 WARNING_IF(!tex, "Couldn't create texture \"%s\"", k.c_str());
-
             } else {
                 warning("Found unamed texture, skipping");
             }
         }
     }
-    return 0;
 }
 
-int32_t _Scene::load_materials(const rapidjson::Document &d)
+void _SceneFromJSON::load_materials()
 {
     //FIXME: CHECKS
-    rapidjson::Value::ConstMemberIterator section = d.FindMember("materials");
-
-    if (section != d.MemberEnd()) {
+    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("materials");
+    if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
-                sptr<Material> mat = read_material(v, m_textures);
+                sptr<Material> mat = read_material(v);
 
                 WARNING_IF(!mat, "Couldn't create material \"%s\"", k.c_str());
                 m_materials.insert(std::make_pair(k, mat));
@@ -178,14 +258,13 @@ int32_t _Scene::load_materials(const rapidjson::Document &d)
             }
         }
     }
-    return 0;
 }
 
-int32_t _Scene::load_shapes(const rapidjson::Document &d)
+void _SceneFromJSON::load_shapes()
 {
-    rapidjson::Value::ConstMemberIterator section = d.FindMember("shapes");
+    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("shapes");
 
-    if (section != d.MemberEnd()) {
+    if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
@@ -197,36 +276,32 @@ int32_t _Scene::load_shapes(const rapidjson::Document &d)
             }
         }
     }
-    return 0;
 }
 
-int32_t _Scene::load_camera(const rapidjson::Document &d)
+void _SceneFromJSON::load_camera()
 {
-    rapidjson::Value::ConstMemberIterator section = d.FindMember("camera");
+    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("camera");
 
-    if (section != d.MemberEnd()) {
-        m_camera = read_camera(section->value);
+    if (section != m_doc.MemberEnd()) {
+        m_camera = Camera::create(read_params(section->value, m_dir));
     } else {
         error("Missing \"camera\"");
-        return -1;
     }
-    return 0;
 }
 
-int32_t _Scene::load_options(const rapidjson::Document &d)
+void _SceneFromJSON::load_options()
 {
-    rapidjson::Value::ConstMemberIterator section = d.FindMember("options");
-    if (section != d.MemberEnd()) {
-        m_options = read_params(section->value);
+    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("options");
+    if (section != m_doc.MemberEnd()) {
+        m_options = read_params(section->value, m_dir);
     }
-    return 0;
 }
 
-int32_t _Scene::make_primitives(const rapidjson::Document &d)
+void _SceneFromJSON::load_primitives()
 {
-    rapidjson::Value::ConstMemberIterator section = d.FindMember("primitives");
+    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("primitives");
 
-    if (section != d.MemberEnd()) {
+    if (section != m_doc.MemberEnd()) {
         size_t ix = 0;
         for (auto &v : section->value.GetArray()) {
             if (v.IsObject()) {
@@ -262,7 +337,7 @@ int32_t _Scene::make_primitives(const rapidjson::Document &d)
 
                         sptr<Material> mat;
                         if (itm->value.IsObject()) {
-                            mat = read_material(itm->value, m_textures);
+                            mat = read_material(itm->value);
                         }
                         else if (itm->value.IsString()) {
                             std::string name = itm->value.GetString();
@@ -286,48 +361,7 @@ int32_t _Scene::make_primitives(const rapidjson::Document &d)
     }
     if (m_primitives.empty()) {
         error("Couldn't find a primitive");
-        return -1;
     }
-    return 0;
-}
-
-void _Scene::init(const std::vector<sptr<Primitive>> &primitives,
-                  const sptr<Camera> &camera,
-                  const sptr<Params> &options)
-{
-    m_primitives = primitives;
-    m_camera = camera;
-    m_options = options;
-}
-
-int32_t _Scene::init_with_json(const std::string &path)
-{
-    FILE *fp = fopen(path.c_str(), "r");
-    char readBuffer[65536];
-    rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::Document d;
-    rapidjson::ParseResult ok = d.ParseStream(is);
-    fclose(fp);
-
-    /* Check that the file was parsed without error */
-    if (!ok) {
-        error("JSON parse error: %s (%lu)\n",
-              GetParseError_En(ok.Code()), ok.Offset());
-        return -1;
-    }
-
-
-    int32_t err = 0;
-
-    err = load_textures(d);
-    err = load_materials(d);
-    err = load_shapes(d);
-    err = load_camera(d);
-    err = load_options(d);
-
-    err = make_primitives(d);
-
-    return err;
 }
 
 #pragma mark - Static constructors
@@ -336,22 +370,17 @@ sptr<Scene> Scene::create(const std::vector<sptr<Primitive>> &primitives,
                           const sptr<Camera> &camera,
                           const sptr<Params> &options)
 {
-    sptr<_Scene> scene = std::make_shared<_Scene>();
-    scene->init(primitives, camera, options);
-
-    return scene;
+    return std::make_shared<_Scene>(primitives, camera, options);
 }
 
-sptr<Scene> Scene::create_json(const std::string &path)
+sptr<Scene> Scene::load(const std::string &path)
 {
-    sptr<_Scene> scene = std::make_shared<_Scene>();
-    int32_t err = scene->init_with_json(path);
+    sptr<_SceneFromJSON> scene = std::make_shared<_SceneFromJSON>(path);
 
+    int32_t err = scene->init();
     if (!err) {
         return scene;
     }
-
     error("Couldn't extract a valid scene from %s", path.c_str());
-
     return nullptr;
 }
