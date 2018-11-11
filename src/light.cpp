@@ -11,7 +11,7 @@ struct _DiffuseLight : DiffuseLight {
     bool scatter(const sptr<Ray> &,
                  const hit_record &,
                  v3f &,
-                 sptr<Ray> &) const   { return false; }
+                 v3f &) const   { return false; }
     v3f emitted(float u, float v, v3f p) const { return m_emit->value(u, v, p); }
 
     sptr<Texture> m_emit;

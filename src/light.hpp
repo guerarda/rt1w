@@ -14,6 +14,6 @@ struct DiffuseLight : Material {
     virtual bool scatter(const sptr<Ray> &r_in,
                          const hit_record &rec,
                          v3f &attenuation,
-                         sptr<Ray> &scattered) const = 0;
-    virtual v3f emitted(float u, float v, v3f p) const = 0;
+                         v3f &) const override = 0;
+    virtual v3f emitted(float u, float v, v3f p) const override = 0;
 };
