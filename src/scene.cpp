@@ -1,11 +1,9 @@
 #include "scene.hpp"
 
-#include <fstream>
-#include <iostream>
+#include <libgen.h>
+
 #include <map>
 #include <vector>
-#include <climits>
-#include <libgen.h>
 
 #include "rapidjson/document.h"
 #include "rapidjson/error/en.h"
@@ -113,38 +111,45 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
     return p;
 }
 
-#pragma mark - Scene
+#pragma mark - Render Description
 
-struct _Scene : Scene {
+struct _RenderDesc : RenderDescription {
 
-    _Scene(const std::vector<sptr<Primitive>> &p,
-           const sptr<Camera> &c,
-           const sptr<Params> &o) : m_primitives(p), m_camera(c), m_options(o) { }
+    _RenderDesc(const std::vector<sptr<Primitive>> &p,
+                const std::vector<sptr<Light>> &l,
+                const sptr<Camera> &c,
+                const sptr<Params> &o) : m_primitives(p),
+                                         m_lights(l),
+                                         m_camera(c),
+                                         m_options(o) { }
 
     std::vector<sptr<Primitive>> primitives() const override { return m_primitives; }
+    std::vector<sptr<Light>>     lights() const override     { return m_lights; }
     sptr<Camera>                 camera() const override     { return m_camera; }
     sptr<const Params>           options() const override    { return m_options; }
 
     std::vector<sptr<Primitive>> m_primitives;
+    std::vector<sptr<Light>>     m_lights;
     sptr<Camera>                 m_camera;
     sptr<Params>                 m_options;
 };
 
-#pragma mark - Scene From JSON
+#pragma mark - Render From JSON
 
-struct _SceneFromJSON : Scene {
+struct _RenderDescFromJSON : RenderDescription {
 
-    _SceneFromJSON(const std::string &path) : m_path(path) { }
+    _RenderDescFromJSON(const std::string &path) : m_path(path) { }
 
     std::vector<sptr<Primitive>> primitives() const override { return m_primitives; }
+    std::vector<sptr<Light>>     lights() const override     { return m_lights; }
     sptr<Camera>                 camera() const override     { return m_camera; }
     sptr<const Params>           options() const override    { return m_options; }
 
     int32_t init();
 
     sptr<Material> read_material(const rapidjson::Value &v) const;
-    sptr<Shape> read_shape(const rapidjson::Value &v) const;
-    sptr<Texture> read_texture(const rapidjson::Value &v) const;
+    sptr<Shape>    read_shape(const rapidjson::Value &v) const;
+    sptr<Texture>  read_texture(const rapidjson::Value &v) const;
 
     void load_camera();
     void load_materials();
@@ -158,6 +163,7 @@ struct _SceneFromJSON : Scene {
     rapidjson::Document m_doc;
 
     std::vector<sptr<Primitive>> m_primitives;
+    std::vector<sptr<Light>>     m_lights;
     sptr<Camera>                 m_camera;
     sptr<Params>                 m_options;
 
@@ -166,7 +172,7 @@ struct _SceneFromJSON : Scene {
     std::map<const std::string, const sptr<Shape>>    m_shapes;
 };
 
-int32_t _SceneFromJSON::init()
+int32_t _RenderDescFromJSON::init()
 {
     FILE *fp = fopen(m_path.c_str(), "r");
     char readBuffer[65536];
@@ -200,28 +206,28 @@ int32_t _SceneFromJSON::init()
     return -1;
 }
 
-sptr<Material> _SceneFromJSON::read_material(const rapidjson::Value &v) const
+sptr<Material> _RenderDescFromJSON::read_material(const rapidjson::Value &v) const
 {
     sptr<Params> p = read_params(v, m_dir);
     p->merge(m_textures);
     return Material::create(p);
 }
 
-sptr<Shape> _SceneFromJSON::read_shape(const rapidjson::Value &v) const
+sptr<Shape> _RenderDescFromJSON::read_shape(const rapidjson::Value &v) const
 {
     return Shape::create(read_params(v, m_dir));
 }
 
-sptr<Texture> _SceneFromJSON::read_texture(const rapidjson::Value &v) const
+sptr<Texture> _RenderDescFromJSON::read_texture(const rapidjson::Value &v) const
 {
     sptr<Params> p = read_params(v, m_dir);
     p->merge(m_textures);
     return Texture::create(p);
 }
 
-void _SceneFromJSON::load_textures()
+void _RenderDescFromJSON::load_textures()
 {
-    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("textures");
+    auto section = m_doc.FindMember("textures");
     if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
@@ -240,10 +246,10 @@ void _SceneFromJSON::load_textures()
     }
 }
 
-void _SceneFromJSON::load_materials()
+void _RenderDescFromJSON::load_materials()
 {
     //FIXME: CHECKS
-    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("materials");
+    auto section = m_doc.FindMember("materials");
     if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
@@ -260,10 +266,9 @@ void _SceneFromJSON::load_materials()
     }
 }
 
-void _SceneFromJSON::load_shapes()
+void _RenderDescFromJSON::load_shapes()
 {
-    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("shapes");
-
+    auto section = m_doc.FindMember("shapes");
     if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
@@ -278,10 +283,9 @@ void _SceneFromJSON::load_shapes()
     }
 }
 
-void _SceneFromJSON::load_camera()
+void _RenderDescFromJSON::load_camera()
 {
-    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("camera");
-
+    auto section = m_doc.FindMember("camera");
     if (section != m_doc.MemberEnd()) {
         m_camera = Camera::create(read_params(section->value, m_dir));
     } else {
@@ -289,18 +293,17 @@ void _SceneFromJSON::load_camera()
     }
 }
 
-void _SceneFromJSON::load_options()
+void _RenderDescFromJSON::load_options()
 {
-    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("options");
+    auto section = m_doc.FindMember("options");
     if (section != m_doc.MemberEnd()) {
         m_options = read_params(section->value, m_dir);
     }
 }
 
-void _SceneFromJSON::load_primitives()
+void _RenderDescFromJSON::load_primitives()
 {
-    rapidjson::Value::ConstMemberIterator section = m_doc.FindMember("primitives");
-
+    auto section = m_doc.FindMember("primitives");
     if (section != m_doc.MemberEnd()) {
         size_t ix = 0;
         for (auto &v : section->value.GetArray()) {
@@ -364,23 +367,43 @@ void _SceneFromJSON::load_primitives()
     }
 }
 
+#pragma mark - Scene
+
+struct _Scene : Scene {
+    _Scene(const sptr<Primitive> &w,
+           const std::vector<sptr<Light>> &l) : m_world(w), m_lights(l) { }
+
+    sptr<Primitive>          world() const override { return m_world; }
+    std::vector<sptr<Light>> lights() const override { return m_lights; }
+
+    sptr<Primitive>          m_world;
+    std::vector<sptr<Light>> m_lights;
+};
+
 #pragma mark - Static constructors
 
-sptr<Scene> Scene::create(const std::vector<sptr<Primitive>> &primitives,
-                          const sptr<Camera> &camera,
-                          const sptr<Params> &options)
+sptr<RenderDescription> RenderDescription::create(const std::vector<sptr<Primitive>> &primitives,
+                                                  const std::vector<sptr<Light>> &lights,
+                                                  const sptr<Camera> &camera,
+                                                  const sptr<Params> &options)
 {
-    return std::make_shared<_Scene>(primitives, camera, options);
+    return std::make_shared<_RenderDesc>(primitives, lights, camera, options);
 }
 
-sptr<Scene> Scene::load(const std::string &path)
+sptr<RenderDescription> RenderDescription::load(const std::string &path)
 {
-    sptr<_SceneFromJSON> scene = std::make_shared<_SceneFromJSON>(path);
+    sptr<_RenderDescFromJSON> render = std::make_shared<_RenderDescFromJSON>(path);
 
-    int32_t err = scene->init();
+    int32_t err = render->init();
     if (!err) {
-        return scene;
+        return render;
     }
-    error("Couldn't extract a valid scene from %s", path.c_str());
+    error("Couldn't extract a valid render description from %s", path.c_str());
     return nullptr;
+}
+
+sptr<Scene> Scene::create(const sptr<Primitive> &world,
+                          const std::vector<sptr<Light>> &lights)
+{
+    return std::make_shared<_Scene>(world, lights);
 }

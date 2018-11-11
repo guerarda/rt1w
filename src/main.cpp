@@ -74,15 +74,21 @@ int main(int argc, char *argv[])
             strncpy(options.file, argv[i], 255);
         }
     }
-    sptr<Scene> scene = Scene::create_json(options.file);
+    sptr<RenderDescription> render = RenderDescription::load(options.file);
 
-    DIE_IF(!scene, "No scene to render");
+    DIE_IF(!render, "Nothing to render");
+
+    WARNING_IF(render->primitives().size() == 0, "Scene has no primitive");
+    WARNING_IF(render->lights().size() == 0, "Scene has no light");
 
     /* Create BVH */
-    sptr<Primitive> bvh = BVHAccelerator::create(scene->primitives());
+    sptr<Primitive> bvh = BVHAccelerator::create(render->primitives());
+
+    /* Create Scene */
+    sptr<Scene> scene = Scene::create(bvh, render->lights());
 
     /* Get camera */
-    sptr<Camera> camera = scene->camera();
+    sptr<Camera> camera = render->camera();
 
     /* Create integrator */
     uint32_t ns = options.quality;
@@ -90,11 +96,11 @@ int main(int argc, char *argv[])
     sptr<Integrator> integrator = Integrator::create(sampler, 4);
 
     /* Create rendering context */
-    sptr<RenderingContext> context = RenderingContext::create(bvh, camera, integrator);
+    sptr<RenderingContext> context = RenderingContext::create(scene->world(), camera, integrator);
 
     buffer_t buf = context->buffer();
 
-    std::string output = scene->options()->string("output");
+    std::string output = render->options()->string("output");
     if (!output.empty()) {
         image_write_png(output.c_str(),
                         buf.rect.size.x,
