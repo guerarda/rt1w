@@ -177,6 +177,18 @@ inline Vector2<T> Reflect(const Vector2<T> &v, const Vector2<T> &n)
     return v - 2 * Dot(v, n) * n;
 }
 
+template <typename T>
+inline T Distance(const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return (va - vb).length();
+}
+
+template <typename T>
+inline T DistanceSquared(const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return (va - vb).length_sq();
+}
+
 #pragma mark - Vector 3 Declaration
 
 template <typename T>
@@ -379,6 +391,18 @@ template <typename T>
 inline Vector3<T> Reflect(const Vector3<T> &v, const Vector3<T> &n)
 {
     return v - 2 * Dot(v, n) * n;
+}
+
+template<typename T>
+inline T Distance(const Vector3<T> &va, const Vector3<T> &vb)
+{
+    return (va - vb).length();
+}
+
+template<typename T>
+inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
+{
+    return (va - vb).length_sq();
 }
 
 #pragma mark - Vector 4 Declaration
