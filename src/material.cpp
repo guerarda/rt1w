@@ -1,7 +1,6 @@
 #include "material.hpp"
 
 #include <random>
-#include <math.h>
 
 #include "error.h"
 #include "light.hpp"
@@ -54,6 +53,7 @@ struct _Lambertian : Lambertian {
 
     _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) { }
 
+    v3f f(const hit_record &rec, const v3f &wo, const v3f &wi) const override;
     bool scatter(const sptr<Ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
@@ -62,6 +62,11 @@ struct _Lambertian : Lambertian {
 
     sptr<Texture>  m_albedo;
 };
+
+v3f _Lambertian::f(const hit_record &rec, const v3f &, const v3f &) const
+{
+    return m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
+}
 
 bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
                           const hit_record &rec,
@@ -80,6 +85,7 @@ struct _Metal : Metal {
 
     _Metal(const sptr<Texture> &tex, float f);
 
+    v3f f(const hit_record &, const v3f &, const v3f &) const override { return v3f(); }
     bool scatter(const sptr<Ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
@@ -115,12 +121,13 @@ struct _Dielectric : Dielectric {
 
     _Dielectric(float ri) : m_ref_idx(ri) { }
 
+    v3f f(const hit_record &, const v3f &, const v3f &) const override { return v3f(); }
     bool scatter(const sptr<Ray> &r_in,
                  const hit_record &rec,
                  v3f &attenuation,
-                 v3f &wi) const;
+                 v3f &wi) const override;
 
-    v3f emitted(float, float, v3f) const { return v3f(); }
+    v3f emitted(float, float, v3f) const override { return v3f(); }
 
     float m_ref_idx;
 };

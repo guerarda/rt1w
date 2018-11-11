@@ -8,6 +8,7 @@ struct _DiffuseLight : DiffuseLight {
 
     _DiffuseLight(const sptr<Texture> &emit) : m_emit(emit) { }
 
+    v3f  f(const hit_record &, const v3f &, const v3f &) const { return v3f(); }
     bool scatter(const sptr<Ray> &,
                  const hit_record &,
                  v3f &,

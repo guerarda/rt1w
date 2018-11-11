@@ -5,12 +5,14 @@
 
 struct Params;
 struct Texture;
+struct hit_record;
 
 struct DiffuseLight : Material {
 
     static sptr<DiffuseLight> create(const sptr<Texture> &tex);
     static sptr<DiffuseLight> create(const sptr<Params> &p);
 
+    virtual v3f  f(const hit_record &rec, const v3f &wo, const v3f &wi) const override = 0;
     virtual bool scatter(const sptr<Ray> &r_in,
                          const hit_record &rec,
                          v3f &attenuation,
