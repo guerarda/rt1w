@@ -3,7 +3,6 @@
 #include <random>
 
 #include "error.h"
-#include "light.hpp"
 #include "params.hpp"
 #include "texture.hpp"
 #include "value.hpp"

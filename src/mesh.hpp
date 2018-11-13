@@ -1,8 +1,9 @@
 #pragma once
 
+#include <vector>
+
 #include "shape.hpp"
 #include "sptr.hpp"
-#include <vector>
 
 struct Params;
 struct Value;

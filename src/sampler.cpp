@@ -1,7 +1,7 @@
 #include "sampler.hpp"
 
-#include <vector>
 #include <algorithm>
+#include <vector>
 
 #include "error.h"
 #include "rng.hpp"

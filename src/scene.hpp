@@ -16,16 +16,16 @@ struct RenderDescription : Object {
                                           const sptr<Params> &options);
     static sptr<RenderDescription> load(const std::string &path);
 
-    virtual std::vector<sptr<Primitive>> primitives() const = 0;
-    virtual std::vector<sptr<Light>>     lights() const = 0;
-    virtual sptr<Camera>                 camera() const = 0;
-    virtual sptr<const Params>           options() const = 0;
+    virtual const std::vector<sptr<Primitive>> &primitives() const = 0;
+    virtual const std::vector<sptr<Light>> &lights() const = 0;
+    virtual sptr<Camera> camera() const = 0;
+    virtual sptr<const Params> options() const = 0;
 };
 
 struct Scene : Object {
     static sptr<Scene> create(const sptr<Primitive> &world,
                               const std::vector<sptr<Light>> &lights);
 
-    virtual sptr<Primitive>          world() const = 0;
-    virtual std::vector<sptr<Light>> lights() const = 0;
+    virtual sptr<Primitive> world() const = 0;
+    virtual const std::vector<sptr<Light>> &lights() const = 0;
 };

@@ -124,10 +124,10 @@ struct _RenderDesc : RenderDescription {
                                          m_camera(c),
                                          m_options(o) { }
 
-    std::vector<sptr<Primitive>> primitives() const override { return m_primitives; }
-    std::vector<sptr<Light>>     lights() const override     { return m_lights; }
-    sptr<Camera>                 camera() const override     { return m_camera; }
-    sptr<const Params>           options() const override    { return m_options; }
+    const std::vector<sptr<Primitive>> &primitives() const override { return m_primitives; }
+    const std::vector<sptr<Light>>     &lights() const override { return m_lights; }
+    sptr<Camera>                        camera() const override { return m_camera; }
+    sptr<const Params>                  options() const override { return m_options; }
 
     std::vector<sptr<Primitive>> m_primitives;
     std::vector<sptr<Light>>     m_lights;
@@ -141,10 +141,10 @@ struct _RenderDescFromJSON : RenderDescription {
 
     _RenderDescFromJSON(const std::string &path) : m_path(path) { }
 
-    std::vector<sptr<Primitive>> primitives() const override { return m_primitives; }
-    std::vector<sptr<Light>>     lights() const override     { return m_lights; }
-    sptr<Camera>                 camera() const override     { return m_camera; }
-    sptr<const Params>           options() const override    { return m_options; }
+    const std::vector<sptr<Primitive>> &primitives() const override { return m_primitives; }
+    const std::vector<sptr<Light>>     &lights() const override { return m_lights; }
+    sptr<Camera>                       camera() const override { return m_camera; }
+    sptr<const Params>                 options() const override { return m_options; }
 
     int32_t init();
 
@@ -399,8 +399,8 @@ struct _Scene : Scene {
     _Scene(const sptr<Primitive> &w,
            const std::vector<sptr<Light>> &l) : m_world(w), m_lights(l) { }
 
-    sptr<Primitive>          world() const override { return m_world; }
-    std::vector<sptr<Light>> lights() const override { return m_lights; }
+    sptr<Primitive> world() const override { return m_world; }
+    const std::vector<sptr<Light>> &lights() const override { return m_lights; }
 
     sptr<Primitive>          m_world;
     std::vector<sptr<Light>> m_lights;

@@ -1,6 +1,7 @@
 #include "primitive.hpp"
-#include "shape.hpp"
+
 #include "error.h"
+#include "shape.hpp"
 
 #pragma mark - Primitive
 
