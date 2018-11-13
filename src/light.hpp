@@ -1,21 +1,33 @@
 #pragma once
 
-#include "material.hpp"
+#include <vector>
+
+#include "geometry.hpp"
 #include "sptr.hpp"
 
 struct Params;
-struct Texture;
+struct Ray;
+struct Sampler;
+struct Scene;
 struct hit_record;
 
-struct DiffuseLight : Material {
+struct Light : Object {
+    static sptr<Light> create(const sptr<Params> &p);
 
-    static sptr<DiffuseLight> create(const sptr<Texture> &tex);
-    static sptr<DiffuseLight> create(const sptr<Params> &p);
-
-    virtual v3f  f(const hit_record &rec, const v3f &wo, const v3f &wi) const override = 0;
-    virtual bool scatter(const sptr<Ray> &r_in,
-                         const hit_record &rec,
-                         v3f &attenuation,
-                         v3f &) const override = 0;
-    virtual v3f emitted(float u, float v, v3f p) const override = 0;
+    virtual v3f sample_Li(const hit_record &rec, v3f &wi) const = 0;
+    virtual v3f Le(const sptr<Ray> &r) const = 0;
+    virtual bool visible(const hit_record &rec, const sptr<Scene> &scene) const = 0;
 };
+
+struct PointLight : Light {
+    static sptr<PointLight> create(const v3f &pos, const v3f &intensity);
+    static sptr<PointLight> create(const sptr<Params> &p);
+};
+
+v3f EstimateDirect(const hit_record &rec,
+                   const sptr<Light> &light,
+                   const sptr<Scene> &scene,
+                   const sptr<Sampler> &sampler);
+v3f UniformSampleOneLight(const hit_record &rec,
+                          const sptr<Scene> &scene,
+                          const sptr<Sampler> &sampler);

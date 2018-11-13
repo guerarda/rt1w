@@ -13,6 +13,7 @@ struct hit_record {
     v2f   uv;
     v3f   p;
     v3f   normal;
+    v3f   wo;
     sptr<Material> mat;
 };
 

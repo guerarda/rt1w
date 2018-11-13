@@ -14,7 +14,6 @@ struct Material : Object {
                          const hit_record &rec,
                          v3f &attenuation,
                          v3f &wi) const = 0;
-    virtual v3f emitted(float u, float v, v3f p) const = 0;
 };
 
 struct Lambertian : Material {

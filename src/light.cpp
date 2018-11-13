@@ -1,37 +1,104 @@
 #include "light.hpp"
 
 #include "error.h"
-#include "texture.hpp"
+#include "material.hpp"
 #include "params.hpp"
+#include "primitive.hpp"
+#include "sampler.hpp"
+#include "scene.hpp"
+#include "texture.hpp"
+#include "value.hpp"
 
-struct _DiffuseLight : DiffuseLight {
+#pragma mark - Light Sampling
 
-    _DiffuseLight(const sptr<Texture> &emit) : m_emit(emit) { }
+v3f EstimateDirect(const hit_record &rec,
+                   const sptr<Light> &light,
+                   const sptr<Scene> &scene,
+                   const sptr<Sampler> &)
+{
+    v3f wi;
+    v3f Li = light->sample_Li(rec, wi);
+    if (!light->visible(rec, scene)) {
+        return v3f();
+    }
+    v3f f = rec.mat->f(rec, rec.wo, wi);
 
-    v3f  f(const hit_record &, const v3f &, const v3f &) const { return v3f(); }
-    bool scatter(const sptr<Ray> &,
-                 const hit_record &,
-                 v3f &,
-                 v3f &) const   { return false; }
-    v3f emitted(float u, float v, v3f p) const { return m_emit->value(u, v, p); }
+    return f * Li;
+}
 
-    sptr<Texture> m_emit;
+v3f UniformSampleOneLight(const hit_record &rec,
+                          const sptr<Scene> &scene,
+                          const sptr<Sampler> &sampler)
+{
+    auto lights = scene->lights();
+    ASSERT(lights.size() > 0);
+
+    /* Randomly pick one light */
+    size_t n = lights.size();
+    size_t ix = (size_t)floor(sampler->sample1D() * n);
+
+    sptr<Light> light = lights[ix];
+
+    return n * EstimateDirect(rec, light, scene, sampler);
+}
+
+#pragma mark - Point Light
+
+struct _PointLight : PointLight {
+    _PointLight(const v3f &p, const v3f &I) : m_p(p), m_I(I) { }
+
+    v3f sample_Li(const hit_record &rec, v3f &wi) const override;
+    v3f Le(const sptr<Ray> &) const override { return v3f(); }
+    bool visible(const hit_record &rec, const sptr<Scene> &scene) const override;
+
+    v3f m_p;
+    v3f m_I;
 };
+
+
+v3f _PointLight::sample_Li(const hit_record &rec, v3f &wi) const
+{
+    wi = Normalize(m_p - rec.p);
+
+    return m_I / DistanceSquared(rec.p, m_p);
+}
+
+bool _PointLight::visible(const hit_record &rec, const sptr<Scene> &scene) const
+{
+    sptr<Ray> ray = Ray::create(m_p, rec.p - m_p);
+    hit_record r;
+    return !scene->world()->hit(ray, 0.001f, 1.0f, r);
+}
 
 #pragma mark - Static Constructors
 
-sptr<DiffuseLight> DiffuseLight::create(const sptr<Texture> &emit)
+sptr<Light> Light::create(const sptr<Params> &p)
 {
-    return std::make_shared<_DiffuseLight>(emit);
+    std::string type = p->string("type");
+    WARNING_IF(type.empty(), "Light parameter \"type\" not specified");
+
+    if (type == "point") {
+        return PointLight::create(p);
+    }
+    warning("Light parameter \"type\" not recognized");
+
+    return nullptr;
 }
 
-sptr<DiffuseLight> DiffuseLight::create(const sptr<Params> &p)
+sptr<PointLight> PointLight::create(const v3f &p, const v3f &I)
 {
-    sptr<Texture> emit = p->texture("emit");
+    return std::make_shared<_PointLight>(p, I);
+}
 
-    if (emit) {
-        return DiffuseLight::create(emit);
+sptr<PointLight> PointLight::create(const sptr<Params> &p)
+{
+    sptr<Value> pos = p->value("position");
+    v3f I = Params::vector3f(p, "intensity", { 1.0f, 1.0f, 1.0f });
+
+    if (pos) {
+        return PointLight::create(pos->vector3f(), I);
     }
-    warning("Diffuse Light parameter \"emit\" not specified");
+    warning("Point Light parameter \"position\" not specified");
+
     return nullptr;
 }

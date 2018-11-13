@@ -33,14 +33,20 @@ v3f _Integrator::Li(const sptr<Ray> &ray,
     hit_record rec;
     if (scene->world()->hit(ray, 0.001f, std::numeric_limits<float>::max(), rec)) {
         v3f attenuation;
-        v3f emitted = rec.mat->emitted(rec.uv.x, rec.uv.y, rec.p);
         v3f wi;
-
         if (depth < m_maxDepth && rec.mat->scatter(ray, rec, attenuation, wi)) {
+            v3f L;
+            for (const auto &light : scene->lights()) {
+                v3f lwi;
+                v3f Li = light->sample_Li(rec, lwi);
+                if (light->visible(rec, scene)) {
+                    L += Li * rec.mat->f(rec, rec.wo, lwi);
+                }
+            }
             sptr<Ray> scattered = Ray::create(rec.p, wi);
-            return emitted + attenuation * Li(scattered, scene, sampler, depth + 1);
+            L +=  attenuation * Li(scattered, scene, sampler, depth + 1);
+            return L;
         }
-        return emitted;
     }
     return m_background;
 }
