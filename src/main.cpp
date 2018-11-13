@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
     sptr<Integrator> integrator = Integrator::create(sampler, 4);
 
     /* Create rendering context */
-    sptr<RenderingContext> context = RenderingContext::create(scene->world(), camera, integrator);
+    sptr<RenderingContext> context = RenderingContext::create(scene, camera, integrator);
 
     buffer_t buf = context->buffer();
 

@@ -6,10 +6,10 @@
 struct Camera;
 struct Event;
 struct Integrator;
-struct Primitive;
+struct Scene;
 
 struct RenderingContext : Object {
-    static sptr<RenderingContext> create(const sptr<Primitive> &world,
+    static sptr<RenderingContext> create(const sptr<Scene> &world,
                                          const sptr<Camera> &camera,
                                          const sptr<Integrator> &integrator);
 

@@ -6,6 +6,7 @@
 #include "event.hpp"
 #include "integrator.hpp"
 #include "sampler.hpp"
+#include "scene.hpp"
 #include "sync.h"
 #include "workq.hpp"
 
@@ -21,15 +22,15 @@ struct ImageTile : Object {
 };
 
 struct _RenderingContext : RenderingContext, std::enable_shared_from_this<_RenderingContext> {
-    _RenderingContext(const sptr<Primitive> &world,
+    _RenderingContext(const sptr<Scene> &scene,
                       const sptr<Camera> &camera,
-                      const sptr<Integrator> &integrator) : m_world(world),
+                      const sptr<Integrator> &integrator) : m_scene(scene),
                                                             m_camera(camera),
                                                             m_integrator(integrator) { }
     sptr<Event> schedule() override;
     buffer_t    buffer() override;
 
-    sptr<Primitive>  m_world;
+    sptr<Scene>      m_scene;
     sptr<Camera>     m_camera;
     sptr<Integrator> m_integrator;
     sptr<Event>      m_event;
@@ -88,11 +89,11 @@ buffer_t _RenderingContext::buffer()
 
 #pragma mark - Static constructor
 
-sptr<RenderingContext> RenderingContext::create(const sptr<Primitive> &world,
+sptr<RenderingContext> RenderingContext::create(const sptr<Scene> &scene,
                                                 const sptr<Camera> &camera,
                                                 const sptr<Integrator> &integrator)
 {
-    return std::make_shared<_RenderingContext>(world, camera, integrator);
+    return std::make_shared<_RenderingContext>(scene, camera, integrator);
 }
 
 #pragma mark - Static functions
@@ -121,7 +122,10 @@ static void render_tile(const sptr<Object> &obj, const sptr<Object> &arg)
                 CameraSample cs = sampler->cameraSample();
                 sptr<Ray> r = ctx->m_camera->generateRay(cs);
 
-                c = c + ctx->m_integrator->Li(r, ctx->m_world, 0);
+                c = c + ctx->m_integrator->Li(r,
+                                              ctx->m_scene,
+                                              sampler,
+                                              0);
             } while (sampler->startNextSample());
 
             c *= ns_inv;
