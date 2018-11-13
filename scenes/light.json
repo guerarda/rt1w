@@ -66,11 +66,6 @@
             "name": "ground",
             "type": "lambertian",
             "texture": "groundtex"
-        },
-        {
-            "name": "light",
-            "type": "diffuse_light",
-            "emit": "white"
         }
     ],
     "shapes" : [
@@ -93,7 +88,6 @@
                 0.0
             ],
             "radius": 1000
-
         },
         {
             "name": "small",
@@ -107,7 +101,6 @@
         }
     ],
     "primitives" : [
-
         {
             "shape": "earth",
             "material": "ground"
@@ -115,12 +108,19 @@
         {
             "shape": "ball",
             "material": "bar"
+        }
+    ],
+    "lights" : [
+        {
+            "type" : "point",
+            "position" : [ 3.0, 2.0, 2.0 ],
+            "intensity" : [ 4.0 , 4.0, 4.0 ]
         },
         {
-            "shape": "small",
-            "material": "light"
+            "type" : "point",
+            "position" : [ -3.0, 2.0, 2.0 ],
+            "intensity" : [ 4.0 , 4.0, 4.0 ]
         }
-
     ],
     "camera": {
         "position" : [
@@ -144,9 +144,10 @@
         ],
         "fov": 20.0,
         "aperture": 0.1,
-        "focusdistance": 10.0
+        "focusdistance": 13.5
     },
     "options": {
-        "output": "test.png"
+        "integrator" : "path",
+        "output": "pointlight.png"
     }
 }

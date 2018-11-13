@@ -11,6 +11,7 @@
 
 #include "camera.hpp"
 #include "error.h"
+#include "light.hpp"
 #include "material.hpp"
 #include "params.hpp"
 #include "primitive.hpp"
@@ -147,11 +148,13 @@ struct _RenderDescFromJSON : RenderDescription {
 
     int32_t init();
 
+    sptr<Light>    read_light(const rapidjson::Value &v) const;
     sptr<Material> read_material(const rapidjson::Value &v) const;
     sptr<Shape>    read_shape(const rapidjson::Value &v) const;
     sptr<Texture>  read_texture(const rapidjson::Value &v) const;
 
     void load_camera();
+    void load_lights();
     void load_materials();
     void load_options();
     void load_primitives();
@@ -199,11 +202,19 @@ int32_t _RenderDescFromJSON::init()
     load_camera();
     load_options();
     load_primitives();
+    load_lights();
 
     if (m_primitives.size() > 0 && m_camera) {
         return 0;
     }
     return -1;
+}
+
+sptr<Light> _RenderDescFromJSON::read_light(const rapidjson::Value &v) const
+{
+    sptr<Params> p = read_params(v, m_dir);
+    p->merge(m_textures);
+    return Light::create(p);
 }
 
 sptr<Material> _RenderDescFromJSON::read_material(const rapidjson::Value &v) const
@@ -278,6 +289,21 @@ void _RenderDescFromJSON::load_shapes()
 
                 WARNING_IF(!shape, "Couldn't create shape \"%s\"", k.c_str());
                 m_shapes.insert(std::make_pair(k, shape));
+            }
+        }
+    }
+}
+
+void _RenderDescFromJSON::load_lights()
+{
+    auto section = m_doc.FindMember("lights");
+    if (section != m_doc.MemberEnd()) {
+        size_t ix = 0;
+        for (auto &v : section->value.GetArray()) {
+            if (sptr<Light> light = read_light(v)) {
+                m_lights.push_back(light);
+            } else {
+                warning("Couldn't create light at index %lu", ix);
             }
         }
     }
