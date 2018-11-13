@@ -51,9 +51,70 @@ v3f _Integrator::Li(const sptr<Ray> &ray,
     return m_background;
 }
 
+#pragma mark - Path Integrator
+
+struct _PathIntegrator : PathIntegrator {
+    _PathIntegrator(const sptr<Sampler> &s, size_t m) : m_sampler(s),
+                                                        m_maxDepth(m) { }
+
+    sptr<const Sampler> sampler() const override { return m_sampler; }
+    v3f Li(const sptr<Ray> &ray,
+           const sptr<Scene> &scene,
+           const sptr<Sampler> &sampler,
+           size_t depth) const override;
+
+    sptr<Sampler> m_sampler;
+    size_t        m_maxDepth;
+};
+
+v3f _PathIntegrator::Li(const sptr<Ray> &r,
+                        const sptr<Scene> &scene,
+                        const sptr<Sampler> &sampler,
+                        size_t) const
+{
+    sptr<Ray> ray = r;
+    v3f L;
+    v3f beta = { 1.0f, 1.0f, 1.0f };
+
+    for (size_t bounces = 0; ; bounces++) {
+        hit_record rec;
+        bool intersect = scene->world()->hit(ray,
+                                             0.001f,
+                                             std::numeric_limits<float>::max(),
+                                             rec);
+        if (!intersect || bounces > m_maxDepth) {
+            break;
+        }
+        L += beta * UniformSampleOneLight(rec, scene, sampler);
+
+        v3f wi;
+        v3f f;
+        bool scatter = rec.mat->scatter(ray, rec, f, wi);
+        if (!scatter) {
+            break;
+        }
+        beta *= f;
+        ray = Ray::create(rec.p, wi);
+
+        if (bounces > 3) {
+            float q = std::max(0.5f, 1 - beta.length());
+            if (sampler->sample1D() < q) {
+                break;
+            }
+            beta /= 1 - q;
+        }
+    }
+    return L;
+}
+
 #pragma mark - Static constructor
 
 sptr<Integrator> Integrator::create(const sptr<Sampler> &sampler, size_t maxDepth)
 {
     return std::make_shared<_Integrator>(sampler, maxDepth);
+}
+
+sptr<PathIntegrator> PathIntegrator::create(const sptr<Sampler> &sampler, size_t maxDepth)
+{
+    return std::make_shared<_PathIntegrator>(sampler, maxDepth);
 }

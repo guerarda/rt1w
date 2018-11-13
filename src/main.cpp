@@ -93,7 +93,14 @@ int main(int argc, char *argv[])
     /* Create integrator */
     uint32_t ns = options.quality;
     sptr<Sampler> sampler = Sampler::create(ns, ns, 4, true);
-    sptr<Integrator> integrator = Integrator::create(sampler, 4);
+
+    sptr<Integrator> integrator;
+    std::string str = render->options()->string("integrator");
+    if (str == "path") {
+        integrator = PathIntegrator::create(sampler, 4);
+    } else {
+        integrator = Integrator::create(sampler, 4);
+    }
 
     /* Create rendering context */
     sptr<RenderingContext> context = RenderingContext::create(scene, camera, integrator);

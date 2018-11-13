@@ -16,3 +16,7 @@ struct Integrator : Object {
                    const sptr<Sampler> &sampler,
                    size_t depth) const = 0;
 };
+
+struct PathIntegrator : Integrator {
+    static sptr<PathIntegrator> create(const sptr<Sampler> &sampler, size_t maxDepth);
+};
