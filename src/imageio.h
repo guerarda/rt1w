@@ -1,8 +1,12 @@
-#ifndef IMAGEIO_H
-#define IMAGEIO_H
+#pragma once
 
-#include <stdint.h>
+#ifdef __cplusplus
+#include <cstddef>
+#include <cstdint>
+#else
 #include <stddef.h>
+#include <stdint.h>
+#endif
 
 struct buffer;
 
@@ -17,5 +21,3 @@ int32_t image_write_png(const char *filename,
 int32_t image_read_png(const char *filename,
                        struct buffer *buf);
 __END_DECLS
-
-#endif

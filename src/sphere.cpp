@@ -1,11 +1,11 @@
 #include "sphere.hpp"
+
+#include "error.h"
 #include "params.hpp"
 #include "primitive.hpp"
 #include "value.hpp"
-#include "error.h"
 
-#include <assert.h>
-#include <math.h>
+#include <cmath>
 
 
 static v2f sphere_uv(const v3f &p)

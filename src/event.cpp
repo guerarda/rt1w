@@ -1,9 +1,9 @@
 #include "event.hpp"
+
 #include "sync.h"
 #include "workq.hpp"
 
 #include <mutex>
-#include <assert.h>
 
 struct token {
     void *foo;

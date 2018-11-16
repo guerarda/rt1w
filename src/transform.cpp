@@ -1,7 +1,8 @@
 #include "transform.hpp"
 
-#include <math.h>
 #include "error.h"
+
+#include <cmath>
 
 static inline float Radians(float deg)
 {

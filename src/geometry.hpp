@@ -1,14 +1,16 @@
 #pragma once
 
-#include <algorithm>
-#include <cmath>
-#include <limits>
 #include "error.h"
 #include "utils.h"
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
+
+#include <algorithm>
+#include <cmath>
+#include <limits>
 
 #pragma mark - Vector 2 Declaration
+
 template <typename T>
 struct Vector2 {
     Vector2() { x = 0; y = 0; }
@@ -662,6 +664,8 @@ typedef struct rectf {
 } rectf;
 
 #else
+
+#include <math.h>
 
 typedef struct v2f {
     float x;

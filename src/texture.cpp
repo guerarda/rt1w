@@ -1,9 +1,11 @@
 #include "texture.hpp"
-#include <math.h>
-#include "value.hpp"
-#include "params.hpp"
+
 #include "error.h"
 #include "image.hpp"
+#include "params.hpp"
+#include "value.hpp"
+
+#include <cmath>
 
 struct _Texture_const : Texture {
     _Texture_const(const v3f &c) : m_color(c) { };

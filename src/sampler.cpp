@@ -1,10 +1,10 @@
 #include "sampler.hpp"
 
-#include <algorithm>
-#include <vector>
-
 #include "error.h"
 #include "rng.hpp"
+
+#include <algorithm>
+#include <vector>
 
 static void GenerateSamples1D(float *smp, size_t n, const sptr<RNG> &rng, bool jitter)
 {

@@ -1,6 +1,6 @@
 #include "camera.hpp"
 
-#include <math.h>
+#include <cmath>
 
 #include "params.hpp"
 #include "ray.hpp"

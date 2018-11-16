@@ -1,8 +1,7 @@
-#ifndef EVENT_H
-#define EVENT_H
+#pragma once
 
-#include "types.h"
 #include "sptr.hpp"
+#include "types.h"
 #include "workq.hpp"
 
 struct Event : Object {
@@ -17,5 +16,3 @@ struct Event : Object {
     virtual bool test() const = 0;
     virtual int32_t wait() = 0;
 };
-
-#endif

@@ -1,6 +1,7 @@
 #include "image.hpp"
-#include "imageio.h"
+
 #include "error.h"
+#include "imageio.h"
 #include "params.hpp"
 
 struct _ImageFile : Image {

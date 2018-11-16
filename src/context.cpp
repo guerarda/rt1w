@@ -1,7 +1,5 @@
 #include "context.hpp"
 
-#include <vector>
-
 #include "camera.hpp"
 #include "event.hpp"
 #include "integrator.hpp"
@@ -9,6 +7,8 @@
 #include "scene.hpp"
 #include "sync.h"
 #include "workq.hpp"
+
+#include <vector>
 
 struct ImageTile : Object {
     static sptr<ImageTile> create(rect_t r, uint8_t *dp, size_t bpr) {

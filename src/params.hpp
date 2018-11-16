@@ -1,10 +1,10 @@
 #pragma once
 
-#include <string>
-#include <map>
-
-#include "sptr.hpp"
 #include "geometry.hpp"
+#include "sptr.hpp"
+
+#include <map>
+#include <string>
 
 struct Texture;
 struct Value;

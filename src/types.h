@@ -1,9 +1,15 @@
-#ifndef TYPE_H
-#define TYPE_H
+#pragma once
 
-#include <stdint.h>
+#ifdef __cplusplus
+#include <cstddef>
+#include <cstdint>
+#include <cstdlib>
+#else
 #include <stddef.h>
+#include <stdint.h>
 #include <stdlib.h>
+#endif
+
 #include <x86intrin.h>
 
 __BEGIN_DECLS
@@ -116,5 +122,3 @@ inline buffer_format_t buffer_format_init(buffer_type_t t, buffer_order_t o)
 }
 
 __END_DECLS
-
-#endif

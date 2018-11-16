@@ -1,7 +1,7 @@
 #pragma once
 
-#include "types.h"
 #include "sptr.hpp"
+#include "types.h"
 
 struct workq;
 struct Event;

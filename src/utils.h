@@ -1,8 +1,7 @@
 #pragma once
 
-#include <stdint.h>
-
-#if defined(__cplusplus)
+#ifdef __cplusplus
+#include <cstdint>
 
 int32_t FloatCompare(float, float);
 bool FloatEqual(float, float);
@@ -10,6 +9,8 @@ bool FloatEqual(float, float);
 int32_t FloatCompare(double, double);
 bool FloatEqual(double, double);
 
+#else
+#include <stdint.h>
 #endif
 
 __BEGIN_DECLS

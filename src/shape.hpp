@@ -1,7 +1,7 @@
 #pragma once
 
-#include "sptr.hpp"
 #include "geometry.hpp"
+#include "sptr.hpp"
 
 struct hit_record;
 struct Params;

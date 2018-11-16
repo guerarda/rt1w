@@ -1,8 +1,8 @@
 #pragma once
 
+#include "geometry.hpp"
 #include "sptr.hpp"
 #include "types.h"
-#include "geometry.hpp"
 
 typedef buffer_type_t vtype_t;
 template <typename T> struct vtype_from_type;

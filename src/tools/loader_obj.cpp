@@ -1,13 +1,13 @@
 #include "primitive.hpp"
 
-#include <functional>
-#include <unordered_map>
-
 #include "bvh.hpp"
-#include "mesh.hpp"
 #include "material.hpp"
+#include "mesh.hpp"
 #include "texture.hpp"
 #include "value.hpp"
+
+#include <functional>
+#include <unordered_map>
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include "tinyobjloader/tiny_obj_loader.h"

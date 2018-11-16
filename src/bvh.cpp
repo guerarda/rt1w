@@ -1,9 +1,8 @@
 #include "bvh.hpp"
 
-#include <vector>
-
 #include "arena.hpp"
 
+#include <vector>
 
 static bool box_hit(const bounds3f &b, const sptr<Ray> &r, float tmin, float tmax)
 {

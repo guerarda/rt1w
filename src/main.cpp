@@ -1,10 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-
-#include <string>
-
 #include "bvh.hpp"
 #include "camera.hpp"
 #include "context.hpp"
@@ -15,6 +8,13 @@
 #include "params.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
+
+#include <cstdint>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
+#include <string>
 
 __attribute__((noreturn)) static void usage(const char *msg = nullptr)
 {
