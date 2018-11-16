@@ -424,7 +424,7 @@ typedef Vector4<double> v4d;
 
 template <typename T>
 struct Matrix4x4 {
-    Matrix4x4() { }
+    Matrix4x4() = default;
     Matrix4x4(const Vector4<T> &vx,
               const Vector4<T> &vy,
               const Vector4<T> &vz,

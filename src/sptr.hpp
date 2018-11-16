@@ -14,7 +14,7 @@ using uptr = typename std::unique_ptr<T>;
  */
 struct Object {
 protected:
-    virtual ~Object() { }
+    virtual ~Object() = default;
 };
 
 #endif
