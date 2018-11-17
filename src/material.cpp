@@ -34,9 +34,8 @@ static bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refract)
         refract = ni_over_nt * (uv - dt * n);
         refract = refract - sqrtf(delta) * n;
         return true;
-    } else {
-        return false;
     }
+    return false;
 }
 
 static float schlick(float cos, float ri)
@@ -221,10 +220,10 @@ sptr<Material> Material::create(const sptr<Params> &p)
     if (type == "dielectric") {
         return Dielectric::create(p);
     }
-    else if (type == "lambertian") {
+    if (type == "lambertian") {
         return Lambertian::create(p);
     }
-    else if (type == "metal") {
+    if (type == "metal") {
         return Metal::create(p);
     }
     warning("Material parameter \"type\" not recognized");

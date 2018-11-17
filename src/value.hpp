@@ -19,7 +19,7 @@ template<> struct vtype_from_type<float>    { static vtype_t value() { return  T
 template<> struct vtype_from_type<double>   { static vtype_t value() { return  TYPE_FLOAT64; } };
 
 struct Value : Object {
-    static sptr<Value> create(vtype_t t, void *v, size_t count);
+    static sptr<Value> create(vtype_t t, void *v, size_t n);
 
     template <typename T>
     static sptr<Value> create(const T *v, size_t n) {

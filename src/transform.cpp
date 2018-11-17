@@ -118,18 +118,18 @@ Transform Transform::LookAt(const v3f &p, const v3f &look, const v3f &up)
     return Transform(m44f(m), Inverse(m44f(m)));
 }
 
-Transform Transform::Orthographic(float near, float far)
+Transform Transform::Orthographic(float znear, float zfar)
 {
-    return Scale(1.0f, 1.0f, 1.0f / (far - near)) * Translate({ 0.0f, 0.0f, -near });
+    return Scale(1.0f, 1.0f, 1.0f / (zfar - znear)) * Translate({ 0.0f, 0.0f, -znear });
 }
 
-Transform Transform::Perspective(float fov, float n, float f)
+Transform Transform::Perspective(float fov, float znear, float zfar)
 {
     ASSERT(fov > 0.0f);
 
     float itan = 1.0f / std::tan(Radians(fov / 2.0f));
-    float A = f / (f - n);
-    float B = - f * n / (f - n);
+    float A = zfar / (zfar - znear);
+    float B = - zfar * znear / (zfar - znear);
     float m[4][4] = {
         { itan, 0.0f, 0.0f, 0.0f  },
         { 0.0f, itan, 0.0f, 0.0f  },

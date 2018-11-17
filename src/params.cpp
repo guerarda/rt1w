@@ -17,7 +17,7 @@ struct _Params : Params {
     void merge(const std::map<const std::string, const sptr<Value>> &values) override;
 
     sptr<Params>  params(const std::string &k) const override;
-    std::string   string(const std::string &j) const override;
+    std::string   string(const std::string &k) const override;
     sptr<Texture> texture(const std::string &k) const override;
     sptr<Value>   value(const std::string &k) const override;
 

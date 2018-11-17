@@ -9,7 +9,7 @@ struct Integrator;
 struct Scene;
 
 struct RenderingContext : Object {
-    static sptr<RenderingContext> create(const sptr<Scene> &world,
+    static sptr<RenderingContext> create(const sptr<Scene> &scene,
                                          const sptr<Camera> &camera,
                                          const sptr<Integrator> &integrator);
 

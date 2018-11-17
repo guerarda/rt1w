@@ -27,6 +27,6 @@ struct Metal : Material {
 };
 
 struct Dielectric : Material {
-    static sptr<Dielectric> create(float ref_index);
+    static sptr<Dielectric> create(float ri);
     static sptr<Dielectric> create(const sptr<Params> &params);
 };
