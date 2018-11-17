@@ -32,7 +32,7 @@ struct Primitive : Object {
 
 struct Aggregate : Primitive {
 
-    static sptr<Aggregate> create(std::vector<sptr<Primitive>> primitives);
+    static sptr<Aggregate> create(const std::vector<sptr<Primitive>> &primitives);
 
     virtual const std::vector<sptr<Primitive>> &primitives() const = 0;
 };

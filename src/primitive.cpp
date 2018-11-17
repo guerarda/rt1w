@@ -86,7 +86,7 @@ bool _Aggregate::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) 
 
 #pragma mark - Static Constructor
 
-sptr<Aggregate> Aggregate::create(const std::vector<sptr<Primitive>> primitives)
+sptr<Aggregate> Aggregate::create(const std::vector<sptr<Primitive>> &primitives)
 {
     return std::make_shared<_Aggregate>(primitives);
 }
