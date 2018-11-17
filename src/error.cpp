@@ -15,6 +15,7 @@ static void process_error(const char *fmt, va_list args, const char *type)
     str.resize(size);
     vsnprintf(&str[0], size, fmt, argscpy);
     str.pop_back();
+    va_end(argscpy);
 
     std::string error_str(type);
     if (!error_str.empty()) {
