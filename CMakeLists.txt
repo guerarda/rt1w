@@ -14,6 +14,7 @@ SET(WARNING_FLAGS
   "missing-noreturn"
   "missing-prototypes"
   "non-virtual-dtor"
+  "null-dereference"
   "overloaded-virtual"
   "shadow"
   "sign-conversion"
