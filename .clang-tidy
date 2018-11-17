@@ -1,0 +1,13 @@
+Checks: '-*,
+clang-analyzer-*,
+llvm-include-order,
+misc-*,
+modernize-use-bool-literals,
+modernize-use-equals-default,
+modernize-use-equals-delete,
+modernize-use-override,
+modernize-use-nullptr,
+performance-*,
+readability-*,
+-readability-named-parameter,
+-readability-implicit-bool-conversion'
