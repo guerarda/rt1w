@@ -448,10 +448,10 @@ template <typename T>
 inline Matrix4x4<T> Identity4x4()
 {
     T m[4][4] = {
-        { 1.0f, 0.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 0.0f, 1.0f }
+        { 1.0, 0.0, 0.0, 0.0 },
+        { 0.0, 1.0, 0.0, 0.0 },
+        { 0.0, 0.0, 1.0, 0.0 },
+        { 0.0, 0.0, 0.0, 1.0 }
     };
     return Matrix4x4<T>(m);
 }
@@ -471,7 +471,7 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
             if (ipiv[j] != 1) {
                 for (size_t k = 0; k < 4; k++) {
                     if (ipiv[k] == 0) {
-                        if (std::abs(minv[j][k]) >= big) {
+                        if ((double)std::abs(minv[j][k]) >= big) {
                             big = double(std::abs(minv[j][k]));
                             irow = j;
                             icol = k;
@@ -490,14 +490,14 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
         ERROR_IF(FloatEqual(minv[icol][icol], T{0.0}), "Singular matrix in MatrixInvert");
 
         // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
-        double pivinv = 1 / minv[icol][icol];
+        T pivinv = 1 / minv[icol][icol];
         minv[icol][icol] = 1.;
         for (size_t j = 0; j < 4; j++) minv[icol][j] *= pivinv;
 
         // Subtract this row from others to zero out their columns
         for (size_t j = 0; j < 4; j++) {
             if (j != icol) {
-                double save = minv[j][icol];
+                T save = minv[j][icol];
                 minv[j][icol] = 0;
                 for (size_t k = 0; k < 4; k++) minv[j][k] -= minv[icol][k] * save;
             }

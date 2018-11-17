@@ -137,9 +137,9 @@ static void render_tile(const sptr<Object> &obj, const sptr<Object> &arg)
                  fminf(1.0f, sqrtf(c.z))
             };
 
-            dp[0] = (uint8_t)(255.99 * c.x);
-            dp[1] = (uint8_t)(255.99 * c.y);
-            dp[2] = (uint8_t)(255.99 * c.z);
+            dp[0] = (uint8_t)(255.99f * c.x);
+            dp[1] = (uint8_t)(255.99f * c.y);
+            dp[2] = (uint8_t)(255.99f * c.z);
             dp += 3;
         }
     }
@@ -153,11 +153,11 @@ static void progress(const sptr<Object> &obj, const sptr<Object> &)
     int32_t done = sync_add_i32(&progress, 1);
     sptr<_RenderingContext> ctx = std::static_pointer_cast<_RenderingContext>(obj);
 
-    float p = ctx ? (float)done / (float)ctx->m_ntiles * 100.0f : 0.0f;
+    double p = ctx ? (double)done / ctx->m_ntiles * 100.0 : 0.0;
 
     char buf[256];
     size_t offset = (size_t)snprintf(buf, 256, "\r%.1f%% [", p);
-    int64_t n = lrint(floorf(p)) / 2;
+    int64_t n = lrint(floor(p)) / 2;
     for (int32_t i = 0; i < 50; i++) {
         char c = i <= n ? '#' : ' ';
         snprintf(&buf[offset], 256 - offset, "%c", c);

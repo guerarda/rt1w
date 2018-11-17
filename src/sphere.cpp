@@ -7,17 +7,16 @@
 
 #include <cmath>
 
-
 static v2f sphere_uv(const v3f &p)
 {
-    float x = fminf(1.0f, fmaxf(-1.0f, p.x));
-    float y = fminf(1.0f, fmaxf(-1.0f, p.y));
-    float z = fminf(1.0f, fmaxf(-1.0f, p.z));
+    float x = std::min(1.0f, std::max(-1.0f, p.x));
+    float y = std::min(1.0f, std::max(-1.0f, p.y));
+    float z = std::min(1.0f, std::max(-1.0f, p.z));
 
-    double phi = atan2(z, x);
-    double theta = asin(y);
+    float phi = atan2(z, x);
+    float theta = asin(y);
 
-    double u = 1.0 - (phi + M_PI) / (2 * M_PI);
+    double u = 1.0 - (phi + M_PI) / (2.0 * M_PI);
     double v = (theta + M_PI_2) / M_PI;
 
     return { (float)u, (float)v };
