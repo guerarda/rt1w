@@ -6,11 +6,11 @@
 
 struct _ImageFile : Image {
 
-             _ImageFile(const std::string &filename);
-    virtual ~_ImageFile();
+     _ImageFile(const std::string &filename);
+    ~_ImageFile() override;
 
-    buffer_t buffer() const { return m_buffer; }
-    v2u      size()   const { return m_size; }
+    buffer_t buffer() const override { return m_buffer; }
+    v2u      size()   const override { return m_size; }
 
     std::string m_filename;
     buffer_t    m_buffer;

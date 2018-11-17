@@ -10,7 +10,7 @@
 struct _Texture_const : Texture {
     _Texture_const(const v3f &c) : m_color(c) { };
 
-    v3f value(float, float, const v3f &) const { return m_color; }
+    v3f value(float, float, const v3f &) const override { return m_color; }
 
     v3f m_color;
 };
@@ -20,7 +20,7 @@ struct _Texture_checker : Texture {
     _Texture_checker(const sptr<Texture> &a,
                      const sptr<Texture> &b) : m_odd(a), m_even(b) { }
 
-    v3f value(float, float, const v3f &) const;
+    v3f value(float, float, const v3f &) const override;
 
     sptr<Texture> m_odd;
     sptr<Texture> m_even;
@@ -36,7 +36,7 @@ struct _Texture_img : Texture {
 
     _Texture_img(const sptr<Image> &img, rect_t r);
 
-    v3f value(float, float, const v3f &) const;
+    v3f value(float, float, const v3f &) const override;
 
     sptr<Image> m_img;
     rect_t      m_rect;

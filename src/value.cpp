@@ -1,4 +1,5 @@
 #include "value.hpp"
+
 #include "error.h"
 
 #pragma mark - Scalar Value
@@ -31,9 +32,9 @@ struct _Scalar : Value {
 
     _Scalar(const void *v) : m_value(*(T *)v) { }
 
-    size_t count() const { return 1; }
-    vtype_t type() const { return vtype_from_type<T>::value(); }
-    void value(vtype_t type, void *v, size_t off, size_t len) const;
+    size_t count() const override { return 1; }
+    vtype_t type() const override { return vtype_from_type<T>::value(); }
+    void value(vtype_t type, void *v, size_t off, size_t len) const override;
 
     T m_value;
 };
@@ -97,9 +98,9 @@ struct _Vector : Value {
         }
     }
 
-    size_t count() const { return m_count; }
-    vtype_t type() const { return vtype_from_type<T>::value(); }
-    void value(vtype_t type, void *v, size_t off, size_t len) const;
+    size_t count() const override { return m_count; }
+    vtype_t type() const override { return vtype_from_type<T>::value(); }
+    void value(vtype_t type, void *v, size_t off, size_t len) const override;
 
     static const size_t N = VECTOR_MAX_SIZE / sizeof(T);
 
@@ -141,9 +142,9 @@ struct _BigVector : Value {
         }
     }
 
-    size_t count() const       { return m_count; }
-    vtype_t type() const       { return vtype_from_type<T>::value(); }
-    void value(vtype_t type, void *v, size_t off, size_t len) const;
+    size_t count() const override       { return m_count; }
+    vtype_t type() const override       { return vtype_from_type<T>::value(); }
+    void value(vtype_t type, void *v, size_t off, size_t len) const override;
 
     uptr<T[]> m_data;
     size_t    m_count;

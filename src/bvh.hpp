@@ -10,8 +10,8 @@ struct BVHNode : Primitive {
 
     static sptr<BVHNode> create(const std::vector<sptr<Primitive>> &v);
 
-    virtual bool     hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const = 0;
-    virtual bounds3f bounds() const = 0;
+    bool     hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const override = 0;
+    bounds3f bounds() const override = 0;
 };
 
 struct BVHAccelerator : Aggregate {

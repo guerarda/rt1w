@@ -10,8 +10,8 @@ struct _Primitive : Primitive {
     _Primitive(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s),
                                                                 m_material(m) { }
 
-    bool     hit(const sptr<Ray> &, float, float, hit_record &) const;
-    bounds3f bounds() const;
+    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bounds3f bounds() const override;
 
     sptr<Shape>    m_shape;
     sptr<Material> m_material;

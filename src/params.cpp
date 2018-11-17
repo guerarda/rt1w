@@ -5,21 +5,21 @@
 
 struct _Params : Params {
 
-    void insert(const std::string &k, const sptr<Params> &v);
-    void insert(const std::string &k, const std::string &v);
-    void insert(const std::string &k, const sptr<Texture> &v);
-    void insert(const std::string &k, const sptr<Value> &v);
+    void insert(const std::string &k, const sptr<Params> &v) override;
+    void insert(const std::string &k, const std::string &v) override;
+    void insert(const std::string &k, const sptr<Texture> &v) override;
+    void insert(const std::string &k, const sptr<Value> &v) override;
 
-    void merge(const sptr<Params> &p);
-    void merge(const std::map<const std::string, const sptr<Params>> &params);
-    void merge(const std::map<const std::string, const std::string> &strings);
-    void merge(const std::map<const std::string, const sptr<Texture>> &textures);
-    void merge(const std::map<const std::string, const sptr<Value>> &values);
+    void merge(const sptr<Params> &p) override;
+    void merge(const std::map<const std::string, const sptr<Params>> &params) override;
+    void merge(const std::map<const std::string, const std::string> &strings) override;
+    void merge(const std::map<const std::string, const sptr<Texture>> &textures) override;
+    void merge(const std::map<const std::string, const sptr<Value>> &values) override;
 
-    sptr<Params>  params(const std::string &k) const;
-    std::string   string(const std::string &j) const;
-    sptr<Texture> texture(const std::string &k) const;
-    sptr<Value>   value(const std::string &k) const;
+    sptr<Params>  params(const std::string &k) const override;
+    std::string   string(const std::string &j) const override;
+    sptr<Texture> texture(const std::string &k) const override;
+    sptr<Value>   value(const std::string &k) const override;
 
     std::map<const std::string, const sptr<Params>>  m_params;
     std::map<const std::string, const std::string>   m_strings;

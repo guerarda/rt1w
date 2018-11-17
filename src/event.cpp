@@ -71,16 +71,16 @@ _notif::~_notif()
 
 struct _Event : Event {
 
-    _Event(int32_t n);
-    virtual ~_Event();
+     _Event(int32_t n);
+    ~_Event() override;
 
     int32_t notify(workq *,
                    workq_func,
                    const sptr<Object> &,
-                   const sptr<Object> &);
-    int32_t signal();
-    bool test() const;
-    int32_t wait();
+                   const sptr<Object> &) override;
+    int32_t signal() override;
+    bool test() const override;
+    int32_t wait() override;
 
     uptr<_lock>      m_lock;
     uptr<_notif>     m_notif;

@@ -14,9 +14,9 @@ struct hdr {
 struct _Arena : Arena {
 
      _Arena();
-    ~_Arena();
+    ~_Arena() override;
 
-    void *alloc(size_t n);
+    void *alloc(size_t n) override;
 
     struct hdr *m_hdr;
     struct {

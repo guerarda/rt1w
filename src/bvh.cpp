@@ -77,7 +77,7 @@ struct BVHLinearNode {
 struct _BVHAccelerator : BVHAccelerator {
 
      _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
-    ~_BVHAccelerator();
+    ~_BVHAccelerator() override;
 
     bool     hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const override;
     bounds3f bounds() const override { return m_bounds; }
