@@ -80,7 +80,7 @@ float _RNG::f32()
 uint32_t _RNG::u32(uint32_t b)
 {
     float f = f32();
-    uint32_t v = (uint32_t)floor(f * b);
+    auto v = (uint32_t)floor(f * b);
     ASSERT(v < b);
     return v;
 }

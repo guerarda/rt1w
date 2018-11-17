@@ -156,7 +156,7 @@ static void progress(const sptr<Object> &obj, const sptr<Object> &)
     double p = ctx ? (double)done / ctx->m_ntiles * 100.0 : 0.0;
 
     char buf[256];
-    size_t offset = (size_t)snprintf(buf, 256, "\r%.1f%% [", p);
+    auto offset = (size_t)snprintf(buf, 256, "\r%.1f%% [", p);
     int64_t n = lrint(floor(p)) / 2;
     for (int32_t i = 0; i < 50; i++) {
         char c = i <= n ? '#' : ' ';

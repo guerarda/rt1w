@@ -35,7 +35,7 @@ v3f UniformSampleOneLight(const hit_record &rec,
 
     /* Randomly pick one light */
     size_t n = lights.size();
-    size_t ix = (size_t)floor(sampler->sample1D() * n);
+    auto ix = (size_t)floor(sampler->sample1D() * n);
 
     sptr<Light> light = lights[ix];
 

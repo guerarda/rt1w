@@ -215,7 +215,7 @@ BVHBuildNode *_BVHAccelerator::buildNode(Arena *arena,
         float leafCost = n;
         if (minCost < leafCost) {
             auto part_fn = [=](const auto &p) {
-                               size_t ix = (size_t)llrint(nBuckets *
+                               auto ix = (size_t)llrint(nBuckets *
                                                           Offset(centerBounds, p.center)[(size_t)axis]);
                                if (ix == nBuckets) {
                                    ix -= 1;
@@ -276,7 +276,7 @@ bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &
             size_t n = m_nodes[index].size;
 
             if (n > 0) {
-                size_t first = (size_t)m_nodes[index].primitivesOffset;
+                auto first = (size_t)m_nodes[index].primitivesOffset;
 
                 for (size_t i = first; i < first + n; i++) {
                     if (m_prims[i]->hit(r, min, max, rec)) {

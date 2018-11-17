@@ -80,9 +80,9 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
             else {
                 /* 'index' represent a vertex we haven't seen yet, had it to
                  * the vertex data and create a remaped index for it */
-                const float *vp = (const float *)(&attrib.vertices[3 * (size_t)idx.vertex_index]);
-                const float *np = (const float *)(&attrib.vertices[3 * (size_t)idx.normal_index]);
-                const float *tp = (const float *)(&attrib.vertices[3 * (size_t)idx.texcoord_index]);
+                const auto *vp = (const float *)(&attrib.vertices[3 * (size_t)idx.vertex_index]);
+                const auto *np = (const float *)(&attrib.vertices[3 * (size_t)idx.normal_index]);
+                const auto *tp = (const float *)(&attrib.vertices[3 * (size_t)idx.texcoord_index]);
 
                 vertices.push_back({ vp[0], vp[1], vp[2] });
                 normals.push_back({ np[0], np[1], np[2] });

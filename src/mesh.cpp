@@ -105,9 +105,9 @@ bool Triangle::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) co
     p2t.z *= Sz;
 
     /* Edge functions */
-    float e0 = (float)((double)p1t.x * (double)p2t.y - (double)p1t.y * (double)p2t.x);
-    float e1 = (float)((double)p2t.x * (double)p0t.y - (double)p2t.y * (double)p0t.x);
-    float e2 = (float)((double)p0t.x * (double)p1t.y - (double)p0t.y * (double)p1t.x);
+    auto e0 = (float)((double)p1t.x * (double)p2t.y - (double)p1t.y * (double)p2t.x);
+    auto e1 = (float)((double)p2t.x * (double)p0t.y - (double)p2t.y * (double)p0t.x);
+    auto e2 = (float)((double)p0t.x * (double)p1t.y - (double)p0t.y * (double)p1t.x);
 
     if (   (e0 < 0.0f || e1 < 0.0f || e2 < 0.0f)
            && (e0 > 0.0f || e1 > 0.0f || e2 > 0.0f)) {
@@ -266,7 +266,7 @@ sptr<Mesh> Mesh::create(const sptr<Params> &p)
     sptr<Value> i  = p->value("indices");
 
     if (c && v && i) {
-        size_t nt = (size_t)c->u64();
+        auto nt = (size_t)c->u64();
         bool ok_i = 3 * nt == i->count();
         bool ok_n = n ? n->count() == v->count() : true;
         bool ok_uv = uv ? 2 * v->count() == 3 * uv->count() : true;

@@ -51,7 +51,7 @@ void workq::init()
 
 void workq::work()
 {
-    while (1) {
+    while (true) {
         _job *job = dequeue();
         if (job->m_func) {
             job->m_func(job->m_obj, job->m_arg);
@@ -105,7 +105,7 @@ _job *workq::dequeue()
 #pragma mark - Static
 
 static workq *global_workq = []() -> workq *{
-                                 workq *queue = new workq(std::thread::hardware_concurrency());
+                                 auto *queue = new workq(std::thread::hardware_concurrency());
                                  queue->init();
 
                                  return queue;
