@@ -5,9 +5,9 @@
 #include <map>
 #include <vector>
 
-#include "rapidjson/document.h"
-#include "rapidjson/error/en.h"
-#include "rapidjson/filereadstream.h"
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/filereadstream.h>
 
 #include "camera.hpp"
 #include "error.h"
@@ -23,7 +23,7 @@
 
 static bool is_absolute_path(const std::string &path)
 {
-    return path.size() > 0 && path[0] == '/';
+    return !path.empty() && path[0] == '/';
 }
 
 static std::string absolute_path(const std::string &path)
@@ -204,7 +204,7 @@ int32_t _RenderDescFromJSON::init()
     load_primitives();
     load_lights();
 
-    if (m_primitives.size() > 0 && m_camera) {
+    if (!m_primitives.empty() && m_camera) {
         return 0;
     }
     return -1;

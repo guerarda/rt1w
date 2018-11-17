@@ -483,7 +483,9 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
         ++ipiv[icol];
         // Swap rows _irow_ and _icol_ for pivot
         if (irow != icol) {
-            for (int k = 0; k < 4; ++k) std::swap(minv[irow][k], minv[icol][k]);
+            for (int k = 0; k < 4; ++k) {
+                std::swap(minv[irow][k], minv[icol][k]);
+            }
         }
         indxr[i] = irow;
         indxc[i] = icol;
@@ -492,22 +494,27 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
         // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
         T pivinv = 1 / minv[icol][icol];
         minv[icol][icol] = 1.;
-        for (size_t j = 0; j < 4; j++) minv[icol][j] *= pivinv;
+        for (size_t j = 0; j < 4; j++) {
+            minv[icol][j] *= pivinv;
+        }
 
         // Subtract this row from others to zero out their columns
         for (size_t j = 0; j < 4; j++) {
             if (j != icol) {
                 T save = minv[j][icol];
                 minv[j][icol] = 0;
-                for (size_t k = 0; k < 4; k++) minv[j][k] -= minv[icol][k] * save;
+                for (size_t k = 0; k < 4; k++) {
+                    minv[j][k] -= minv[icol][k] * save;
+                }
             }
         }
     }
     // Swap columns to reflect permutation
     for (size_t j = 3; j--;) {
         if (indxr[j] != indxc[j]) {
-            for (size_t k = 0; k < 4; k++)
+            for (size_t k = 0; k < 4; k++) {
                 std::swap(minv[k][indxr[j]], minv[k][indxc[j]]);
+            }
         }
     }
     return Matrix4x4<T>(minv);

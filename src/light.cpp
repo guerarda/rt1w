@@ -31,7 +31,7 @@ v3f UniformSampleOneLight(const hit_record &rec,
                           const sptr<Sampler> &sampler)
 {
     auto lights = scene->lights();
-    ASSERT(lights.size() > 0);
+    ASSERT(!lights.empty());
 
     /* Randomly pick one light */
     size_t n = lights.size();

@@ -85,7 +85,7 @@ struct _BVHAccelerator : BVHAccelerator {
 
     void buildBVH();
     BVHBuildNode *buildNode(Arena *arena,
-                            BVHPrimInfo *const info,
+                            BVHPrimInfo *info,
                             size_t bgn,
                             size_t end,
                             size_t &node_count,
@@ -284,7 +284,7 @@ bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &
                         max = rec.t;
                     }
                 }
-                if (sp == 0) break;
+                if (sp == 0) { break; }
                 index = next[--sp];
             }
             else {
@@ -293,7 +293,7 @@ bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &
             }
         }
         else {
-            if (sp == 0) break;
+            if (sp == 0) { break; }
             index = next[--sp];
         }
     }

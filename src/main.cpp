@@ -79,8 +79,8 @@ int main(int argc, char *argv[])
 
     DIE_IF(!render, "Nothing to render");
 
-    WARNING_IF(render->primitives().size() == 0, "Scene has no primitive");
-    WARNING_IF(render->lights().size() == 0, "Scene has no light");
+    WARNING_IF(render->primitives().empty(), "Scene has no primitive");
+    WARNING_IF(render->lights().empty(), "Scene has no light");
 
     /* Create BVH */
     sptr<Primitive> bvh = BVHAccelerator::create(render->primitives());
