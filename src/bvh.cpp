@@ -30,14 +30,14 @@ static bool box_hit(const bounds3f &b, const sptr<Ray> &r, float tmin, float tma
 
 /* BVH Construction */
 struct BVHPrimInfo {
-    size_t   index;
+    size_t index;
     bounds3f bounds;
-    v3f      center;
+    v3f center;
 };
 
 struct BVHBuildNode {
-
-    void initLeaf(size_t ix, size_t n, const bounds3f &b) {
+    void initLeaf(size_t ix, size_t n, const bounds3f &b)
+    {
         children[0] = nullptr;
         children[1] = nullptr;
         index = ix;
@@ -45,7 +45,8 @@ struct BVHBuildNode {
         bounds = b;
     };
 
-    void initInterior(int32_t ax, BVHBuildNode *c0, BVHBuildNode *c1) {
+    void initInterior(int32_t ax, BVHBuildNode *c0, BVHBuildNode *c1)
+    {
         children[0] = c0;
         children[1] = c1;
         axis = ax;
@@ -54,10 +55,10 @@ struct BVHBuildNode {
     };
 
     BVHBuildNode *children[2];
-    bounds3f      bounds;
-    int32_t       axis;
-    size_t        index;
-    size_t        size;
+    bounds3f bounds;
+    int32_t axis;
+    size_t index;
+    size_t size;
 };
 
 /* BVH traversal */
@@ -67,19 +68,18 @@ struct BVHLinearNode {
         int32_t primitivesOffset;  /* For leaf nodes*/
         int32_t secondChildOffset; /* For interior nodes */
     };
-    uint16_t size;                  /* Equals 0 for interior nodes */
-    uint8_t  axis;
-    uint8_t  pad[1];                /* Struct is 64bit for cache alignment*/
+    uint16_t size; /* Equals 0 for interior nodes */
+    uint8_t axis;
+    uint8_t pad[1]; /* Struct is 64bit for cache alignment*/
 };
 
 #pragma mark - BVH Accelerator
 
 struct _BVHAccelerator : BVHAccelerator {
-
-     _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
+    _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
     ~_BVHAccelerator() override;
 
-    bool     hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const override;
+    bool hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const override;
     bounds3f bounds() const override { return m_bounds; }
     const std::vector<sptr<Primitive>> &primitives() const override { return m_prims; }
 
@@ -93,9 +93,9 @@ struct _BVHAccelerator : BVHAccelerator {
     int32_t flattenBVH(const BVHBuildNode *root, int32_t &offset);
 
     std::vector<sptr<Primitive>> m_prims;
-    bounds3f                     m_bounds;
-    BVHLinearNode              * m_nodes = nullptr;
-    size_t                       m_count = 0;
+    bounds3f m_bounds;
+    BVHLinearNode *m_nodes = nullptr;
+    size_t m_count = 0;
 };
 
 _BVHAccelerator::~_BVHAccelerator()
@@ -117,7 +117,7 @@ void _BVHAccelerator::buildBVH()
     /* Build tree structure */
     size_t count = 0;
     std::vector<sptr<Primitive>> ordered;
-    BVHBuildNode *root = buildNode(arena.get(),info, 0, m_prims.size(), count, ordered);
+    BVHBuildNode *root = buildNode(arena.get(), info, 0, m_prims.size(), count, ordered);
 
     m_prims = std::move(ordered);
 
@@ -159,7 +159,7 @@ BVHBuildNode *_BVHAccelerator::buildNode(Arena *arena,
     for (size_t i = bgn; i < end; i++) {
         centerBounds = Union(centerBounds, info[i].center);
     }
-    int32_t axis = centerBounds.maxAxis();
+    auto axis = (size_t)centerBounds.maxAxis();
 
     /* Partition the primitives into two subsets using the SAH heuristic */
     size_t mid;
@@ -169,14 +169,14 @@ BVHBuildNode *_BVHAccelerator::buildNode(Arena *arena,
     else {
         constexpr size_t nBuckets = 12;
         struct bucket {
-            size_t   count = 0;
+            size_t count = 0;
             bounds3f bounds;
         };
         struct bucket buckets[nBuckets];
 
         for (size_t i = bgn; i < end; i++) {
-            size_t ix = (size_t)llrint(nBuckets *
-                                       Offset(centerBounds, info[i].center)[(size_t)axis]);
+            size_t ix = (size_t)llrint(nBuckets
+                                       * Offset(centerBounds, info[i].center)[axis]);
             if (ix == nBuckets) {
                 ix -= 1;
             }
@@ -191,7 +191,7 @@ BVHBuildNode *_BVHAccelerator::buildNode(Arena *arena,
             size_t c0 = 0;
             size_t c1 = 0;
 
-            for (size_t j = 0; j <= i ; j++) {
+            for (size_t j = 0; j <= i; j++) {
                 b0 = Union(b0, buckets[j].bounds);
                 c0 += buckets[j].count;
             }
@@ -215,13 +215,12 @@ BVHBuildNode *_BVHAccelerator::buildNode(Arena *arena,
         float leafCost = n;
         if (minCost < leafCost) {
             auto part_fn = [=](const auto &p) {
-                               auto ix = (size_t)llrint(nBuckets *
-                                                          Offset(centerBounds, p.center)[(size_t)axis]);
-                               if (ix == nBuckets) {
-                                   ix -= 1;
-                               }
-                               return ix <= minBucket;
-                           };
+                auto ix = (size_t)llrint(nBuckets * Offset(centerBounds, p.center)[axis]);
+                if (ix == nBuckets) {
+                    ix -= 1;
+                }
+                return ix <= minBucket;
+            };
             BVHPrimInfo *pmid = std::partition(&info[bgn], &info[end - 1] + 1, part_fn);
             mid = (size_t)(pmid - &info[0]);
         }
@@ -237,7 +236,7 @@ BVHBuildNode *_BVHAccelerator::buildNode(Arena *arena,
     }
 
     /* Build Interior node with the two subsets */
-    node->initInterior(axis,
+    node->initInterior((int32_t)axis,
                        buildNode(arena, info, bgn, mid, node_count, ordered),
                        buildNode(arena, info, mid, end, node_count, ordered));
     return node;
@@ -284,7 +283,9 @@ bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &
                         max = rec.t;
                     }
                 }
-                if (sp == 0) { break; }
+                if (sp == 0) {
+                    break;
+                }
                 index = next[--sp];
             }
             else {
@@ -293,7 +294,9 @@ bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &
             }
         }
         else {
-            if (sp == 0) { break; }
+            if (sp == 0) {
+                break;
+            }
             index = next[--sp];
         }
     }

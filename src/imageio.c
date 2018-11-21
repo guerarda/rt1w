@@ -1,5 +1,7 @@
 #include "imageio.h"
+
 #include "types.h"
+
 #include <assert.h>
 #include <png.h>
 
@@ -27,10 +29,7 @@ int32_t image_write_png(const char *filename,
     }
 
     /* Init write struct */
-    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
-                                      NULL,
-                                      NULL,
-                                      NULL);
+    png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         err = 1;
         goto clean;
@@ -110,10 +109,7 @@ int32_t image_read_png(const char *filename, struct buffer *buf)
     }
 
     /* Init read struct */
-    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING,
-                                     NULL,
-                                     NULL,
-                                     NULL);
+    png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
     if (!png_ptr) {
         err = 1;
         goto clean;
@@ -133,11 +129,11 @@ int32_t image_read_png(const char *filename, struct buffer *buf)
     }
 
     /* Read info */
-    uint8_t bit_depth  = 0;
+    uint8_t bit_depth = 0;
     uint8_t color_type = 0;
-    uint8_t channels   = 0;
-    uint32_t width     = 0;
-    uint32_t height    = 0;
+    uint8_t channels = 0;
+    uint32_t width = 0;
+    uint32_t height = 0;
 
     png_init_io(png_ptr, fp);
     png_set_sig_bytes(png_ptr, 8);
@@ -181,28 +177,16 @@ int32_t image_read_png(const char *filename, struct buffer *buf)
     buf->rect.size.y = height;
     buf->bpr = bpr;
 
-    switch(color_type) {
-    case PNG_COLOR_TYPE_RGB:
-        buf->format.order = ORDER_RGB;
-        break;
-    case PNG_COLOR_TYPE_RGBA:
-        buf->format.order = ORDER_RGBA;
-        break;
-    default:
-        err = 1;
-        goto clean;
+    switch (color_type) {
+    case PNG_COLOR_TYPE_RGB: buf->format.order = ORDER_RGB; break;
+    case PNG_COLOR_TYPE_RGBA: buf->format.order = ORDER_RGBA; break;
+    default: err = 1; goto clean;
     }
 
     switch (bit_depth) {
-    case 8:
-        buf->format.type = TYPE_UINT8;
-        break;
-    case 16:
-        buf->format.type = TYPE_UINT16;
-        break;
-    default:
-        err = 1;
-        goto clean;
+    case 8: buf->format.type = TYPE_UINT8; break;
+    case 16: buf->format.type = TYPE_UINT16; break;
+    default: err = 1; goto clean;
     }
     buf->format.size = channels * bit_depth / 8;
 

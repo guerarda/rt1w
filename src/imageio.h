@@ -18,6 +18,5 @@ int32_t image_write_png(const char *filename,
                         const void *data,
                         size_t bpr);
 
-int32_t image_read_png(const char *filename,
-                       struct buffer *buf);
+int32_t image_read_png(const char *filename, struct buffer *buf);
 __END_DECLS

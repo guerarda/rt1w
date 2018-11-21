@@ -11,31 +11,40 @@
 #include <vector>
 
 struct ImageTile : Object {
-    static sptr<ImageTile> create(rect_t r, uint8_t *dp, size_t bpr) {
+    static sptr<ImageTile> create(rect_t r, uint8_t *dp, size_t bpr)
+    {
         return std::make_shared<ImageTile>(r, dp, bpr);
     }
-    ImageTile(rect_t r, uint8_t *dp, size_t bpr) : m_rect(r), m_dp(dp), m_bytes_per_row(bpr) { }
+    ImageTile(rect_t r, uint8_t *dp, size_t bpr) :
+        m_rect(r),
+        m_dp(dp),
+        m_bytes_per_row(bpr)
+    {}
 
-    rect_t   m_rect;
+    rect_t m_rect;
     uint8_t *m_dp;
-    size_t   m_bytes_per_row;
+    size_t m_bytes_per_row;
 };
 
-struct _RenderingContext : RenderingContext, std::enable_shared_from_this<_RenderingContext> {
+struct _RenderingContext :
+    RenderingContext,
+    std::enable_shared_from_this<_RenderingContext> {
     _RenderingContext(const sptr<Scene> &scene,
                       const sptr<Camera> &camera,
-                      const sptr<Integrator> &integrator) : m_scene(scene),
-                                                            m_camera(camera),
-                                                            m_integrator(integrator) { }
+                      const sptr<Integrator> &integrator) :
+        m_scene(scene),
+        m_camera(camera),
+        m_integrator(integrator)
+    {}
     sptr<Event> schedule() override;
-    buffer_t    buffer() override;
+    buffer_t buffer() override;
 
-    sptr<Scene>      m_scene;
-    sptr<Camera>     m_camera;
+    sptr<Scene> m_scene;
+    sptr<Camera> m_camera;
     sptr<Integrator> m_integrator;
-    sptr<Event>      m_event;
-    buffer_t         m_buffer;
-    size_t           m_ntiles;
+    sptr<Event> m_event;
+    buffer_t m_buffer;
+    size_t m_ntiles;
 };
 
 static void progress(const sptr<Object> &, const sptr<Object> &);
@@ -57,8 +66,8 @@ sptr<Event> _RenderingContext::schedule()
     std::vector<sptr<ImageTile>> tiles;
     for (int32_t i = 0; i < ntx; i++) {
         for (int32_t j = 0; j < nty; j++) {
-
-            uint8_t *ptr = (uint8_t *)m_buffer.data + (uint32_t)j * 32 * m_buffer.bpr + (uint32_t)i * 32 * m_buffer.format.size;
+            uint8_t *ptr = (uint8_t *)m_buffer.data + (uint32_t)j * 32 * m_buffer.bpr
+                           + (uint32_t)i * 32 * m_buffer.format.size;
             rect_t r;
             r.org.x = i * 32;
             r.org.y = j * 32;
@@ -70,7 +79,7 @@ sptr<Event> _RenderingContext::schedule()
         }
     }
 
-    m_event = Event::create((int32_t )tiles.size());
+    m_event = Event::create((int32_t)tiles.size());
     m_ntiles = tiles.size();
 
     for (const auto &t : tiles) {
@@ -122,20 +131,15 @@ static void render_tile(const sptr<Object> &obj, const sptr<Object> &arg)
                 CameraSample cs = sampler->cameraSample();
                 sptr<Ray> r = ctx->m_camera->generateRay(cs);
 
-                c = c + ctx->m_integrator->Li(r,
-                                              ctx->m_scene,
-                                              sampler,
-                                              0);
+                c = c + ctx->m_integrator->Li(r, ctx->m_scene, sampler, 0);
             } while (sampler->startNextSample());
 
             c *= ns_inv;
 
             /* Approx Gamma correction */
-            c = {
-                 fminf(1.0f, sqrtf(c.x)),
-                 fminf(1.0f, sqrtf(c.y)),
-                 fminf(1.0f, sqrtf(c.z))
-            };
+            c = { fminf(1.0f, sqrtf(c.x)),    //
+                  fminf(1.0f, sqrtf(c.y)),    //
+                  fminf(1.0f, sqrtf(c.z)) };
 
             dp[0] = (uint8_t)(255.99f * c.x);
             dp[1] = (uint8_t)(255.99f * c.y);
@@ -163,7 +167,7 @@ static void progress(const sptr<Object> &obj, const sptr<Object> &)
         snprintf(&buf[offset], 256 - offset, "%c", c);
         offset++;
     }
-    snprintf(&buf[offset], 256- offset, "]");
+    snprintf(&buf[offset], 256 - offset, "]");
     fprintf(stderr, "%s", buf);
     fflush(stderr);
 

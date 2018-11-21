@@ -5,16 +5,15 @@
 #include "params.hpp"
 
 struct _ImageFile : Image {
-
-     _ImageFile(const std::string &filename);
+    _ImageFile(const std::string &filename);
     ~_ImageFile() override;
 
     buffer_t buffer() const override { return m_buffer; }
-    v2u      size()   const override { return m_size; }
+    v2u size() const override { return m_size; }
 
     std::string m_filename;
-    buffer_t    m_buffer;
-    v2u         m_size;
+    buffer_t m_buffer;
+    v2u m_size;
 };
 
 _ImageFile::_ImageFile(const std::string &filename)
@@ -24,7 +23,8 @@ _ImageFile::_ImageFile(const std::string &filename)
 
     if (!err) {
         m_size = m_buffer.rect.size;
-    } else {
+    }
+    else {
         warning("Couldn't load image at \"%s\"", filename.c_str());
     }
 }

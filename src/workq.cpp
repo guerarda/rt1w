@@ -12,34 +12,33 @@
 struct _job {
     sptr<Object> m_obj;
     sptr<Object> m_arg;
-    workq_func   m_func;
-    sptr<Event>  m_event;
-    _job        *m_next;
+    workq_func m_func;
+    sptr<Event> m_event;
+    _job *m_next;
 };
 
 struct workq {
-
     workq(uint32_t concurrency);
 
     void init();
     void work() NORETURN;
 
-    void  enqueue(_job *);
+    void enqueue(_job *);
     _job *dequeue();
 
-    uint32_t                 m_concurrency;
-    void * volatile          m_head;
-    void * volatile          m_queue;
-    std::mutex               m_mutex;
-    std::condition_variable  m_cv;
+    uint32_t m_concurrency;
+    void *volatile m_head;
+    void *volatile m_queue;
+    std::mutex m_mutex;
+    std::condition_variable m_cv;
     std::vector<std::thread> m_threads;
 };
 
 workq::workq(uint32_t concurrency)
 {
     m_concurrency = concurrency;
-    m_head        = nullptr;
-    m_queue       = nullptr;
+    m_head = nullptr;
+    m_queue = nullptr;
 }
 
 void workq::init()
@@ -61,7 +60,6 @@ void workq::work()
     }
 }
 
-
 void workq::enqueue(_job *job)
 {
     _job *q = (_job *)sync_lock_ptr(&m_queue);
@@ -80,7 +78,8 @@ _job *workq::dequeue()
             head = job->m_next;
             sync_unlock_ptr(&m_head, head);
             job->m_next = nullptr;
-        } else {
+        }
+        else {
             job = (_job *)sync_lock_ptr(&m_queue);
             if (job) {
                 sync_unlock_ptr(&m_queue, nullptr);
@@ -91,25 +90,26 @@ _job *workq::dequeue()
                     job = next;
                 }
                 sync_unlock_ptr(&m_head, head);
-            } else {
+            }
+            else {
                 sync_unlock_ptr(&m_queue, nullptr);
                 sync_unlock_ptr(&m_head, nullptr);
                 std::unique_lock<std::mutex> lk(m_mutex);
                 m_cv.wait(lk);
             }
         }
-    } while(!job);
+    } while (!job);
     return job;
 }
 
 #pragma mark - Static
 
-static workq *global_workq = []() -> workq *{
-                                 auto *queue = new workq(std::thread::hardware_concurrency());
-                                 queue->init();
+static workq *global_workq = []() -> workq * {
+    auto *queue = new workq(std::thread::hardware_concurrency());
+    queue->init();
 
-                                 return queue;
-                             } ();
+    return queue;
+}();
 
 workq *workq_get_queue()
 {
@@ -130,7 +130,8 @@ sptr<Event> workq_execute(workq *workq,
         job->m_func = func;
         job->m_event = event;
         workq->enqueue(job);
-    } else if (func) {
+    }
+    else if (func) {
         func(obj, arg);
         event = Event::create(0);
     }

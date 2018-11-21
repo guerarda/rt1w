@@ -64,7 +64,7 @@ void trap(const char *fmt, ...)
 #ifdef _WIN32
     __debugbreak();
 #else
-    __asm__ __volatile__ ("int3");
+    __asm__ __volatile__("int3");
 #endif
     exit(EXIT_FAILURE);
 }

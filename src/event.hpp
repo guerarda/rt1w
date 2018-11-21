@@ -5,7 +5,6 @@
 #include "workq.hpp"
 
 struct Event : Object {
-
     static sptr<Event> create(int32_t);
 
     virtual int32_t notify(workq *workq,

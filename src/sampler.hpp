@@ -11,7 +11,7 @@ struct Sampler : Object {
     virtual sptr<Sampler> clone() const = 0;
 
     virtual float sample1D() = 0;
-    virtual v2f   sample2D() = 0;
+    virtual v2f sample2D() = 0;
     virtual CameraSample cameraSample() = 0;
 
     virtual void startPixel(v2i p) = 0;

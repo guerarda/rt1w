@@ -10,12 +10,10 @@
 #pragma mark - Vertex Data
 
 struct _VertexData : VertexData {
-    _VertexData(size_t nv,
-                uptr<v3f[]> &v,
-                uptr<v3f[]> &n,
-                uptr<v2f[]> &uv) : VertexData(nv, v, n , uv) { }
+    _VertexData(size_t nv, uptr<v3f[]> &v, uptr<v3f[]> &n, uptr<v2f[]> &uv) :
+        VertexData(nv, v, n, uv)
+    {}
 };
-
 
 sptr<VertexData> VertexData::create(size_t nv,
                                     uptr<v3f[]> &v,
@@ -28,12 +26,13 @@ sptr<VertexData> VertexData::create(size_t nv,
 #pragma mark - Mesh Data
 
 struct MeshData {
+    MeshData(size_t nt, const sptr<VertexData> &vd, uptr<uint32_t[]> &i) :
+        m_nt(nt),
+        m_vd(vd),
+        m_i(std::move(i))
+    {}
 
-    MeshData(size_t nt,
-             const sptr<VertexData> &vd,
-             uptr<uint32_t[]> &i) : m_nt(nt), m_vd(vd), m_i(std::move(i)) { }
-
-    size_t           m_nt;
+    size_t m_nt;
     sptr<VertexData> m_vd;
     uptr<uint32_t[]> m_i;
 };
@@ -41,15 +40,14 @@ struct MeshData {
 #pragma mark - Triangle
 
 struct Triangle : Shape {
+    Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md), m_v(&md->m_i[3 * ix])
+    {}
 
-    Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md),
-                                                          m_v(&md->m_i[3 * ix]) { }
-
-    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override;
 
-    sptr<const MeshData>   m_md;
-    const uint32_t * const m_v;
+    sptr<const MeshData> m_md;
+    const uint32_t *const m_v;
 };
 
 static v3f absv(const v3f &v)
@@ -105,12 +103,11 @@ bool Triangle::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) co
     p2t.z *= Sz;
 
     /* Edge functions */
-    auto e0 = (float)((double)p1t.x * (double)p2t.y - (double)p1t.y * (double)p2t.x);
-    auto e1 = (float)((double)p2t.x * (double)p0t.y - (double)p2t.y * (double)p0t.x);
-    auto e2 = (float)((double)p0t.x * (double)p1t.y - (double)p0t.y * (double)p1t.x);
+    auto e0 = p1t.x * p2t.y - p1t.y * p2t.x;
+    auto e1 = p2t.x * p0t.y - p2t.y * p0t.x;
+    auto e2 = p0t.x * p1t.y - p0t.y * p1t.x;
 
-    if (   (e0 < 0.0f || e1 < 0.0f || e2 < 0.0f)
-           && (e0 > 0.0f || e1 > 0.0f || e2 > 0.0f)) {
+    if ((e0 < 0.0f || e1 < 0.0f || e2 < 0.0f) && (e0 > 0.0f || e1 > 0.0f || e2 > 0.0f)) {
         return false;
     }
 
@@ -176,13 +173,13 @@ bounds3f Triangle::bounds() const
 struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
-    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override { return m_box; };
 
     std::vector<sptr<Shape>> faces() const override;
 
-    bounds3f                    m_box;
-    sptr<MeshData>              m_md;
+    bounds3f m_box;
+    sptr<MeshData> m_md;
     std::vector<sptr<Triangle>> m_tris;
 };
 
@@ -215,9 +212,7 @@ std::vector<sptr<Shape>> _Mesh::faces() const
 
 #pragma mark - Static Constructors
 
-sptr<Mesh> Mesh::create(size_t nt,
-                        const sptr<VertexData> &vd,
-                        const sptr<Value> &indices)
+sptr<Mesh> Mesh::create(size_t nt, const sptr<VertexData> &vd, const sptr<Value> &indices)
 {
     uptr<uint32_t[]> i = std::make_unique<uint32_t[]>(3 * nt);
     indices->value(TYPE_UINT32, i.get(), 0, 3 * nt);
@@ -259,11 +254,11 @@ sptr<Mesh> Mesh::create(size_t nt,
 
 sptr<Mesh> Mesh::create(const sptr<Params> &p)
 {
-    sptr<Value> c  = p->value("count");
-    sptr<Value> v  = p->value("vertices");
-    sptr<Value> n  = p->value("normals");
+    sptr<Value> c = p->value("count");
+    sptr<Value> v = p->value("vertices");
+    sptr<Value> n = p->value("normals");
     sptr<Value> uv = p->value("uv");
-    sptr<Value> i  = p->value("indices");
+    sptr<Value> i = p->value("indices");
 
     if (c && v && i) {
         auto nt = (size_t)c->u64();
@@ -274,15 +269,15 @@ sptr<Mesh> Mesh::create(const sptr<Params> &p)
         if (ok_i && ok_n && ok_uv) {
             return Mesh::create(nt, v, i, n, uv);
         }
-        WARNING_IF(!ok_i,  "Triangle count doesn't match index count");
-        WARNING_IF(!ok_n,  "Normal count doesn't match vertex count");
+        WARNING_IF(!ok_i, "Triangle count doesn't match index count");
+        WARNING_IF(!ok_n, "Normal count doesn't match vertex count");
         WARNING_IF(!ok_uv, "UV count doesn't match vertex count");
     }
     ERROR_IF(!c, "Mesh parameter \"count\" not specified");
     ERROR_IF(!v, "Mesh parameter \"vertices\" not specified");
     ERROR_IF(!i, "Mesh parameter \"indices\" not specified");
     WARNING_IF(!n, "Mesh parameter \"normals\" not specified");
-    WARNING_IF(!uv,"Mesh parameter \"uv\" not specified");
+    WARNING_IF(!uv, "Mesh parameter \"uv\" not specified");
 
     return nullptr;
 }

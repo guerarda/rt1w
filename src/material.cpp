@@ -28,7 +28,7 @@ static bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refract)
 {
     v3f uv = Normalize(v);
     float dt = Dot(uv, n);
-    float delta = 1.0f - ni_over_nt * ni_over_nt * ( 1.0f - dt * dt);
+    float delta = 1.0f - ni_over_nt * ni_over_nt * (1.0f - dt * dt);
 
     if (delta > 0.0f) {
         refract = ni_over_nt * (uv - dt * n);
@@ -41,15 +41,14 @@ static bool refract(const v3f &v, const v3f &n, float ni_over_nt, v3f &refract)
 static float schlick(float cos, float ri)
 {
     float r = (1.0f - ri) / (1.0f + ri);
-    r  = r * r;
+    r = r * r;
     return r + (1.0f - r) * powf((1.0f - cos), 5.0f);
 }
 
 #pragma mark - Lambertian
 
 struct _Lambertian : Lambertian {
-
-    _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) { }
+    _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) {}
 
     v3f f(const hit_record &rec, const v3f &wo, const v3f &wi) const override;
     bool scatter(const sptr<Ray> &r_in,
@@ -57,7 +56,7 @@ struct _Lambertian : Lambertian {
                  v3f &attenuation,
                  v3f &wi) const override;
 
-    sptr<Texture>  m_albedo;
+    sptr<Texture> m_albedo;
 };
 
 v3f _Lambertian::f(const hit_record &rec, const v3f &, const v3f &) const
@@ -79,7 +78,6 @@ bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
 #pragma mark - Metal
 
 struct _Metal : Metal {
-
     _Metal(const sptr<Texture> &tex, float f);
 
     v3f f(const hit_record &, const v3f &, const v3f &) const override { return v3f(); }
@@ -89,7 +87,7 @@ struct _Metal : Metal {
                  v3f &wi) const override;
 
     sptr<Texture> m_albedo;
-    float         m_fuzz;
+    float m_fuzz;
 };
 
 _Metal::_Metal(const sptr<Texture> &tex, float f)
@@ -113,8 +111,7 @@ bool _Metal::scatter(const sptr<Ray> &r_in,
 #pragma mark - Dieletric
 
 struct _Dielectric : Dielectric {
-
-    _Dielectric(float ri) : m_ref_idx(ri) { }
+    _Dielectric(float ri) : m_ref_idx(ri) {}
 
     v3f f(const hit_record &, const v3f &, const v3f &) const override { return v3f(); }
     bool scatter(const sptr<Ray> &r_in,
@@ -142,20 +139,23 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
         norm_out = -rec.normal;
         ni_over_nt = m_ref_idx;
         cosine = m_ref_idx * Dot(rdir, rec.normal) / rdir.length();
-    } else {
+    }
+    else {
         norm_out = rec.normal;
         ni_over_nt = 1.0f / m_ref_idx;
         cosine = -Dot(rdir, rec.normal) / rdir.length();
     }
     if (refract(r_in->direction(), norm_out, ni_over_nt, refracted)) {
         p_reflected = schlick(cosine, m_ref_idx);
-    } else {
+    }
+    else {
         p_reflected = 1.0f;
     }
     static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     if (dist(__prng) < p_reflected) {
         wi = Normalize(Reflect(rdir, rec.normal));
-    } else {
+    }
+    else {
         wi = Normalize(refracted);
     }
     return true;

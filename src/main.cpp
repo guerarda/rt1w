@@ -32,13 +32,10 @@ __attribute__((noreturn)) static void usage(const char *msg = nullptr)
     exit(1);
 }
 
-enum {
-    OPTION_QUIET   = 1,
-    OPTION_VERBOSE = 1<<1
-};
+enum { OPTION_QUIET = 1, OPTION_VERBOSE = 1 << 1 };
 
 struct options {
-    char     file[256];
+    char file[256];
     uint32_t quality;
     uint32_t flags;
 };
@@ -58,20 +55,18 @@ int main(int argc, char *argv[])
         else if (char *cc = strstr(argv[i], "-quality=")) {
             options.quality = (uint32_t)atoi(cc + 9);
         }
-        else if (   !strcmp(argv[i], "--quiet")
-                 || !strcmp(argv[i], "-quiet")) {
+        else if (!strcmp(argv[i], "--quiet") || !strcmp(argv[i], "-quiet")) {
             options.flags |= OPTION_QUIET;
         }
-        else if (   !strcmp(argv[i], "--verbose")
-                 || !strcmp(argv[i], "-verbose")) {
+        else if (!strcmp(argv[i], "--verbose") || !strcmp(argv[i], "-verbose")) {
             options.flags |= OPTION_VERBOSE;
         }
-        else if (   !strcmp(argv[i], "--help")
-                 || !strcmp(argv[i], "-h")
+        else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")
                  || !strcmp(argv[i], "-help")) {
             usage();
             return 0;
-        } else {
+        }
+        else {
             strncpy(options.file, argv[i], 255);
         }
     }
@@ -99,7 +94,8 @@ int main(int argc, char *argv[])
     std::string str = render->options()->string("integrator");
     if (str == "path") {
         integrator = PathIntegrator::create(sampler, 4);
-    } else {
+    }
+    else {
         integrator = Integrator::create(sampler, 4);
     }
 

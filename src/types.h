@@ -54,37 +54,32 @@ typedef enum {
 } buffer_order_t;
 
 typedef struct buffer_format {
-    uint16_t       size;
-    buffer_type_t  type:8;
-    buffer_order_t order:8;
+    uint16_t size;
+    buffer_type_t type : 8;
+    buffer_order_t order : 8;
 } buffer_format_t;
 
 typedef struct buffer {
-    void            *data;
-    size_t           bpr;
-    rect_t           rect;
-    buffer_format_t  format;
+    void *data;
+    size_t bpr;
+    rect_t rect;
+    buffer_format_t format;
 } buffer_t;
 
 inline size_t buffer_order_sizeof(buffer_order_t t)
 {
-    switch(t) {
-    case ORDER_R:
-        return 1;
+    switch (t) {
+    case ORDER_R: return 1;
 
-    case ORDER_RG:
-        return 2;
+    case ORDER_RG: return 2;
 
-    case ORDER_RGB:
-        return 3;
+    case ORDER_RGB: return 3;
 
     case ORDER_RGBA:
     case ORDER_ARGB:
-    case ORDER_BGRA:
-        return 4;
+    case ORDER_BGRA: return 4;
 
-    default:
-        return 0;
+    default: return 0;
     }
 }
 
@@ -92,32 +87,27 @@ inline size_t buffer_type_sizeof(buffer_type_t t)
 {
     switch (t) {
     case TYPE_INT8:
-    case TYPE_UINT8:
-        return 1;
+    case TYPE_UINT8: return 1;
 
     case TYPE_INT16:
-    case TYPE_UINT16:
-        return 2;
+    case TYPE_UINT16: return 2;
 
     case TYPE_INT32:
     case TYPE_UINT32:
-    case TYPE_FLOAT32:
-        return 4;
+    case TYPE_FLOAT32: return 4;
 
     case TYPE_INT64:
     case TYPE_UINT64:
-    case TYPE_FLOAT64:
-        return 8;
+    case TYPE_FLOAT64: return 8;
 
-    default:
-        return 0;
+    default: return 0;
     }
 }
 
 inline buffer_format_t buffer_format_init(buffer_type_t t, buffer_order_t o)
 {
     uint16_t s = (uint16_t)(buffer_type_sizeof(t) * buffer_order_sizeof(o));
-    buffer_format_t f = { s, t, o};
+    buffer_format_t f = { s, t, o };
     return f;
 }
 

@@ -10,8 +10,7 @@ struct token {
 };
 
 struct _lock {
-
-    _lock(std::mutex *mutex) : m_mutex(mutex), m_next(nullptr) { }
+    _lock(std::mutex *mutex) : m_mutex(mutex), m_next(nullptr) {}
     ~_lock() { m_mutex->unlock(); }
 
     std::mutex *m_mutex;
@@ -24,15 +23,11 @@ static uptr<_lock> create_lock(std::mutex *mutex)
 }
 
 struct _notif {
-
-    _notif(workq *q,
-           workq_func f,
-           const sptr<Object> &obj,
-           const sptr<Object> &arg);
+    _notif(workq *q, workq_func f, const sptr<Object> &obj, const sptr<Object> &arg);
     ~_notif();
 
-    workq       *m_queue;
-    workq_func   m_func;
+    workq *m_queue;
+    workq_func m_func;
     sptr<Object> m_obj;
     sptr<Object> m_arg;
     uptr<_notif> m_next;
@@ -46,10 +41,7 @@ static uptr<_notif> create_notif(workq *workq,
     return std::make_unique<_notif>(workq, func, obj, arg);
 }
 
-_notif::_notif(workq *q,
-               workq_func f,
-               const sptr<Object> &obj,
-               const sptr<Object> &arg)
+_notif::_notif(workq *q, workq_func f, const sptr<Object> &obj, const sptr<Object> &arg)
 {
     m_queue = q;
     m_func = f;
@@ -63,15 +55,15 @@ _notif::~_notif()
     if (m_func) {
         if (m_queue) {
             workq_execute(m_queue, m_func, m_obj, m_arg);
-        } else {
+        }
+        else {
             m_func(m_obj, m_arg);
         }
     }
 }
 
 struct _Event : Event {
-
-     _Event(int32_t n);
+    _Event(int32_t n);
     ~_Event() override;
 
     int32_t notify(workq *,
@@ -82,10 +74,10 @@ struct _Event : Event {
     bool test() const override;
     int32_t wait() override;
 
-    uptr<_lock>      m_lock;
-    uptr<_notif>     m_notif;
+    uptr<_lock> m_lock;
+    uptr<_notif> m_notif;
     int32_t volatile m_counter;
-    void * volatile  m_token;
+    void *volatile m_token;
 };
 
 _Event::_Event(int32_t n)
@@ -103,9 +95,9 @@ _Event::~_Event()
 }
 
 int32_t _Event::notify(workq *workq,
-                    workq_func func,
-                    const sptr<Object> &obj,
-                    const sptr<Object> &arg)
+                       workq_func func,
+                       const sptr<Object> &obj,
+                       const sptr<Object> &arg)
 {
     if (m_token) {
         void *token = sync_lock_ptr(&m_token);
@@ -116,7 +108,8 @@ int32_t _Event::notify(workq *workq,
             m_notif = std::move(notif);
             notif.reset();
             sync_unlock_ptr(&m_token, token);
-        } else {
+        }
+        else {
             m_token = nullptr;
         }
     }
@@ -165,7 +158,8 @@ int32_t _Event::wait()
             /* Exit when the mutex has been unlocked,
                i.e. lock is destroyed */
             mutex.lock();
-        } else {
+        }
+        else {
             m_token = nullptr;
         }
     }

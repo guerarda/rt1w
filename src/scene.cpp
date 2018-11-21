@@ -46,7 +46,6 @@ static std::string resolve_path(const std::string &dir, const std::string &path)
         return path;
     }
     return absolute_path(dir + "/" + path);
-
 }
 
 static sptr<Params> read_params(const rapidjson::Value &v, const std::string &dir)
@@ -106,7 +105,6 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
             p->insert(name, read_params(m.value, dir));
         }
         else {
-
         }
     }
     return p;
@@ -115,43 +113,49 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
 #pragma mark - Render Description
 
 struct _RenderDesc : RenderDescription {
-
     _RenderDesc(const std::vector<sptr<Primitive>> &p,
                 const std::vector<sptr<Light>> &l,
                 const sptr<Camera> &c,
-                const sptr<Params> &o) : m_primitives(p),
-                                         m_lights(l),
-                                         m_camera(c),
-                                         m_options(o) { }
+                const sptr<Params> &o) :
+        m_primitives(p),
+        m_lights(l),
+        m_camera(c),
+        m_options(o)
+    {}
 
-    const std::vector<sptr<Primitive>> &primitives() const override { return m_primitives; }
-    const std::vector<sptr<Light>>     &lights() const override { return m_lights; }
-    sptr<Camera>                        camera() const override { return m_camera; }
-    sptr<const Params>                  options() const override { return m_options; }
+    const std::vector<sptr<Primitive>> &primitives() const override
+    {
+        return m_primitives;
+    }
+    const std::vector<sptr<Light>> &lights() const override { return m_lights; }
+    sptr<Camera> camera() const override { return m_camera; }
+    sptr<const Params> options() const override { return m_options; }
 
     std::vector<sptr<Primitive>> m_primitives;
-    std::vector<sptr<Light>>     m_lights;
-    sptr<Camera>                 m_camera;
-    sptr<Params>                 m_options;
+    std::vector<sptr<Light>> m_lights;
+    sptr<Camera> m_camera;
+    sptr<Params> m_options;
 };
 
 #pragma mark - Render From JSON
 
 struct _RenderDescFromJSON : RenderDescription {
+    _RenderDescFromJSON(const std::string &path) : m_path(path) {}
 
-    _RenderDescFromJSON(const std::string &path) : m_path(path) { }
-
-    const std::vector<sptr<Primitive>> &primitives() const override { return m_primitives; }
-    const std::vector<sptr<Light>>     &lights() const override { return m_lights; }
-    sptr<Camera>                       camera() const override { return m_camera; }
-    sptr<const Params>                 options() const override { return m_options; }
+    const std::vector<sptr<Primitive>> &primitives() const override
+    {
+        return m_primitives;
+    }
+    const std::vector<sptr<Light>> &lights() const override { return m_lights; }
+    sptr<Camera> camera() const override { return m_camera; }
+    sptr<const Params> options() const override { return m_options; }
 
     int32_t init();
 
-    sptr<Light>    read_light(const rapidjson::Value &v) const;
+    sptr<Light> read_light(const rapidjson::Value &v) const;
     sptr<Material> read_material(const rapidjson::Value &v) const;
-    sptr<Shape>    read_shape(const rapidjson::Value &v) const;
-    sptr<Texture>  read_texture(const rapidjson::Value &v) const;
+    sptr<Shape> read_shape(const rapidjson::Value &v) const;
+    sptr<Texture> read_texture(const rapidjson::Value &v) const;
 
     void load_camera();
     void load_lights();
@@ -166,13 +170,13 @@ struct _RenderDescFromJSON : RenderDescription {
     rapidjson::Document m_doc;
 
     std::vector<sptr<Primitive>> m_primitives;
-    std::vector<sptr<Light>>     m_lights;
-    sptr<Camera>                 m_camera;
-    sptr<Params>                 m_options;
+    std::vector<sptr<Light>> m_lights;
+    sptr<Camera> m_camera;
+    sptr<Params> m_options;
 
-    std::map<const std::string, const sptr<Texture>>  m_textures;
+    std::map<const std::string, const sptr<Texture>> m_textures;
     std::map<const std::string, const sptr<Material>> m_materials;
-    std::map<const std::string, const sptr<Shape>>    m_shapes;
+    std::map<const std::string, const sptr<Shape>> m_shapes;
 };
 
 int32_t _RenderDescFromJSON::init()
@@ -185,8 +189,7 @@ int32_t _RenderDescFromJSON::init()
 
     /* Check that the file was parsed without error */
     if (!ok) {
-        error("JSON parse error: %s (%lu)\n",
-              GetParseError_En(ok.Code()), ok.Offset());
+        error("JSON parse error: %s (%lu)\n", GetParseError_En(ok.Code()), ok.Offset());
         return -1;
     }
     /* Get directory containing the json file that will be used to resolve
@@ -250,7 +253,8 @@ void _RenderDescFromJSON::load_textures()
                     m_textures.insert(std::make_pair(k, tex));
                 }
                 WARNING_IF(!tex, "Couldn't create texture \"%s\"", k.c_str());
-            } else {
+            }
+            else {
                 warning("Found unamed texture, skipping");
             }
         }
@@ -259,7 +263,7 @@ void _RenderDescFromJSON::load_textures()
 
 void _RenderDescFromJSON::load_materials()
 {
-    //FIXME: CHECKS
+    // FIXME: CHECKS
     auto section = m_doc.FindMember("materials");
     if (section != m_doc.MemberEnd()) {
         for (auto &v : section->value.GetArray()) {
@@ -270,7 +274,8 @@ void _RenderDescFromJSON::load_materials()
 
                 WARNING_IF(!mat, "Couldn't create material \"%s\"", k.c_str());
                 m_materials.insert(std::make_pair(k, mat));
-            } else {
+            }
+            else {
                 warning("Found unamed material, skipping");
             }
         }
@@ -302,7 +307,8 @@ void _RenderDescFromJSON::load_lights()
         for (auto &v : section->value.GetArray()) {
             if (sptr<Light> light = read_light(v)) {
                 m_lights.push_back(light);
-            } else {
+            }
+            else {
                 warning("Couldn't create light at index %lu", ix);
             }
         }
@@ -314,7 +320,8 @@ void _RenderDescFromJSON::load_camera()
     auto section = m_doc.FindMember("camera");
     if (section != m_doc.MemberEnd()) {
         m_camera = Camera::create(read_params(section->value, m_dir));
-    } else {
+    }
+    else {
         error("Missing \"camera\"");
     }
 }
@@ -348,9 +355,11 @@ void _RenderDescFromJSON::load_primitives()
                 auto itm = v.FindMember("material");
                 if (its != v.MemberEnd() || itm != v.MemberEnd()) {
                     WARNING_IF(its == v.MemberEnd(),
-                               "Primitive at index %lu, no shape found", ix);
+                               "Primitive at index %lu, no shape found",
+                               ix);
                     WARNING_IF(itm == v.MemberEnd(),
-                               "Primitive at index %lu, no material found", ix);
+                               "Primitive at index %lu, no material found",
+                               ix);
 
                     if (its != v.MemberEnd() && itm != v.MemberEnd()) {
                         sptr<Shape> shape;
@@ -360,7 +369,9 @@ void _RenderDescFromJSON::load_primitives()
                         else if (its->value.IsString()) {
                             std::string name = its->value.GetString();
                             shape = m_shapes[name];
-                            WARNING_IF(!shape, "Couldn't find shape named \"%s\"", name.c_str());
+                            WARNING_IF(!shape,
+                                       "Couldn't find shape named \"%s\"",
+                                       name.c_str());
                         }
                         WARNING_IF(!shape, "Primitive at index %lu, invalid shape", ix);
 
@@ -371,18 +382,22 @@ void _RenderDescFromJSON::load_primitives()
                         else if (itm->value.IsString()) {
                             std::string name = itm->value.GetString();
                             mat = m_materials[name];
-                            WARNING_IF(!mat, "Couldn't find material named \"%s\"", name.c_str());
+                            WARNING_IF(!mat,
+                                       "Couldn't find material named \"%s\"",
+                                       name.c_str());
                         }
                         WARNING_IF(!mat, "Primitive at index %lu, invalid material", ix);
 
                         if (shape && mat) {
                             m_primitives.emplace_back(Primitive::create(shape, mat));
-                        } else {
+                        }
+                        else {
                             warning("Couldnt create Primitive at index %lu", ix);
                         }
                     }
                 }
-            } else {
+            }
+            else {
                 warning("Primitive at index %lu must be an object", ix);
             }
             ix++;
@@ -396,22 +411,25 @@ void _RenderDescFromJSON::load_primitives()
 #pragma mark - Scene
 
 struct _Scene : Scene {
-    _Scene(const sptr<Primitive> &w,
-           const std::vector<sptr<Light>> &l) : m_world(w), m_lights(l) { }
+    _Scene(const sptr<Primitive> &w, const std::vector<sptr<Light>> &l) :
+        m_world(w),
+        m_lights(l)
+    {}
 
     sptr<Primitive> world() const override { return m_world; }
     const std::vector<sptr<Light>> &lights() const override { return m_lights; }
 
-    sptr<Primitive>          m_world;
+    sptr<Primitive> m_world;
     std::vector<sptr<Light>> m_lights;
 };
 
 #pragma mark - Static constructors
 
-sptr<RenderDescription> RenderDescription::create(const std::vector<sptr<Primitive>> &primitives,
-                                                  const std::vector<sptr<Light>> &lights,
-                                                  const sptr<Camera> &camera,
-                                                  const sptr<Params> &options)
+sptr<RenderDescription> RenderDescription::create(
+    const std::vector<sptr<Primitive>> &primitives,
+    const std::vector<sptr<Light>> &lights,
+    const sptr<Camera> &camera,
+    const sptr<Params> &options)
 {
     return std::make_shared<_RenderDesc>(primitives, lights, camera, options);
 }

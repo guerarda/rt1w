@@ -9,24 +9,22 @@ struct Params;
 struct Value;
 
 struct VertexData : Object {
-
     static sptr<VertexData> create(size_t nv,
                                    uptr<v3f[]> &v,
                                    uptr<v3f[]> &n,
                                    uptr<v2f[]> &uv);
-    const size_t            m_nv;
+    const size_t m_nv;
     const uptr<const v3f[]> m_v;
     const uptr<const v3f[]> m_n;
     const uptr<const v2f[]> m_uv;
 
 protected:
-    VertexData(size_t nv,
-               uptr<v3f[]> &v,
-               uptr<v3f[]> &n,
-               uptr<v2f[]> &uv) : m_nv(nv),
-                                  m_v(std::move(v)),
-                                  m_n(std::move(n)),
-                                  m_uv(std::move(uv)) { }
+    VertexData(size_t nv, uptr<v3f[]> &v, uptr<v3f[]> &n, uptr<v2f[]> &uv) :
+        m_nv(nv),
+        m_v(std::move(v)),
+        m_n(std::move(n)),
+        m_uv(std::move(uv))
+    {}
 };
 
 struct Mesh : Shape {

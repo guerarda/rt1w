@@ -8,7 +8,7 @@
 #include <cmath>
 
 struct _Texture_const : Texture {
-    _Texture_const(const v3f &c) : m_color(c) { };
+    _Texture_const(const v3f &c) : m_color(c){};
 
     v3f value(float, float, const v3f &) const override { return m_color; }
 
@@ -16,9 +16,8 @@ struct _Texture_const : Texture {
 };
 
 struct _Texture_checker : Texture {
-
-    _Texture_checker(const sptr<Texture> &a,
-                     const sptr<Texture> &b) : m_odd(a), m_even(b) { }
+    _Texture_checker(const sptr<Texture> &a, const sptr<Texture> &b) : m_odd(a), m_even(b)
+    {}
 
     v3f value(float, float, const v3f &) const override;
 
@@ -33,13 +32,12 @@ v3f _Texture_checker::value(float u, float v, const v3f &p) const
 }
 
 struct _Texture_img : Texture {
-
     _Texture_img(const sptr<Image> &img, rect_t r);
 
     v3f value(float, float, const v3f &) const override;
 
     sptr<Image> m_img;
-    rect_t      m_rect;
+    rect_t m_rect;
 };
 
 _Texture_img::_Texture_img(const sptr<Image> &img, rect_t r)
@@ -72,11 +70,7 @@ v3f _Texture_img::value(float u, float v, const v3f &) const
 
     size_t pix_size = buf.format.size;
     uint8_t *sp = (uint8_t *)buf.data + (size_t)y * buf.bpr + (size_t)x * pix_size;
-    v3f color = {
-        sp[0] / 255.0f,
-        sp[1] / 255.0f,
-        sp[2] / 255.0f
-    };
+    v3f color = { sp[0] / 255.0f, sp[1] / 255.0f, sp[2] / 255.0f };
 
     return color;
 }
@@ -88,8 +82,7 @@ sptr<Texture> Texture::create_color(const v3f &c)
     return std::make_shared<_Texture_const>(c);
 }
 
-sptr<Texture> Texture::create_checker(const sptr<Texture> &a,
-                                      const sptr<Texture> &b)
+sptr<Texture> Texture::create_checker(const sptr<Texture> &a, const sptr<Texture> &b)
 {
     return std::make_shared<_Texture_checker>(a, b);
 }
@@ -126,10 +119,8 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
         sptr<Value> size = p->value("size");
 
         if (img) {
-            rect_t rect = {
-                org ? org->vector2i() : v2i(),
-                size ? size->vector2u() : img->size()
-            };
+            rect_t rect = { org ? org->vector2i() : v2i(),
+                            size ? size->vector2u() : img->size() };
             return Texture::create_image(img, rect);
         }
         WARNING_IF(!img, "Texture parameter \"image\" not specified");

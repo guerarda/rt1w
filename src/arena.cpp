@@ -7,13 +7,12 @@ constexpr size_t extra_alloc_size = 256 * 1024;
 
 struct hdr {
     struct hdr *prev;
-    uint8_t    *next;
-    uint8_t    *limit;
+    uint8_t *next;
+    uint8_t *limit;
 };
 
 struct _Arena : Arena {
-
-     _Arena();
+    _Arena();
     ~_Arena() override;
 
     void *alloc(size_t n) override;

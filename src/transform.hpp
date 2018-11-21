@@ -5,16 +5,16 @@
 #include "utils.h"
 
 struct Transform {
-    Transform() : m_mat(m44f_identity()), m_inv(m44f_identity()) { }
-    explicit Transform(const m44f &m) : m_mat(m), m_inv(Inverse(m)) { }
-    explicit Transform(const m44f &m, const m44f &inv) : m_mat(m), m_inv(inv) { }
+    Transform() : m_mat(m44f_identity()), m_inv(m44f_identity()) {}
+    explicit Transform(const m44f &m) : m_mat(m), m_inv(Inverse(m)) {}
+    explicit Transform(const m44f &m, const m44f &inv) : m_mat(m), m_inv(inv) {}
 
     m44f mat() const { return m_mat; }
     m44f inv() const { return m_inv; }
 
-    Transform operator *  (const Transform &) const;
-    sptr<Ray> operator () (const sptr<Ray> &r) const;
-    bounds3f  operator () (const bounds3f &) const;
+    Transform operator*(const Transform &)const;
+    sptr<Ray> operator()(const sptr<Ray> &r) const;
+    bounds3f operator()(const bounds3f &) const;
 
     static Transform Scale(float x, float y, float z);
     static Transform Translate(const v3f &v);
@@ -39,11 +39,9 @@ inline Vector3<T> Mulv(const Transform &t, const Vector3<T> &v)
 {
     T x = v.x, y = v.y, z = v.z;
     m44f mat = t.mat();
-    return {
-        mat.vx.x * x + mat.vx.y * y + mat.vx.z * z,
-        mat.vy.x * x + mat.vy.y * y + mat.vy.z * z,
-        mat.vz.x * x + mat.vz.y * y + mat.vz.z * z
-    };
+    return { mat.vx.x * x + mat.vx.y * y + mat.vx.z * z,
+             mat.vy.x * x + mat.vy.y * y + mat.vy.z * z,
+             mat.vz.x * x + mat.vz.y * y + mat.vz.z * z };
 }
 
 template <typename T>
@@ -55,7 +53,7 @@ inline Vector3<T> Mulp(const Transform &t, const Vector3<T> &p)
     T z = mat.vz.x * p.x + mat.vz.y * p.y + mat.vz.z * p.z + mat.vz.w;
     T w = mat.vw.x * p.x + mat.vw.y * p.y + mat.vw.z * p.z + mat.vw.w;
 
-    if (FloatEqual(w, T{1.0})) {
+    if (FloatEqual(w, T{ 1.0 })) {
         return { x, y, z };
     }
     return { x / w, y / w, z / w };

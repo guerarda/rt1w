@@ -14,19 +14,22 @@ static inline uint64_t splitmix64(uint64_t x)
     return z ^ (z >> 31);
 }
 
-static inline uint64_t rotl(const uint64_t x, int k) {
+static inline uint64_t rotl(const uint64_t x, int k)
+{
     return (x << k) | (x >> (64 - k));
 }
 
 struct xoroshiro256plus {
-    xoroshiro256plus(uint64_t seed) {
+    xoroshiro256plus(uint64_t seed)
+    {
         uint64_t x = seed;
         for (size_t i = 0; i < 4; i++) {
             x = splitmix64(x);
             s[i] = x;
         }
     }
-    uint64_t next() {
+    uint64_t next()
+    {
         const uint64_t r = s[0] + s[3];
         const uint64_t t = s[1] << 17;
 
@@ -41,7 +44,8 @@ struct xoroshiro256plus {
         return r;
     }
 
-    double uniform_double() {
+    double uniform_double()
+    {
         uint64_t x = next();
         return (x >> 11) * (1. / (UINT64_C(1) << 53));
     }
@@ -50,14 +54,13 @@ struct xoroshiro256plus {
 };
 
 struct _RNG : RNG {
-
-    _RNG(uint64_t seed) : m_xs256p(xoroshiro256plus(seed)) { }
+    _RNG(uint64_t seed) : m_xs256p(xoroshiro256plus(seed)) {}
 
     uint32_t u32() override;
-    float    f32() override;
+    float f32() override;
 
     uint32_t u32(uint32_t b) override;
-    float    f32(float b) override;
+    float f32(float b) override;
 
     xoroshiro256plus m_xs256p;
 };

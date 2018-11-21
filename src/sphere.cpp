@@ -23,16 +23,15 @@ static v2f sphere_uv(const v3f &p)
 }
 
 struct _Sphere : Sphere {
-
     _Sphere(const v3f &c, float r);
 
-    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override { return m_box; }
-    v3f      center() const override { return m_center; }
-    float    radius() const override { return m_radius; }
+    v3f center() const override { return m_center; }
+    float radius() const override { return m_radius; }
 
-    v3f      m_center;
-    float    m_radius;
+    v3f m_center;
+    float m_radius;
     bounds3f m_box;
 };
 

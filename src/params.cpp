@@ -4,7 +4,6 @@
 #include "value.hpp"
 
 struct _Params : Params {
-
     void insert(const std::string &k, const sptr<Params> &v) override;
     void insert(const std::string &k, const std::string &v) override;
     void insert(const std::string &k, const sptr<Texture> &v) override;
@@ -16,15 +15,15 @@ struct _Params : Params {
     void merge(const std::map<const std::string, const sptr<Texture>> &textures) override;
     void merge(const std::map<const std::string, const sptr<Value>> &values) override;
 
-    sptr<Params>  params(const std::string &k) const override;
-    std::string   string(const std::string &k) const override;
+    sptr<Params> params(const std::string &k) const override;
+    std::string string(const std::string &k) const override;
     sptr<Texture> texture(const std::string &k) const override;
-    sptr<Value>   value(const std::string &k) const override;
+    sptr<Value> value(const std::string &k) const override;
 
-    std::map<const std::string, const sptr<Params>>  m_params;
-    std::map<const std::string, const std::string>   m_strings;
+    std::map<const std::string, const sptr<Params>> m_params;
+    std::map<const std::string, const std::string> m_strings;
     std::map<const std::string, const sptr<Texture>> m_textures;
-    std::map<const std::string, const sptr<Value>>   m_values;
+    std::map<const std::string, const sptr<Value>> m_values;
 };
 
 void _Params::insert(const std::string &k, const sptr<Params> &v)
@@ -99,7 +98,6 @@ void _Params::merge(const std::map<const std::string, const sptr<Value>> &values
 
 sptr<Params> _Params::params(const std::string &k) const
 {
-
     auto it = m_params.find(k);
     if (it != m_params.end()) {
         return it->second;
@@ -247,7 +245,9 @@ v3d Params::vector3d(const sptr<Params> &p, const std::string &n, v3d v)
     return v;
 }
 
-std::string Params::string(const sptr<Params> &p, const std::string &n, const std::string &v)
+std::string Params::string(const sptr<Params> &p,
+                           const std::string &n,
+                           const std::string &v)
 {
     ASSERT(p);
     auto str = p->string(n);

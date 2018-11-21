@@ -13,27 +13,28 @@
 
 template <typename T>
 struct Vector2 {
-    Vector2() { x = 0; y = 0; }
-    Vector2(T x, T y) : x(x), y(y) { }
+    Vector2() = default;
+    Vector2(T x, T y) : x(x), y(y) {}
 
-    T          length() const;
-    T          length_sq() const;
+    T length() const;
+    T length_sq() const;
 
-    Vector2<T>   operator +  (const Vector2<T> &v) const;
-    Vector2<T> & operator += (const Vector2<T> &v);
-    Vector2<T>   operator -  () const;
-    Vector2<T>   operator -  (const Vector2<T> &v) const;
-    Vector2<T> & operator -= (const Vector2<T> &v);
-    Vector2<T>   operator *  (T f) const;
-    Vector2<T>   operator *  (const Vector2<T> &v) const;
-    Vector2<T> & operator *= (T f);
-    Vector2<T> & operator *= (const Vector2<T> &v);
-    Vector2<T>   operator /  (T f) const;
-    Vector2<T> & operator /= (T f);
-    T            operator [] (size_t i) const;
-    T          & operator [] (size_t i);
+    Vector2<T> operator+(const Vector2<T> &v) const;
+    Vector2<T> &operator+=(const Vector2<T> &v);
+    Vector2<T> operator-() const;
+    Vector2<T> operator-(const Vector2<T> &v) const;
+    Vector2<T> &operator-=(const Vector2<T> &v);
+    Vector2<T> operator*(T f) const;
+    Vector2<T> operator*(const Vector2<T> &v) const;
+    Vector2<T> &operator*=(T f);
+    Vector2<T> &operator*=(const Vector2<T> &v);
+    Vector2<T> operator/(T f) const;
+    Vector2<T> &operator/=(T f);
+    T operator[](size_t i) const;
+    T &operator[](size_t i);
 
-    T x, y;
+    T x = 0;
+    T y = 0;
 };
 
 typedef Vector2<float> v2f;
@@ -52,13 +53,13 @@ T Vector2<T>::length_sq() const
 }
 
 template <typename T>
-Vector2<T> Vector2<T>::operator + (const Vector2<T> &v) const
+Vector2<T> Vector2<T>::operator+(const Vector2<T> &v) const
 {
     return { x + v.x, y + v.y };
 }
 
 template <typename T>
-Vector2<T> & Vector2<T>::operator += (const Vector2<T> &v)
+Vector2<T> &Vector2<T>::operator+=(const Vector2<T> &v)
 {
     x += v.x;
     y += v.y;
@@ -67,19 +68,19 @@ Vector2<T> & Vector2<T>::operator += (const Vector2<T> &v)
 }
 
 template <typename T>
-Vector2<T> Vector2<T>::operator - () const
+Vector2<T> Vector2<T>::operator-() const
 {
     return { -x, -y };
 }
 
 template <typename T>
-Vector2<T> Vector2<T>::operator - (const Vector2<T> &v) const
+Vector2<T> Vector2<T>::operator-(const Vector2<T> &v) const
 {
     return { x - v.x, y - v.y };
 }
 
 template <typename T>
-Vector2<T> & Vector2<T>::operator -= (const Vector2<T> &v)
+Vector2<T> &Vector2<T>::operator-=(const Vector2<T> &v)
 {
     x -= v.x;
     y -= v.y;
@@ -88,19 +89,19 @@ Vector2<T> & Vector2<T>::operator -= (const Vector2<T> &v)
 }
 
 template <typename T>
-Vector2<T> Vector2<T>::operator * (T f) const
+Vector2<T> Vector2<T>::operator*(T f) const
 {
     return { x * f, y * f };
 }
 
 template <typename T>
-Vector2<T> Vector2<T>::operator * (const Vector2<T> &v) const
+Vector2<T> Vector2<T>::operator*(const Vector2<T> &v) const
 {
     return { x * v.x, y * v.y };
 }
 
 template <typename T>
-Vector2<T> & Vector2<T>::operator *= (T f)
+Vector2<T> &Vector2<T>::operator*=(T f)
 {
     x *= f;
     y *= f;
@@ -109,7 +110,7 @@ Vector2<T> & Vector2<T>::operator *= (T f)
 }
 
 template <typename T>
-Vector2<T> & Vector2<T>::operator *= (const Vector2<T> &v)
+Vector2<T> &Vector2<T>::operator*=(const Vector2<T> &v)
 {
     x *= v.x;
     y *= v.y;
@@ -118,14 +119,14 @@ Vector2<T> & Vector2<T>::operator *= (const Vector2<T> &v)
 }
 
 template <typename T>
-Vector2<T> Vector2<T>::operator / (T f) const
+Vector2<T> Vector2<T>::operator/(T f) const
 {
     T inv = 1 / f;
     return { x * inv, y * inv };
 }
 
 template <typename T>
-Vector2<T> & Vector2<T>::operator /= (T f)
+Vector2<T> &Vector2<T>::operator/=(T f)
 {
     T inv = 1 / f;
     x *= inv;
@@ -135,14 +136,14 @@ Vector2<T> & Vector2<T>::operator /= (T f)
 }
 
 template <typename T>
-T Vector2<T>::operator [] (size_t i) const
+T Vector2<T>::operator[](size_t i) const
 {
     ASSERT(i < 2);
     return i == 0 ? x : y;
 }
 
 template <typename T>
-T & Vector2<T>::operator [] (size_t i)
+T &Vector2<T>::operator[](size_t i)
 {
     ASSERT(i < 2);
     return i == 0 ? x : y;
@@ -151,7 +152,8 @@ T & Vector2<T>::operator [] (size_t i)
 #pragma mark Inline Functions
 
 template <typename T, typename U>
-inline Vector2<T> operator * (U s, const Vector2<T> &v) {
+inline Vector2<T> operator*(U s, const Vector2<T> &v)
+{
     return v * s;
 }
 
@@ -195,29 +197,31 @@ inline T DistanceSquared(const Vector2<T> &va, const Vector2<T> &vb)
 
 template <typename T>
 struct Vector3 {
-    Vector3() : x(0), y(0), z(0) { }
-    Vector3(T x, T y, T z) : x(x), y(y), z(z) { }
+    Vector3() = default;
+    Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
 
-    T          length() const;
-    T          length_sq() const;
+    T length() const;
+    T length_sq() const;
 
-    Vector3<T>   operator +  (const Vector3<T> &v) const;
-    Vector3<T> & operator += (const Vector3<T> &v);
-    Vector3<T>   operator -  () const;
-    Vector3<T>   operator -  (const Vector3<T> &v) const;
-    Vector3<T> & operator -= (const Vector3<T> &v);
-    Vector3<T>   operator *  (T f) const;
-    Vector3<T>   operator *  (const Vector3<T> &v) const;
-    Vector3<T> & operator *= (T f);
-    Vector3<T> & operator *= (const Vector3<T> &v);
-    Vector3<T>   operator /  (T f) const;
-    Vector3<T> & operator /= (T f);
-    Vector3<T>   operator /  (const Vector3<T> &v) const;
-    Vector3<T> & operator /  (const Vector3<T> &v);
-    T            operator [] (size_t i) const;
-    T          & operator [] (size_t i);
+    Vector3<T> operator+(const Vector3<T> &v) const;
+    Vector3<T> &operator+=(const Vector3<T> &v);
+    Vector3<T> operator-() const;
+    Vector3<T> operator-(const Vector3<T> &v) const;
+    Vector3<T> &operator-=(const Vector3<T> &v);
+    Vector3<T> operator*(T f) const;
+    Vector3<T> operator*(const Vector3<T> &v) const;
+    Vector3<T> &operator*=(T f);
+    Vector3<T> &operator*=(const Vector3<T> &v);
+    Vector3<T> operator/(T f) const;
+    Vector3<T> &operator/=(T f);
+    Vector3<T> operator/(const Vector3<T> &v) const;
+    Vector3<T> &operator/(const Vector3<T> &v);
+    T operator[](size_t i) const;
+    T &operator[](size_t i);
 
-    T x, y, z;
+    T x = 0;
+    T y = 0;
+    T z = 0;
 };
 
 typedef Vector3<float> v3f;
@@ -236,13 +240,13 @@ T Vector3<T>::length_sq() const
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator + (const Vector3<T> &v) const
+Vector3<T> Vector3<T>::operator+(const Vector3<T> &v) const
 {
     return { x + v.x, y + v.y, z + v.z };
 }
 
 template <typename T>
-Vector3<T> & Vector3<T>::operator += (const Vector3<T> &v)
+Vector3<T> &Vector3<T>::operator+=(const Vector3<T> &v)
 {
     x += v.x;
     y += v.y;
@@ -252,19 +256,19 @@ Vector3<T> & Vector3<T>::operator += (const Vector3<T> &v)
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator - () const
+Vector3<T> Vector3<T>::operator-() const
 {
     return { -x, -y, -z };
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator - (const Vector3<T> &v) const
+Vector3<T> Vector3<T>::operator-(const Vector3<T> &v) const
 {
     return { x - v.x, y - v.y, z - v.z };
 }
 
 template <typename T>
-Vector3<T> & Vector3<T>::operator -= (const Vector3<T> &v)
+Vector3<T> &Vector3<T>::operator-=(const Vector3<T> &v)
 {
     x -= v.x;
     y -= v.y;
@@ -274,19 +278,19 @@ Vector3<T> & Vector3<T>::operator -= (const Vector3<T> &v)
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator * (T f) const
+Vector3<T> Vector3<T>::operator*(T f) const
 {
     return { x * f, y * f, z * f };
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator * (const Vector3<T> &v) const
+Vector3<T> Vector3<T>::operator*(const Vector3<T> &v) const
 {
     return { x * v.x, y * v.y, z * v.z };
 }
 
 template <typename T>
-Vector3<T> & Vector3<T>::operator *= (T f)
+Vector3<T> &Vector3<T>::operator*=(T f)
 {
     x *= f;
     y *= f;
@@ -296,7 +300,7 @@ Vector3<T> & Vector3<T>::operator *= (T f)
 }
 
 template <typename T>
-Vector3<T> & Vector3<T>::operator *= (const Vector3<T> &v)
+Vector3<T> &Vector3<T>::operator*=(const Vector3<T> &v)
 {
     x *= v.x;
     y *= v.y;
@@ -306,14 +310,14 @@ Vector3<T> & Vector3<T>::operator *= (const Vector3<T> &v)
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator / (T f) const
+Vector3<T> Vector3<T>::operator/(T f) const
 {
     T inv = 1 / f;
     return { x * inv, y * inv, z * inv };
 }
 
 template <typename T>
-Vector3<T> & Vector3<T>::operator /= (T f)
+Vector3<T> &Vector3<T>::operator/=(T f)
 {
     T inv = 1 / f;
     x *= inv;
@@ -324,14 +328,14 @@ Vector3<T> & Vector3<T>::operator /= (T f)
 }
 
 template <typename T>
-Vector3<T> Vector3<T>::operator / (const Vector3<T> &v) const
+Vector3<T> Vector3<T>::operator/(const Vector3<T> &v) const
 {
-    ASSERT(v.x )
+    ASSERT(v.x)
     return { x / v.x, y / v.y, z / v.z };
 }
 
 template <typename T>
-Vector3<T> & Vector3<T>::operator / (const Vector3<T> &v)
+Vector3<T> &Vector3<T>::operator/(const Vector3<T> &v)
 {
     x /= v.x;
     y /= v.y;
@@ -341,14 +345,14 @@ Vector3<T> & Vector3<T>::operator / (const Vector3<T> &v)
 }
 
 template <typename T>
-T Vector3<T>::operator [] (size_t i) const
+T Vector3<T>::operator[](size_t i) const
 {
     ASSERT(i < 3);
     return i == 0 ? x : (i == 1 ? y : z);
 }
 
 template <typename T>
-T & Vector3<T>::operator [] (size_t i)
+T &Vector3<T>::operator[](size_t i)
 {
     ASSERT(i < 3);
     return i == 0 ? x : (i == 1 ? y : z);
@@ -357,7 +361,8 @@ T & Vector3<T>::operator [] (size_t i)
 #pragma mark Inline Functions
 
 template <typename T, typename U>
-inline Vector3<T> operator * (U s, const Vector3<T> &v) {
+inline Vector3<T> operator*(U s, const Vector3<T> &v)
+{
     return v * s;
 }
 
@@ -370,11 +375,9 @@ inline T Dot(const Vector3<T> &va, const Vector3<T> &vb)
 template <typename T>
 inline Vector3<T> Cross(const Vector3<T> &va, const Vector3<T> &vb)
 {
-    return {
-        va.y * vb.z - va.z * vb.y,
-        va.z * vb.x - va.x * vb.z,
-        va.x * vb.y - va.y * vb.x
-    };
+    return { va.y * vb.z - va.z * vb.y,    //
+             va.z * vb.x - va.x * vb.z,    //
+             va.x * vb.y - va.y * vb.x };
 }
 
 template <typename T>
@@ -395,13 +398,13 @@ inline Vector3<T> Reflect(const Vector3<T> &v, const Vector3<T> &n)
     return v - 2 * Dot(v, n) * n;
 }
 
-template<typename T>
+template <typename T>
 inline T Distance(const Vector3<T> &va, const Vector3<T> &vb)
 {
     return (va - vb).length();
 }
 
-template<typename T>
+template <typename T>
 inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
 {
     return (va - vb).length_sq();
@@ -411,10 +414,13 @@ inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
 
 template <typename T>
 struct Vector4 {
-    Vector4() : x(0), y(0), z(0), w(0) { }
-    Vector4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) { }
+    Vector4() = default;
+    Vector4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 
-    T x, y, z, w;
+    T x = 0;
+    T y = 0;
+    T z = 0;
+    T w = 0;
 };
 
 typedef Vector4<float> v4f;
@@ -428,8 +434,14 @@ struct Matrix4x4 {
     Matrix4x4(const Vector4<T> &vx,
               const Vector4<T> &vy,
               const Vector4<T> &vz,
-              const Vector4<T> &vw) : vx(vx), vy(vy), vz(vz), vw(vw) { }
-    Matrix4x4(T m[4][4]) {
+              const Vector4<T> &vw) :
+        vx(vx),
+        vy(vy),
+        vz(vz),
+        vw(vw)
+    {}
+    Matrix4x4(T m[4][4])
+    {
         vx = { m[0][0], m[0][1], m[0][2], m[0][3] };
         vy = { m[1][0], m[1][1], m[1][2], m[1][3] };
         vz = { m[2][0], m[2][1], m[2][2], m[2][3] };
@@ -447,12 +459,10 @@ typedef Matrix4x4<double> m44d;
 template <typename T>
 inline Matrix4x4<T> Identity4x4()
 {
-    T m[4][4] = {
-        { 1.0, 0.0, 0.0, 0.0 },
-        { 0.0, 1.0, 0.0, 0.0 },
-        { 0.0, 0.0, 1.0, 0.0 },
-        { 0.0, 0.0, 0.0, 1.0 }
-    };
+    T m[4][4] = { { 1.0, 0.0, 0.0, 0.0 },
+                  { 0.0, 1.0, 0.0, 0.0 },
+                  { 0.0, 0.0, 1.0, 0.0 },
+                  { 0.0, 0.0, 0.0, 1.0 } };
     return Matrix4x4<T>(m);
 }
 
@@ -476,7 +486,9 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
                             irow = j;
                             icol = k;
                         }
-                    } else ERROR_IF(ipiv[k] > 1, "Singular matrix in MatrixInvert");
+                    }
+                    else
+                        ERROR_IF(ipiv[k] > 1, "Singular matrix in MatrixInvert");
                 }
             }
         }
@@ -489,7 +501,8 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
         }
         indxr[i] = irow;
         indxc[i] = icol;
-        ERROR_IF(FloatEqual(minv[icol][icol], T{0.0}), "Singular matrix in MatrixInvert");
+        ERROR_IF(FloatEqual(minv[icol][icol], T{ 0.0 }),
+                 "Singular matrix in MatrixInvert");
 
         // Set $m[icol][icol]$ to one by scaling row _icol_ appropriately
         T pivinv = 1 / minv[icol][icol];
@@ -523,12 +536,10 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
 template <typename T>
 inline Matrix4x4<T> Transpose(const Matrix4x4<T> &m)
 {
-    T t[4][4] = {
-        { m.vx.x, m.vy.x, m.vz.x, m.vw.x },
-        { m.vx.y, m.vy.y, m.vz.y, m.vw.y },
-        { m.vx.z, m.vy.z, m.vz.z, m.vw.z },
-        { m.vx.w, m.vy.w, m.vz.w, m.vw.w }
-    };
+    T t[4][4] = { { m.vx.x, m.vy.x, m.vz.x, m.vw.x },
+                  { m.vx.y, m.vy.y, m.vz.y, m.vw.y },
+                  { m.vx.z, m.vy.z, m.vz.z, m.vw.z },
+                  { m.vx.w, m.vy.w, m.vz.w, m.vw.w } };
     return Matrix4x4<T>(t);
 }
 
@@ -541,10 +552,10 @@ inline Matrix4x4<T> Mul(const Matrix4x4<T> &ma, const Matrix4x4<T> &mb)
     T *pm = &m.vx.x;
     for (size_t i = 0; i < 4; i++) {
         for (size_t j = 0; j < 4; j++) {
-            pm[i * 4 + j] = pa[i * 4 + 0] * pb[0 * 4 + j] +
-                            pa[i * 4 + 1] * pb[1 * 4 + j] +
-                            pa[i * 4 + 2] * pb[2 * 4 + j] +
-                            pa[i * 4 + 3] * pb[3 * 4 + j];
+            pm[i * 4 + j] = pa[i * 4 + 0] * pb[0 * 4 + j]
+                            + pa[i * 4 + 1] * pb[1 * 4 + j]    //
+                            + pa[i * 4 + 2] * pb[2 * 4 + j]    //
+                            + pa[i * 4 + 3] * pb[3 * 4 + j];
         }
     }
     return m;
@@ -563,28 +574,26 @@ inline m44d m44d_identity()
 #pragma mark - Bounds 3 Declaration
 
 template <typename T>
- struct Bounds3 {
-    Bounds3() {
+struct Bounds3 {
+    Bounds3()
+    {
         T min = std::numeric_limits<T>::lowest();
         T max = std::numeric_limits<T>::max();
 
         lo = Vector3<T>(max, max, max);
         hi = Vector3<T>(min, min, min);
     }
-    Bounds3(const Vector3<T> &p) : lo(p), hi(p) { }
-    Bounds3(const Vector3<T> &p1,
-            const Vector3<T> &p2) : lo(std::min(p1.x, p2.x),
-                                       std::min(p1.y, p2.y),
-                                       std::min(p1.z, p2.z)),
-                                    hi(std::max(p1.x, p2.x),
-                                       std::max(p1.y, p2.y),
-                                       std::max(p1.z, p2.z)) { }
+    Bounds3(const Vector3<T> &p) : lo(p), hi(p) {}
+    Bounds3(const Vector3<T> &p1, const Vector3<T> &p2) :
+        lo(std::min(p1.x, p2.x), std::min(p1.y, p2.y), std::min(p1.z, p2.z)),
+        hi(std::max(p1.x, p2.x), std::max(p1.y, p2.y), std::max(p1.z, p2.z))
+    {}
 
     Vector3<T> center() const;
     Vector3<T> diagonal() const;
-    T          area() const;
-    T          volume() const;
-    int32_t    maxAxis() const;
+    T area() const;
+    T volume() const;
+    int32_t maxAxis() const;
 
     Vector3<T> lo;
     Vector3<T> hi;

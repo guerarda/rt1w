@@ -16,10 +16,14 @@ static void GenerateSamples1D(float *smp, size_t n, const sptr<RNG> &rng, bool j
     }
 }
 
-static void GenerateSamples2D(v2f *smp, size_t nx, size_t ny, const sptr<RNG> &rng, bool jitter)
+static void GenerateSamples2D(v2f *smp,
+                              size_t nx,
+                              size_t ny,
+                              const sptr<RNG> &rng,
+                              bool jitter)
 {
     float dx = 1.0f / nx;
-    float dy = 1.0f/ ny;
+    float dy = 1.0f / ny;
 
     size_t i = 0;
     for (size_t x = 0; x < nx; x++) {
@@ -44,18 +48,20 @@ static void Shuffle(T *smp, size_t n, const sptr<RNG> &rng)
 }
 
 struct _Sampler : Sampler {
-    _Sampler(uint32_t x,
-             uint32_t y,
-             uint32_t dim,
-             bool jitter) : m_spp(x * y), m_x(x), m_y(y),
-                            m_dim(dim), m_jitter(jitter) { }
+    _Sampler(uint32_t x, uint32_t y, uint32_t dim, bool jitter) :
+        m_spp(x * y),
+        m_x(x),
+        m_y(y),
+        m_dim(dim),
+        m_jitter(jitter)
+    {}
     void init();
 
     uint64_t samplesPerPixel() const override { return m_spp; }
     sptr<Sampler> clone() const override;
 
     float sample1D() override;
-    v2f   sample2D() override;
+    v2f sample2D() override;
     CameraSample cameraSample() override;
 
     void startPixel(v2i p) override;
@@ -65,13 +71,13 @@ struct _Sampler : Sampler {
     const uint32_t m_x;
     const uint32_t m_y;
     const uint32_t m_dim;
-    const bool     m_jitter;
+    const bool m_jitter;
 
-    v2i    m_pixel; // Current pixel
+    v2i m_pixel;    // Current pixel
     size_t m_ix;    // Current sample
 
     std::vector<std::vector<float>> m_samples1D;
-    std::vector<std::vector<v2f>>   m_samples2D;
+    std::vector<std::vector<v2f>> m_samples2D;
     size_t m_1d_dim;
     size_t m_2d_dim;
 

@@ -45,7 +45,7 @@ v3f UniformSampleOneLight(const hit_record &rec,
 #pragma mark - Point Light
 
 struct _PointLight : PointLight {
-    _PointLight(const v3f &p, const v3f &I) : m_p(p), m_I(I) { }
+    _PointLight(const v3f &p, const v3f &I) : m_p(p), m_I(I) {}
 
     v3f sample_Li(const hit_record &rec, v3f &wi) const override;
     v3f Le(const sptr<Ray> &) const override { return v3f(); }
@@ -54,7 +54,6 @@ struct _PointLight : PointLight {
     v3f m_p;
     v3f m_I;
 };
-
 
 v3f _PointLight::sample_Li(const hit_record &rec, v3f &wi) const
 {

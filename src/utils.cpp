@@ -8,8 +8,10 @@
 template <typename T>
 inline int32_t flt_compare(T a, T b)
 {
-    static_assert(std::is_floating_point<T>::value, "FloatCompare with non floating point type");
-    if (std::abs(a - b) <= std::max(std::abs(a), std::abs(b)) * std::numeric_limits<T>::epsilon()) {
+    static_assert(std::is_floating_point<T>::value,
+                  "FloatCompare with non floating point type");
+    if (std::abs(a - b)
+        <= std::max(std::abs(a), std::abs(b)) * std::numeric_limits<T>::epsilon()) {
         return 0;
     }
     return a < b ? -1 : 1;

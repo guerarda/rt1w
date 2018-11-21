@@ -6,14 +6,13 @@
 #pragma mark - Primitive
 
 struct _Primitive : Primitive {
+    _Primitive(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s), m_material(m)
+    {}
 
-    _Primitive(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s),
-                                                                m_material(m) { }
-
-    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override;
 
-    sptr<Shape>    m_shape;
+    sptr<Shape> m_shape;
     sptr<Material> m_material;
 };
 
@@ -47,13 +46,15 @@ sptr<Primitive> Primitive::create(const sptr<Shape> &s, const sptr<Material> &m)
 #pragma mark - Aggregate
 
 struct _Aggregate : Aggregate {
-
     _Aggregate(const std::vector<sptr<Primitive>> &prims);
 
-    bool     hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
     bounds3f bounds() const override { return m_bounds; }
 
-    const std::vector<sptr<Primitive>> &primitives() const override { return m_primitives; }
+    const std::vector<sptr<Primitive>> &primitives() const override
+    {
+        return m_primitives;
+    }
 
     std::vector<sptr<Primitive>> m_primitives;
     bounds3f m_bounds;
