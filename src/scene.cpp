@@ -1,14 +1,5 @@
 #include "scene.hpp"
 
-#include <libgen.h>
-
-#include <map>
-#include <vector>
-
-#include <rapidjson/document.h>
-#include <rapidjson/error/en.h>
-#include <rapidjson/filereadstream.h>
-
 #include "camera.hpp"
 #include "error.h"
 #include "light.hpp"
@@ -18,6 +9,15 @@
 #include "shape.hpp"
 #include "texture.hpp"
 #include "value.hpp"
+
+#include <rapidjson/document.h>
+#include <rapidjson/error/en.h>
+#include <rapidjson/filereadstream.h>
+
+#include <libgen.h>
+
+#include <map>
+#include <vector>
 
 #pragma mark Utils
 

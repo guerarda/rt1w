@@ -1,5 +1,4 @@
-#ifndef SPTR_H
-#define SPTR_H
+#pragma once
 
 #include <memory>
 
@@ -16,5 +15,3 @@ struct Object {
 protected:
     virtual ~Object() = default;
 };
-
-#endif

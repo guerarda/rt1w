@@ -2,7 +2,9 @@
 
 #include "ray.hpp"
 #include "types.h"
+#include "sptr.hpp"
 
+#include <string>
 #include <vector>
 
 struct Material;

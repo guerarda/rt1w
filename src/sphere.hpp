@@ -1,5 +1,4 @@
-#ifndef SPHERE_H
-#define SPHERE_H
+#pragma once
 
 #include "shape.hpp"
 #include "sptr.hpp"
@@ -18,5 +17,3 @@ struct Sphere : Shape {
     virtual v3f center() const = 0;
     virtual float radius() const = 0;
 };
-
-#endif

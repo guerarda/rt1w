@@ -1,13 +1,13 @@
 #include "integrator.hpp"
 
-#include <limits>
-
 #include "light.hpp"
 #include "material.hpp"
 #include "primitive.hpp"
 #include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
+
+#include <limits>
 
 #pragma mark - Integrator Implementation
 
