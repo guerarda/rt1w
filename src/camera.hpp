@@ -2,10 +2,10 @@
 
 #include "geometry.hpp"
 #include "sptr.hpp"
-#include "transform.hpp"
 
 struct Params;
 struct Ray;
+struct Transform;
 
 struct CameraSample {
     v2f pFilm;

@@ -22,7 +22,7 @@ _ImageFile::_ImageFile(const std::string &filename)
     int32_t err = image_read_png(filename.c_str(), &m_buffer);
 
     if (!err) {
-        m_size = m_buffer.rect.size;
+        m_size = { m_buffer.rect.size.x, m_buffer.rect.size.y };
     }
     else {
         warning("Couldn't load image at \"%s\"", filename.c_str());

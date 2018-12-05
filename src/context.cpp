@@ -8,6 +8,7 @@
 #include "sync.h"
 #include "workq.hpp"
 
+#include <memory>
 #include <vector>
 
 struct ImageTile : Object {
@@ -54,7 +55,7 @@ sptr<Event> _RenderingContext::schedule()
 {
     v2u size = m_camera->resolution();
     m_buffer.format = buffer_format_init(TYPE_UINT8, ORDER_RGB);
-    m_buffer.rect = { { 0, 0 }, size };
+    m_buffer.rect = { { 0, 0 }, { size.x, size.y } };
 
     m_buffer.bpr = size.x * m_buffer.format.size;
     m_buffer.data = malloc(size.y * m_buffer.bpr);

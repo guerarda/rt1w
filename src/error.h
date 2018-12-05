@@ -1,7 +1,11 @@
 #pragma once
 
-#include "types.h"
+#ifdef __cplusplus
+#include <cstdlib>
 
+#else
+#include <stdlib.h>
+#endif
 __BEGIN_DECLS
 
 #ifdef __GNUC__

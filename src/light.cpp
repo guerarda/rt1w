@@ -8,7 +8,6 @@
 #include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
-#include "texture.hpp"
 #include "value.hpp"
 
 #pragma mark - Light Sampling

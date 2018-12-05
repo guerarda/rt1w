@@ -1,9 +1,10 @@
 #pragma once
 
 #include "error.h"
-#include "utils.hpp"
 
 #ifdef __cplusplus
+
+#include "utils.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -37,6 +38,8 @@ struct Vector2 {
     T y = 0;
 };
 
+typedef Vector2<int32_t> v2i;
+typedef Vector2<uint32_t> v2u;
 typedef Vector2<float> v2f;
 typedef Vector2<double> v2d;
 
@@ -487,8 +490,9 @@ inline Matrix4x4<T> Inverse(const Matrix4x4<T> &m)
                             icol = k;
                         }
                     }
-                    else
+                    else {
                         ERROR_IF(ipiv[k] > 1, "Singular matrix in MatrixInvert");
+                    }
                 }
             }
         }
@@ -682,6 +686,16 @@ typedef struct rectf {
 #else
 
 #include <math.h>
+
+typedef struct v2i {
+    int32_t x;
+    int32_t y;
+} v2i;
+
+typedef struct v2u {
+    uint32_t x;
+    uint32_t y;
+} v2u;
 
 typedef struct v2f {
     float x;

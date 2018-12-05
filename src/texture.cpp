@@ -114,20 +114,17 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
         WARNING_IF(!odd, "Texture parameter \"odd\" not specified");
     }
     else if (type == "image") {
-        sptr<Image> img = Image::create(p);
-        sptr<Value> org = p->value("origin");
-        sptr<Value> size = p->value("size");
-
-        if (img) {
-            rect_t rect = { org ? org->vector2i() : v2i(),
-                            size ? size->vector2u() : img->size() };
+        if (sptr<Image> img = Image::create(p)) {
+            v2i org = Params::vector2i(p, "origin", { 0, 0 });
+            v2u size = Params::vector2u(p, "size", { 0, 0 });
+            rect_t rect = { { org.x, org.y }, { size.x, size.y } };
             return Texture::create_image(img, rect);
         }
-        WARNING_IF(!img, "Texture parameter \"image\" not specified");
+        warning("Texture parameter \"image\" not specified");
+
+        return nullptr;
     }
-    else {
-        warning("Texture parameter \"type\" not recognized");
-    }
+    warning("Texture parameter \"type\" not recognized");
 
     return nullptr;
 }

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "geometry.hpp"
 #include "sptr.hpp"
 

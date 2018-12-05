@@ -14,19 +14,15 @@
 
 __BEGIN_DECLS
 
-typedef struct v2i {
-    int32_t x;
-    int32_t y;
-} v2i;
-
-typedef struct v2u {
-    uint32_t x;
-    uint32_t y;
-} v2u;
-
 typedef struct rect {
-    v2i org;
-    v2u size;
+    struct {
+        int32_t x;
+        int32_t y;
+    } org;
+    struct {
+        uint32_t x;
+        uint32_t y;
+    } size;
 } rect_t;
 
 typedef enum {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "geometry.hpp"
 #include "sptr.hpp"
 #include "types.h"
 
