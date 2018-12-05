@@ -4,7 +4,7 @@
 #include "params.hpp"
 #include "primitive.hpp"
 #include "ray.hpp"
-#include "utils.h"
+#include "utils.hpp"
 #include "value.hpp"
 
 #pragma mark - Vertex Data
@@ -112,7 +112,7 @@ bool Triangle::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) co
     }
 
     float det = e0 + e1 + e2;
-    if (f32_equal(det, 0.0f)) {
+    if (FloatEqual(det, 0.0f)) {
         return false;
     }
 

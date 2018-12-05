@@ -4,11 +4,6 @@
 
 #include <cmath>
 
-static inline float Radians(float deg)
-{
-    return (float)((M_PI / 180.0) * (double)deg);
-}
-
 Transform Transform::operator*(const Transform &t) const
 {
     return Transform(Mul(m_mat, t.mat()), Mul(t.inv(), m_inv));

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "error.h"
-#include "utils.h"
+#include "utils.hpp"
 
 #ifdef __cplusplus
 

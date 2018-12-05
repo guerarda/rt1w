@@ -2,7 +2,7 @@
 
 #include "geometry.hpp"
 #include "ray.hpp"
-#include "utils.h"
+#include "utils.hpp"
 
 struct Transform {
     Transform() : m_mat(m44f_identity()), m_inv(m44f_identity()) {}
