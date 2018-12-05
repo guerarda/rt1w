@@ -1,6 +1,7 @@
 #include "primitive.hpp"
 
 #include "error.h"
+#include "interaction.hpp"
 #include "shape.hpp"
 
 #pragma mark - Primitive
@@ -9,17 +10,23 @@ struct _Primitive : Primitive {
     _Primitive(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s), m_material(m)
     {}
 
-    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool intersect(const sptr<Ray> &r,
+                   float min,
+                   float max,
+                   Interaction &isect) const override;
     bounds3f bounds() const override;
 
     sptr<Shape> m_shape;
     sptr<Material> m_material;
 };
 
-bool _Primitive::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
+bool _Primitive::intersect(const sptr<Ray> &r,
+                           float min,
+                           float max,
+                           Interaction &isect) const
 {
-    if (m_shape->hit(r, min, max, rec)) {
-        rec.mat = m_material;
+    if (m_shape->intersect(r, min, max, isect)) {
+        isect.mat = m_material;
         return true;
     }
     return false;
@@ -48,7 +55,10 @@ sptr<Primitive> Primitive::create(const sptr<Shape> &s, const sptr<Material> &m)
 struct _Aggregate : Aggregate {
     _Aggregate(const std::vector<sptr<Primitive>> &prims);
 
-    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool intersect(const sptr<Ray> &r,
+                   float min,
+                   float max,
+                   Interaction &isect) const override;
     bounds3f bounds() const override { return m_bounds; }
 
     const std::vector<sptr<Primitive>> &primitives() const override
@@ -68,16 +78,19 @@ _Aggregate::_Aggregate(const std::vector<sptr<Primitive>> &prims)
     }
 }
 
-bool _Aggregate::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
+bool _Aggregate::intersect(const sptr<Ray> &r,
+                           float min,
+                           float max,
+                           Interaction &isect) const
 {
     bool hit = false;
-    rec.t = std::numeric_limits<float>::max();
+    isect.t = std::numeric_limits<float>::max();
 
     for (auto &p : m_primitives) {
-        hit_record hr;
-        if (p->hit(r, min, max, hr)) {
-            if (hr.t < rec.t) {
-                rec = hr;
+        Interaction hr;
+        if (p->intersect(r, min, max, hr)) {
+            if (hr.t < isect.t) {
+                isect = hr;
             }
             hit = true;
         }

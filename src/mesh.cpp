@@ -43,7 +43,10 @@ struct Triangle : Shape {
     Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md), m_v(&md->m_i[3 * ix])
     {}
 
-    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool intersect(const sptr<Ray> &r,
+                   float min,
+                   float max,
+                   Interaction &isect) const override;
     bounds3f bounds() const override;
 
     sptr<const MeshData> m_md;
@@ -60,7 +63,10 @@ static size_t max_dimension(const v3f &v)
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
 
-bool Triangle::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
+bool Triangle::intersect(const sptr<Ray> &r,
+                         float min,
+                         float max,
+                         Interaction &isect) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -148,11 +154,11 @@ bool Triangle::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) co
     v3f dp12 = p1 - p2;
     v3f n = Normalize(Cross(dp02, dp12));
 
-    /* Update record */
-    rec.t = t;
-    rec.p = b0 * p0 + b1 * p1 + b2 * p2;
-    rec.uv = b0 * uv0 + b1 * uv1 + b2 * uv2;
-    rec.normal = n;
+    /* Update Interaction */
+    isect.t = t;
+    isect.p = b0 * p0 + b1 * p1 + b2 * p2;
+    isect.uv = b0 * uv0 + b1 * uv1 + b2 * uv2;
+    isect.n = n;
 
     return true;
 }
@@ -173,7 +179,10 @@ bounds3f Triangle::bounds() const
 struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
-    bool hit(const sptr<Ray> &, float, float, hit_record &) const override;
+    bool intersect(const sptr<Ray> &r,
+                   float min,
+                   float max,
+                   Interaction &isect) const override;
     bounds3f bounds() const override { return m_box; };
 
     std::vector<sptr<Shape>> faces() const override;
@@ -195,10 +204,10 @@ _Mesh::_Mesh(const sptr<MeshData> &md)
     }
 }
 
-bool _Mesh::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
+bool _Mesh::intersect(const sptr<Ray> &r, float min, float max, Interaction &isect) const
 {
     for (auto &t : m_tris) {
-        if (t->hit(r, min, max, rec)) {
+        if (t->intersect(r, min, max, isect)) {
             return true;
         }
     }

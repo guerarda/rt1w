@@ -1,11 +1,13 @@
 #include "material.hpp"
 
-#include <random>
-
 #include "error.h"
+#include "interaction.hpp"
 #include "params.hpp"
+#include "ray.hpp"
 #include "texture.hpp"
 #include "value.hpp"
+
+#include <random>
 
 static std::random_device rd;
 static std::mt19937 __prng(rd());
@@ -50,28 +52,28 @@ static float schlick(float cos, float ri)
 struct _Lambertian : Lambertian {
     _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) {}
 
-    v3f f(const hit_record &rec, const v3f &wo, const v3f &wi) const override;
+    v3f f(const Interaction &isect, const v3f &wo, const v3f &wi) const override;
     bool scatter(const sptr<Ray> &r_in,
-                 const hit_record &rec,
+                 const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
 
     sptr<Texture> m_albedo;
 };
 
-v3f _Lambertian::f(const hit_record &rec, const v3f &, const v3f &) const
+v3f _Lambertian::f(const Interaction &isect, const v3f &, const v3f &) const
 {
-    return m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
+    return m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
 }
 
 bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
-                          const hit_record &rec,
+                          const Interaction &isect,
                           v3f &attenuation,
                           v3f &wi) const
 {
-    v3f target = rec.p + rec.normal + random_sphere_point();
-    wi = Normalize(target - rec.p);
-    attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
+    v3f target = isect.p + isect.n + random_sphere_point();
+    wi = Normalize(target - isect.p);
+    attenuation = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
     return true;
 }
 
@@ -80,9 +82,9 @@ bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
 struct _Metal : Metal {
     _Metal(const sptr<Texture> &tex, float f);
 
-    v3f f(const hit_record &, const v3f &, const v3f &) const override { return v3f(); }
+    v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
     bool scatter(const sptr<Ray> &r_in,
-                 const hit_record &rec,
+                 const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
 
@@ -97,15 +99,15 @@ _Metal::_Metal(const sptr<Texture> &tex, float f)
 }
 
 bool _Metal::scatter(const sptr<Ray> &r_in,
-                     const hit_record &rec,
+                     const Interaction &isect,
                      v3f &attenuation,
                      v3f &wi) const
 {
-    v3f reflected = Reflect(r_in->direction(), rec.normal);
+    v3f reflected = Reflect(r_in->direction(), isect.n);
     v3f fuzz = m_fuzz * random_sphere_point();
     wi = Normalize(fuzz + reflected);
-    attenuation = m_albedo->value(rec.uv.x, rec.uv.y, rec.p);
-    return Dot(wi, rec.normal) > 0.0f;
+    attenuation = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
+    return Dot(wi, isect.n) > 0.0f;
 }
 
 #pragma mark - Dieletric
@@ -113,9 +115,9 @@ bool _Metal::scatter(const sptr<Ray> &r_in,
 struct _Dielectric : Dielectric {
     _Dielectric(float ri) : m_ref_idx(ri) {}
 
-    v3f f(const hit_record &, const v3f &, const v3f &) const override { return v3f(); }
+    v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
     bool scatter(const sptr<Ray> &r_in,
-                 const hit_record &rec,
+                 const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
 
@@ -123,7 +125,7 @@ struct _Dielectric : Dielectric {
 };
 
 bool _Dielectric::scatter(const sptr<Ray> &r_in,
-                          const hit_record &rec,
+                          const Interaction &isect,
                           v3f &attenuation,
                           v3f &wi) const
 {
@@ -135,15 +137,15 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
     v3f rdir = r_in->direction();
 
     attenuation = { 1.0f, 1.0f, 1.0f };
-    if (Dot(r_in->direction(), rec.normal) > 0.0f) {
-        norm_out = -rec.normal;
+    if (Dot(r_in->direction(), isect.n) > 0.0f) {
+        norm_out = -isect.n;
         ni_over_nt = m_ref_idx;
-        cosine = m_ref_idx * Dot(rdir, rec.normal) / rdir.length();
+        cosine = m_ref_idx * Dot(rdir, isect.n) / rdir.length();
     }
     else {
-        norm_out = rec.normal;
+        norm_out = isect.n;
         ni_over_nt = 1.0f / m_ref_idx;
-        cosine = -Dot(rdir, rec.normal) / rdir.length();
+        cosine = -Dot(rdir, isect.n) / rdir.length();
     }
     if (refract(r_in->direction(), norm_out, ni_over_nt, refracted)) {
         p_reflected = schlick(cosine, m_ref_idx);
@@ -153,7 +155,7 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
     }
     static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
     if (dist(__prng) < p_reflected) {
-        wi = Normalize(Reflect(rdir, rec.normal));
+        wi = Normalize(Reflect(rdir, isect.n));
     }
     else {
         wi = Normalize(refracted);

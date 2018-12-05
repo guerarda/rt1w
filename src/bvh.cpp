@@ -1,6 +1,8 @@
 #include "bvh.hpp"
 
 #include "arena.hpp"
+#include "interaction.hpp"
+#include "ray.hpp"
 
 #include <vector>
 
@@ -79,7 +81,10 @@ struct _BVHAccelerator : BVHAccelerator {
     _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
     ~_BVHAccelerator() override;
 
-    bool hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const override;
+    bool intersect(const sptr<Ray> &r,
+                   float min,
+                   float max,
+                   Interaction &isect) const override;
     bounds3f bounds() const override { return m_bounds; }
     const std::vector<sptr<Primitive>> &primitives() const override { return m_prims; }
 
@@ -263,7 +268,10 @@ int32_t _BVHAccelerator::flattenBVH(const BVHBuildNode *root, int32_t &offset)
     return savedOffset;
 }
 
-bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const
+bool _BVHAccelerator::intersect(const sptr<Ray> &r,
+                                float min,
+                                float max,
+                                Interaction &isect) const
 {
     size_t index = 0;
     size_t next[64] = { 0 };
@@ -278,9 +286,9 @@ bool _BVHAccelerator::hit(const sptr<Ray> &r, float min, float max, hit_record &
                 auto first = (size_t)m_nodes[index].primitivesOffset;
 
                 for (size_t i = first; i < first + n; i++) {
-                    if (m_prims[i]->hit(r, min, max, rec)) {
+                    if (m_prims[i]->intersect(r, min, max, isect)) {
                         hit = true;
-                        max = rec.t;
+                        max = isect.t;
                     }
                 }
                 if (sp == 0) {

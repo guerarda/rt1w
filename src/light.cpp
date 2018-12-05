@@ -1,9 +1,11 @@
 #include "light.hpp"
 
 #include "error.h"
+#include "interaction.hpp"
 #include "material.hpp"
 #include "params.hpp"
 #include "primitive.hpp"
+#include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
 #include "texture.hpp"
@@ -11,22 +13,22 @@
 
 #pragma mark - Light Sampling
 
-v3f EstimateDirect(const hit_record &rec,
+v3f EstimateDirect(const Interaction &isect,
                    const sptr<Light> &light,
                    const sptr<Scene> &scene,
                    const sptr<Sampler> &)
 {
     v3f wi;
-    v3f Li = light->sample_Li(rec, wi);
-    if (!light->visible(rec, scene)) {
+    v3f Li = light->sample_Li(isect, wi);
+    if (!light->visible(isect, scene)) {
         return v3f();
     }
-    v3f f = rec.mat->f(rec, rec.wo, wi);
+    v3f f = isect.mat->f(isect, isect.wo, wi);
 
     return f * Li;
 }
 
-v3f UniformSampleOneLight(const hit_record &rec,
+v3f UniformSampleOneLight(const Interaction &isect,
                           const sptr<Scene> &scene,
                           const sptr<Sampler> &sampler)
 {
@@ -39,7 +41,7 @@ v3f UniformSampleOneLight(const hit_record &rec,
 
     sptr<Light> light = lights[ix];
 
-    return n * EstimateDirect(rec, light, scene, sampler);
+    return n * EstimateDirect(isect, light, scene, sampler);
 }
 
 #pragma mark - Point Light
@@ -47,26 +49,26 @@ v3f UniformSampleOneLight(const hit_record &rec,
 struct _PointLight : PointLight {
     _PointLight(const v3f &p, const v3f &I) : m_p(p), m_I(I) {}
 
-    v3f sample_Li(const hit_record &rec, v3f &wi) const override;
+    v3f sample_Li(const Interaction &isect, v3f &wi) const override;
     v3f Le(const sptr<Ray> &) const override { return v3f(); }
-    bool visible(const hit_record &rec, const sptr<Scene> &scene) const override;
+    bool visible(const Interaction &isect, const sptr<Scene> &scene) const override;
 
     v3f m_p;
     v3f m_I;
 };
 
-v3f _PointLight::sample_Li(const hit_record &rec, v3f &wi) const
+v3f _PointLight::sample_Li(const Interaction &isect, v3f &wi) const
 {
-    wi = Normalize(m_p - rec.p);
+    wi = Normalize(m_p - isect.p);
 
-    return m_I / DistanceSquared(rec.p, m_p);
+    return m_I / DistanceSquared(isect.p, m_p);
 }
 
-bool _PointLight::visible(const hit_record &rec, const sptr<Scene> &scene) const
+bool _PointLight::visible(const Interaction &isect, const sptr<Scene> &scene) const
 {
-    sptr<Ray> ray = Ray::create(m_p, rec.p - m_p);
-    hit_record r;
-    return !scene->world()->hit(ray, 0.001f, 1.0f, r);
+    sptr<Ray> ray = Ray::create(m_p, isect.p - m_p);
+    Interaction i;
+    return !scene->world()->intersect(ray, 0.001f, 1.0f, i);
 }
 
 #pragma mark - Static Constructors

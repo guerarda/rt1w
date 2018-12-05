@@ -1,5 +1,6 @@
 #include "integrator.hpp"
 
+#include "interaction.hpp"
 #include "light.hpp"
 #include "material.hpp"
 #include "primitive.hpp"
@@ -30,20 +31,23 @@ v3f _Integrator::Li(const sptr<Ray> &ray,
                     const sptr<Sampler> &sampler,
                     size_t depth) const
 {
-    hit_record rec;
-    if (scene->world()->hit(ray, 0.001f, std::numeric_limits<float>::max(), rec)) {
+    Interaction isect;
+    if (scene->world()->intersect(ray,
+                                  0.001f,
+                                  std::numeric_limits<float>::max(),
+                                  isect)) {
         v3f attenuation;
         v3f wi;
-        if (depth < m_maxDepth && rec.mat->scatter(ray, rec, attenuation, wi)) {
+        if (depth < m_maxDepth && isect.mat->scatter(ray, isect, attenuation, wi)) {
             v3f L;
             for (const auto &light : scene->lights()) {
                 v3f lwi;
-                v3f Li = light->sample_Li(rec, lwi);
-                if (light->visible(rec, scene)) {
-                    L += Li * rec.mat->f(rec, rec.wo, lwi);
+                v3f Li = light->sample_Li(isect, lwi);
+                if (light->visible(isect, scene)) {
+                    L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
             }
-            sptr<Ray> scattered = Ray::create(rec.p, wi);
+            sptr<Ray> scattered = Ray::create(isect.p, wi);
             L += attenuation * Li(scattered, scene, sampler, depth + 1);
             return L;
         }
@@ -76,22 +80,24 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
     v3f beta = { 1.0f, 1.0f, 1.0f };
 
     for (size_t bounces = 0;; bounces++) {
-        hit_record rec;
-        bool intersect =
-            scene->world()->hit(ray, 0.001f, std::numeric_limits<float>::max(), rec);
+        Interaction isect;
+        bool intersect = scene->world()->intersect(ray,
+                                                   0.001f,
+                                                   std::numeric_limits<float>::max(),
+                                                   isect);
         if (!intersect || bounces > m_maxDepth) {
             break;
         }
-        L += beta * UniformSampleOneLight(rec, scene, sampler);
+        L += beta * UniformSampleOneLight(isect, scene, sampler);
 
         v3f wi;
         v3f f;
-        bool scatter = rec.mat->scatter(ray, rec, f, wi);
+        bool scatter = isect.mat->scatter(ray, isect, f, wi);
         if (!scatter) {
             break;
         }
         beta *= f;
-        ray = Ray::create(rec.p, wi);
+        ray = Ray::create(isect.p, wi);
 
         if (bounces > 3) {
             float q = std::max(0.5f, 1 - beta.length());

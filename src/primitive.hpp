@@ -1,29 +1,24 @@
 #pragma once
 
-#include "ray.hpp"
-#include "types.h"
+#include "geometry.hpp"
 #include "sptr.hpp"
 
 #include <string>
 #include <vector>
 
+struct Interaction;
 struct Material;
+struct Ray;
 struct Shape;
-
-struct hit_record {
-    float t;
-    v2f uv;
-    v3f p;
-    v3f normal;
-    v3f wo;
-    sptr<Material> mat;
-};
 
 struct Primitive : Object {
     static sptr<Primitive> create(const sptr<Shape> &s, const sptr<Material> &m);
     static sptr<Primitive> load_obj(const std::string &path);
 
-    virtual bool hit(const sptr<Ray> &r, float min, float max, hit_record &rec) const = 0;
+    virtual bool intersect(const sptr<Ray> &r,
+                           float min,
+                           float max,
+                           Interaction &isect) const = 0;
     virtual bounds3f bounds() const = 0;
 };
 
