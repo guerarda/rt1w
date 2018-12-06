@@ -4,7 +4,7 @@ constexpr float OneMinusEpsilon_f32 = 0.99999994f;
 constexpr double OneMinusEpsilon_f64 = 0.99999999999999989;
 
 struct RNG : Object {
-    static sptr<RNG> create();
+    static uptr<RNG> create();
 
     virtual uint32_t u32() = 0;
     virtual float f32() = 0;

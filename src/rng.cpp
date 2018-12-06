@@ -97,7 +97,7 @@ float _RNG::f32(float b)
 
 #pragma mark - Static Constructor
 
-sptr<RNG> RNG::create()
+uptr<RNG> RNG::create()
 {
-    return std::make_shared<_RNG>(std::random_device()());
+    return std::make_unique<_RNG>(std::random_device()());
 }
