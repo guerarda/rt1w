@@ -18,10 +18,10 @@ struct Params : Object {
     virtual void insert(const std::string &k, const sptr<Value> &v) = 0;
 
     virtual void merge(const sptr<Params> &p) = 0;
-    virtual void merge(const std::map<const std::string, const std::string> &) = 0;
-    virtual void merge(const std::map<const std::string, const sptr<Params>> &) = 0;
-    virtual void merge(const std::map<const std::string, const sptr<Texture>> &) = 0;
-    virtual void merge(const std::map<const std::string, const sptr<Value>> &) = 0;
+    virtual void merge(const std::map<const std::string, const std::string> &p) = 0;
+    virtual void merge(const std::map<const std::string, const sptr<Params>> &p) = 0;
+    virtual void merge(const std::map<const std::string, const sptr<Texture>> &p) = 0;
+    virtual void merge(const std::map<const std::string, const sptr<Value>> &p) = 0;
 
     virtual std::string string(const std::string &k) const = 0;
     virtual sptr<Params> params(const std::string &k) const = 0;
@@ -37,6 +37,7 @@ struct Params : Object {
 
     static v2i vector2i(const sptr<Params> &p, const std::string &n, v2i v);
     static v2u vector2u(const sptr<Params> &p, const std::string &n, v2u v);
+    static v2f vector2f(const sptr<Params> &p, const std::string &n, v2f v);
     static v3f vector3f(const sptr<Params> &p, const std::string &n, v3f v);
     static v3d vector3d(const sptr<Params> &p, const std::string &n, v3d v);
 

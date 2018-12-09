@@ -227,6 +227,15 @@ v2u Params::vector2u(const sptr<Params> &p, const std::string &n, v2u v)
     return v;
 }
 
+v2f Params::vector2f(const sptr<Params> &p, const std::string &n, v2f v)
+{
+    ASSERT(p);
+    if (auto val = p->value(n)) {
+        return val->vector2f();
+    }
+    return v;
+}
+
 v3f Params::vector3f(const sptr<Params> &p, const std::string &n, v3f v)
 {
     ASSERT(p);

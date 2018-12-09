@@ -24,8 +24,7 @@ struct Value : Object {
     static sptr<Value> create(vtype_t t, void *v, size_t n);
 
     template <typename T>
-    static sptr<Value> create(const T *v, size_t n)
-    {
+    static sptr<Value> create(const T *v, size_t n) {
         return create(vtype_from_type<T>::value(), (void *)v, n);
     }
 
@@ -52,12 +51,18 @@ struct Value : Object {
 
     v2i vector2i() const { return vector<int32_t, v2i>(this); }
     v2u vector2u() const { return vector<uint32_t, v2u>(this); }
+    v2f vector2f() const { return vector<float, v2f>(this); }
     v3f vector3f() const { return vector<float, v3f>(this); }
     v3d vector3d() const { return vector<double, v3d>(this); }
 
     virtual vtype_t type() const = 0;
     virtual size_t count() const = 0;
     virtual void value(vtype_t type, void *v, size_t off, size_t len) const = 0;
+
+    template <typename T>
+    void value(T *v, size_t off, size_t len) {
+        value(vtype_from_type<T>::value(), v, off, len);
+    }
     // clang-format on
 
 protected:
