@@ -45,13 +45,14 @@ bool _Sphere::intersect(const sptr<Ray> &r,
             isect.t = (float)t;
             isect.p = r->point(isect.t);
             isect.n = Normalize((isect.p - m_center));
+            isect.wo = -rdir;
 
             /* Compute sphere uv */
             v3f p = 1.0f / m_radius * (isect.p - m_center);
             double phi = std::atan2(p.x, p.z);
             double theta = std::acos(Clamp(p.y, -1.0, 1.0));
 
-            isect.uv.x = (float)(phi / (2.0 * Pi));
+            isect.uv.x = (float)(0.5 + phi / (2.0 * Pi));
             isect.uv.y = (float)(theta / Pi);
 
             /* Compute dp/du & dp/dv */
