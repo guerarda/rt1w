@@ -13,13 +13,6 @@ struct CameraSample {
 };
 
 struct Camera : Object {
-    static sptr<Camera> create(const Transform &cameraToWorld,
-                               const Transform &projection,
-                               const rectf &bounds,
-                               v2u resolution,
-                               float aperture,
-                               float focusDistance);
-
     static sptr<Camera> create(const sptr<Params> &p);
 
     virtual v2u resolution() const = 0;
@@ -31,6 +24,7 @@ struct PerspectiveCamera : Camera {
                                const v3f &look,
                                const v3f &up,
                                const v2u &resolution,
+                               const v2f &screen,
                                float fov,
                                float aperture,
                                float focusDistance,
@@ -43,8 +37,9 @@ struct OrthographicCamera : Camera {
                                const v3f &look,
                                const v3f &up,
                                const v2u &resolution,
+                               const v2f &screen,
                                float aperture,
                                float focusDistance,
-                               float znear,
+                               float zNear,
                                float zFar);
 };

@@ -15,13 +15,16 @@ static v2f UniformSampleDisk(const v2f &p)
     return { (float)(r * std::cos(a)), (float)(r * std::sin(a)) };
 }
 
+enum struct ProjectionType { Perspective, Orthographic };
+
 struct _ProjectiveCamera : Camera {
     _ProjectiveCamera(const Transform &cameraToWorld,
                       const Transform &projection,
                       const rectf &window,
                       v2u resolution,
                       float lensRadius,
-                      float focusDist);
+                      float focusDist,
+                      ProjectionType type);
 
     sptr<Ray> generateRay(const CameraSample &cs) const override;
     v2u resolution() const override { return m_resolution; }
@@ -35,6 +38,8 @@ struct _ProjectiveCamera : Camera {
 
     float m_lensRadius;
     float m_focusDistance;
+
+    ProjectionType m_type;
 };
 
 _ProjectiveCamera::_ProjectiveCamera(const Transform &cameraToWorld,
@@ -42,13 +47,15 @@ _ProjectiveCamera::_ProjectiveCamera(const Transform &cameraToWorld,
                                      const rectf &window,
                                      v2u resolution,
                                      float lensRadius,
-                                     float focusDist) :
+                                     float focusDist,
+                                     ProjectionType type) :
     m_cameraToWorld(cameraToWorld),
     m_cameraToScreen(projection),
     m_window(window),
     m_resolution(resolution),
     m_lensRadius(lensRadius),
-    m_focusDistance(focusDist)
+    m_focusDistance(focusDist),
+    m_type(type)
 {
     Transform screenToRaster =
         Transform::Scale(resolution.x, resolution.y, 1.0f)
@@ -61,8 +68,9 @@ sptr<Ray> _ProjectiveCamera::generateRay(const CameraSample &cs) const
 {
     v3f pCamera = Mulp(m_rasterToCamera, v3f{ cs.pFilm.x, cs.pFilm.y, 0.0f });
 
-    v3f org = { 0.0f, 0.0f, 0.0f };
-    v3f dir = Normalize(pCamera);
+    v3f org = m_type == ProjectionType::Perspective ? v3f{ 0.0f, 0.0f, 0.0f } : pCamera;
+    v3f dir = m_type == ProjectionType::Perspective ? Normalize(pCamera)
+                                                    : v3f{ 0.0f, 0.0f, -1.0f };
     sptr<Ray> r = Ray::create(org, dir);
 
     if (m_lensRadius > 0.0f) {
@@ -83,27 +91,31 @@ sptr<Ray> _ProjectiveCamera::generateRay(const CameraSample &cs) const
 sptr<Camera> Camera::create(const sptr<Params> &p)
 {
     std::string type = Params::string(p, "type", "perspective");
-    if (type == "custom") {
-        m44f pos = Params::matrix4x4f(p, "cameratoworld", m44f_identity());
-        m44f proj = Params::matrix4x4f(p, "projection", m44f_identity());
+
+    if (type == "perspective") {
+        v3f pos = Params::vector3f(p, "position", { 1.0f, 1.0f, 1.0f });
+        v3f look = Params::vector3f(p, "lookat", { 0.0f, 0.0f, 0.0f });
+        v3f up = Params::vector3f(p, "up", { 0.0f, 1.0f, 0.0f });
         v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
+        float fov = Params::f32(p, "fov", 60.0f);
         float aperture = Params::f32(p, "aperture", 0.1f);
         float fdist = Params::f32(p, "focusdistance", 1.0f);
+        float znear = Params::f32(p, "znear", -0.1f);
+        float zfar = Params::f32(p, "zfar", -1000.0f);
 
-        rectf bounds;
-        if (sptr<Value> vb = p->value("bounds")) {
-            vb->value(TYPE_FLOAT32, &bounds.org.x, 0, 4);
-        }
-        else {
-            float ar = (float)res.x / res.y;
-            bounds = { { -ar, -1.0f }, v2f{ 2.0f * ar, 2.0f } };
-        }
-        return Camera::create(Transform(pos),
-                              Transform(proj),
-                              bounds,
-                              res,
-                              aperture,
-                              fdist);
+        float ar = (float)res.x / res.y;
+        v2f screen = Params::vector2f(p, "screen", { 2.0f * ar, 2.0f });
+
+        return PerspectiveCamera::create(pos,
+                                         look,
+                                         up,
+                                         res,
+                                         screen,
+                                         fov,
+                                         aperture,
+                                         fdist,
+                                         znear,
+                                         zfar);
     }
     if (type == "orthographic") {
         v3f pos = Params::vector3f(p, "position", { 1.0f, 1.0f, 1.0f });
@@ -113,57 +125,30 @@ sptr<Camera> Camera::create(const sptr<Params> &p)
         float aperture = Params::f32(p, "aperture", 0.1f);
         float fdist = Params::f32(p, "focusdistance", 1.0f);
         float znear = Params::f32(p, "znear", -0.1f);
-        float zfar = Params::f32(p, "zfar", 1000.0f);
+        float zfar = Params::f32(p, "zfar", -1000.0f);
+
+        float ar = (float)res.x / res.y;
+        v2f screen = Params::vector2f(p, "screen", { 2.0f * ar, 2.0f });
 
         return OrthographicCamera::create(pos,
                                           look,
                                           up,
                                           res,
+                                          screen,
                                           aperture,
                                           fdist,
                                           znear,
                                           zfar);
     }
-    v3f pos = Params::vector3f(p, "position", { 1.0f, 1.0f, 1.0f });
-    v3f look = Params::vector3f(p, "lookat", { 0.0f, 0.0f, 0.0f });
-    v3f up = Params::vector3f(p, "up", { 0.0f, 1.0f, 0.0f });
-    v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
-    float fov = Params::f32(p, "fov", 60.0f);
-    float aperture = Params::f32(p, "aperture", 0.1f);
-    float fdist = Params::f32(p, "focusdistance", 1.0f);
-    float znear = Params::f32(p, "znear", -0.1f);
-    float zfar = Params::f32(p, "zfar", 1000.0f);
-
-    return PerspectiveCamera::create(pos,
-                                     look,
-                                     up,
-                                     res,
-                                     fov,
-                                     aperture,
-                                     fdist,
-                                     znear,
-                                     zfar);
-}
-
-sptr<Camera> Camera::create(const Transform &cameraToWorld,
-                            const Transform &projection,
-                            const rectf &bounds,
-                            v2u resolution,
-                            float aperture,
-                            float focusDistance)
-{
-    return std::make_shared<_ProjectiveCamera>(cameraToWorld,
-                                               projection,
-                                               bounds,
-                                               resolution,
-                                               aperture,
-                                               focusDistance);
+    error("Unknown camera : \"%s\"", type.c_str());
+    return nullptr;
 }
 
 sptr<Camera> PerspectiveCamera::create(const v3f &pos,
                                        const v3f &look,
                                        const v3f &up,
                                        const v2u &resolution,
+                                       const v2f &screen,
                                        float fov,
                                        float aperture,
                                        float focusDistance,
@@ -172,22 +157,22 @@ sptr<Camera> PerspectiveCamera::create(const v3f &pos,
 {
     Transform lookat = Transform::LookAt(pos, look, up);
     Transform proj = Transform::Perspective(fov, zNear, zFar);
-
-    float ar = (float)resolution.x / resolution.y;
-    rectf screen = { { -ar, -1.0f }, { 2.0f * ar, 2.0f } };
+    rectf bounds = { { 0.5f * -screen.x, 0.5f * -screen.y }, screen };
 
     return std::make_shared<_ProjectiveCamera>(lookat,
                                                proj,
-                                               screen,
+                                               bounds,
                                                resolution,
                                                aperture,
-                                               focusDistance);
+                                               focusDistance,
+                                               ProjectionType::Perspective);
 }
 
 sptr<Camera> OrthographicCamera::create(const v3f &pos,
                                         const v3f &look,
                                         const v3f &up,
                                         const v2u &resolution,
+                                        const v2f &screen,
                                         float aperture,
                                         float focusDistance,
                                         float zNear,
@@ -195,14 +180,13 @@ sptr<Camera> OrthographicCamera::create(const v3f &pos,
 {
     Transform lookat = Transform::LookAt(pos, look, up);
     Transform proj = Transform::Orthographic(zNear, zFar);
-
-    float ar = (float)resolution.x / resolution.y;
-    rectf screen = { { -ar, -1.0f }, { 2.0f * ar, 2.0f } };
+    rectf bounds = { { 0.5f * -screen.x, 0.5f * -screen.y }, screen };
 
     return std::make_shared<_ProjectiveCamera>(lookat,
                                                proj,
-                                               screen,
+                                               bounds,
                                                resolution,
                                                aperture,
-                                               focusDistance);
+                                               focusDistance,
+                                               ProjectionType::Orthographic);
 }
