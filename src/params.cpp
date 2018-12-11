@@ -153,124 +153,54 @@ sptr<Params> Params::create()
     return std::make_shared<_Params>();
 }
 
-#pragma mark - Static functions
+#pragma mark - Static Getter Functions
 
-int32_t Params::i32(const sptr<Params> &p, const std::string &n, int32_t v)
+template <typename T>
+T Params::scalarp(const sptr<Params> &p, const std::string &k, T v)
 {
     ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->i32();
+    if (auto value = p->value(k)) {
+        T rv;
+        value->value(&rv, 0, 1);
+        return rv;
     }
     return v;
 }
-
-int64_t Params::i64(const sptr<Params> &p, const std::string &n, int64_t v)
+template <typename T, typename U>
+U Params::vectorp(const sptr<Params> &p, const std::string &k, U v)
 {
     ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->i64();
-    }
-    return v;
-}
-
-uint32_t Params::u32(const sptr<Params> &p, const std::string &n, uint32_t v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->u32();
-    }
-    return v;
-}
-
-uint64_t Params::u64(const sptr<Params> &p, const std::string &n, uint64_t v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->u64();
-    }
-    return v;
-}
-
-float Params::f32(const sptr<Params> &p, const std::string &n, float v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->f32();
-    }
-    return v;
-}
-
-double Params::f64(const sptr<Params> &p, const std::string &n, double v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->f64();
-    }
-    return v;
-}
-
-v2i Params::vector2i(const sptr<Params> &p, const std::string &n, v2i v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->vector2i();
-    }
-    return v;
-}
-
-v2u Params::vector2u(const sptr<Params> &p, const std::string &n, v2u v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->vector2u();
-    }
-    return v;
-}
-
-v2f Params::vector2f(const sptr<Params> &p, const std::string &n, v2f v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->vector2f();
-    }
-    return v;
-}
-
-v3f Params::vector3f(const sptr<Params> &p, const std::string &n, v3f v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->vector3f();
-    }
-    return v;
-}
-
-v3d Params::vector3d(const sptr<Params> &p, const std::string &n, v3d v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        return val->vector3d();
+    if (auto value = p->value(k)) {
+        U rv;
+        value->value((T *)&rv, 0, sizeof(U) / sizeof(T));
+        return rv;
     }
     return v;
 }
 
 std::string Params::string(const sptr<Params> &p,
-                           const std::string &n,
+                           const std::string &k,
                            const std::string &v)
 {
     ASSERT(p);
-    auto str = p->string(n);
+    auto str = p->string(k);
     return str.empty() ? v : str;
 }
 
-m44f Params::matrix4x4f(const sptr<Params> &p, const std::string &n, m44f v)
-{
-    ASSERT(p);
-    if (auto val = p->value(n)) {
-        m44f m;
-        val->value(TYPE_FLOAT32, &m.vx.x, 0, 16);
+#pragma mark - Explicit Template Instantiation
+// clang-format off
+template int32_t Params::scalarp(const sptr<Params> &p, const std::string &k, int32_t v);
+template int64_t Params::scalarp(const sptr<Params> &p, const std::string &k, int64_t v);
+template uint32_t Params::scalarp(const sptr<Params> &p, const std::string &k, uint32_t v);
+template uint64_t Params::scalarp(const sptr<Params> &p, const std::string &k, uint64_t v);
+template float Params::scalarp(const sptr<Params> &p, const std::string &k, float v);
+template double Params::scalarp(const sptr<Params> &p, const std::string &k, double v);
 
-        return m;
-    }
-    return v;
-}
+template v2i Params::vectorp<int32_t, v2i>(const sptr<Params> &p, const std::string &k, v2i v);
+template v2u Params::vectorp<uint32_t, v2u>(const sptr<Params> &p, const std::string &k, v2u v);
+template v2f Params::vectorp<float, v2f>(const sptr<Params> &p, const std::string &k, v2f v);
+template v2d Params::vectorp<double, v2d>(const sptr<Params> &p, const std::string &k, v2d v);
+template v3f Params::vectorp<float, v3f>(const sptr<Params> &p, const std::string &k, v3f v);
+template v3d Params::vectorp<double, v3d>(const sptr<Params> &p, const std::string &k, v3d v);
+template m44f Params::vectorp<float, m44f>(const sptr<Params> &p, const std::string &k, m44f v);
+// clang-format on
