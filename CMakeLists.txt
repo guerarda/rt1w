@@ -60,6 +60,7 @@ FIND_PACKAGE(PNG REQUIRED)
 
 ADD_LIBRARY(rt1w
   src/arena.cpp
+  src/bxdf.cpp
   src/bvh.cpp
   src/camera.cpp
   src/context.cpp
