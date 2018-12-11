@@ -3,6 +3,7 @@
 #include "geometry.hpp"
 #include "sptr.hpp"
 
+struct BSDF;
 struct Ray;
 struct Interaction;
 struct Params;
@@ -16,10 +17,11 @@ struct Material : Object {
                          const Interaction &rec,
                          v3f &attenuation,
                          v3f &wi) const = 0;
+    virtual sptr<BSDF> computeBsdf(const Interaction &isect) const = 0;
 };
 
 struct Lambertian : Material {
-    static sptr<Lambertian> create(const sptr<Texture> &tex);
+    static sptr<Lambertian> create(const sptr<Texture> &Kd);
     static sptr<Lambertian> create(const sptr<Params> &params);
 };
 

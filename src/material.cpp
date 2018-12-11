@@ -1,5 +1,6 @@
 #include "material.hpp"
 
+#include "bxdf.hpp"
 #include "error.h"
 #include "interaction.hpp"
 #include "params.hpp"
@@ -16,7 +17,6 @@ static v3f random_sphere_point()
 {
     static std::uniform_real_distribution<float> dist(-1.0f, 1.0f);
     v3f p;
-
     do {
         p.x = dist(__prng);
         p.y = dist(__prng);
@@ -50,20 +50,21 @@ static float schlick(float cos, float ri)
 #pragma mark - Lambertian
 
 struct _Lambertian : Lambertian {
-    _Lambertian(const sptr<Texture> &tex) : m_albedo(tex) {}
+    _Lambertian(const sptr<Texture> &Kd) : m_Kd(Kd) {}
 
     v3f f(const Interaction &isect, const v3f &wo, const v3f &wi) const override;
     bool scatter(const sptr<Ray> &r_in,
                  const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
+    sptr<BSDF> computeBsdf(const Interaction &isect) const override;
 
-    sptr<Texture> m_albedo;
+    sptr<Texture> m_Kd;
 };
 
 v3f _Lambertian::f(const Interaction &isect, const v3f &, const v3f &) const
 {
-    return m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
+    return m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
 }
 
 bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
@@ -73,8 +74,30 @@ bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
 {
     v3f target = isect.p + isect.n + random_sphere_point();
     wi = Normalize(target - isect.p);
-    attenuation = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
+    attenuation = m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
     return true;
+}
+
+sptr<BSDF> _Lambertian::computeBsdf(const Interaction &isect) const
+{
+    v3f Kd = m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
+    std::vector<sptr<BxDF>> bxdfs = { LambertianReflection::create(Kd) };
+
+    return BSDF::create(isect, bxdfs);
+}
+
+sptr<Lambertian> Lambertian::create(const sptr<Texture> &Kd)
+{
+    return std::make_shared<_Lambertian>(Kd);
+}
+
+sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
+{
+    if (sptr<Texture> Kd = p->texture("Kd")) {
+        return Lambertian::create(Kd);
+    }
+    warning("Lambertian parameter \"Kd\" not specified");
+    return nullptr;
 }
 
 #pragma mark - Metal
@@ -164,20 +187,6 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
 }
 
 #pragma mark - Static constructors
-
-sptr<Lambertian> Lambertian::create(const sptr<Texture> &tex)
-{
-    return std::make_shared<_Lambertian>(tex);
-}
-
-sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
-{
-    if (sptr<Texture> tex = p->texture("texture")) {
-        return Lambertian::create(tex);
-    }
-    warning("Lambertian parameter \"texture\" not specified");
-    return nullptr;
-}
 
 sptr<Metal> Metal::create(const sptr<Texture> &tex, float f)
 {

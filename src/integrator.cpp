@@ -1,5 +1,6 @@
 #include "integrator.hpp"
 
+#include "bxdf.hpp"
 #include "interaction.hpp"
 #include "light.hpp"
 #include "material.hpp"
@@ -7,6 +8,7 @@
 #include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
+#include "utils.hpp"
 
 #include <limits>
 
@@ -97,9 +99,13 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
         L += beta * UniformSampleOneLight(isect, scene, sampler);
 
         v3f wi;
-        v3f f;
-        bool scatter = isect.mat ? isect.mat->scatter(ray, isect, f, wi) : false;
-        if (!scatter) {
+
+        sptr<BSDF> bsdf = isect.mat->computeBsdf(isect);
+        if (!bsdf) {
+            break;
+        }
+        v3f f = bsdf->sample_f(isect.wo, wi);
+        if (FloatEqual(f.x, 0.0f) && FloatEqual(f.y, 0.0f) && FloatEqual(f.z, 0.0f)) {
             break;
         }
         beta *= f;
