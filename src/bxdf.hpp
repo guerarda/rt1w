@@ -5,6 +5,7 @@
 #include "sptr.hpp"
 
 struct Interaction;
+struct Fresnel;
 
 #pragma mark - Utils
 
@@ -48,3 +49,14 @@ struct LambertianReflection : BxDF {
     static sptr<LambertianReflection> create(v3f R);
 };
 
+struct SpecularReflection : BxDF {
+    static sptr<SpecularReflection> create(const v3f &R, uptr<Fresnel> fresnel);
+};
+
+struct SpecularTransmission : BxDF {
+    static sptr<SpecularTransmission> create(const v3f &T, float etaA, float etaB);
+};
+
+struct FresnelSpecular : BxDF {
+    static sptr<FresnelSpecular> create(const v3f &R, const v3f &T, float etaA, float etaB);
+};

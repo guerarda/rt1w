@@ -66,6 +66,7 @@ ADD_LIBRARY(rt1w
   src/context.cpp
   src/event.cpp
   src/error.cpp
+  src/fresnel.cpp
   src/geometry.cpp
   src/image.cpp
   src/imageio.c

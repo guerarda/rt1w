@@ -60,12 +60,18 @@
         {
             "name": "bar",
             "type": "lambertian",
-            "texture": "map"
+            "Kd": "map"
         },
         {
             "name": "ground",
             "type": "lambertian",
-            "texture": "groundtex"
+            "Kd": "groundtex"
+        },
+        {
+            "name": "baz",
+            "type": "metal",
+            "texture": "map",
+            "fuzz": 0.0
         }
     ],
     "shapes" : [
@@ -107,7 +113,7 @@
         },
         {
             "shape": "ball",
-            "material": "bar"
+            "material": "baz"
         }
     ],
     "lights" : [
@@ -123,14 +129,15 @@
         }
     ],
     "camera": {
-        "position" : [
+        "type": "perspective",
+        "position": [
             13.0,
             2.0,
             3.0
         ],
         "lookat": [
             0.0,
-            0.0,
+            1.0,
             0.0
         ],
         "up": [

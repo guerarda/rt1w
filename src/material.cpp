@@ -2,6 +2,7 @@
 
 #include "bxdf.hpp"
 #include "error.h"
+#include "fresnel.hpp"
 #include "interaction.hpp"
 #include "params.hpp"
 #include "ray.hpp"
@@ -110,6 +111,7 @@ struct _Metal : Metal {
                  const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
+    sptr<BSDF> computeBsdf(const Interaction &isect) const override;
 
     sptr<Texture> m_albedo;
     float m_fuzz;
@@ -119,6 +121,19 @@ _Metal::_Metal(const sptr<Texture> &tex, float f)
 {
     m_albedo = tex;
     m_fuzz = fminf(1.0f, f);
+}
+
+sptr<BSDF> _Metal::computeBsdf(const Interaction &isect) const
+{
+    v3f R = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
+    v3f eta = { 1.2f, 1.2f, 1.2f };
+    v3f k = { 2.2f, 2.2f, 2.2f };
+    std::vector<sptr<BxDF>> bxdfs = {
+        SpecularReflection::create(R,
+                                   FresnelConductor::create({ 1.0f, 1.0f, 1.0f }, eta, k))
+    };
+
+    return BSDF::create(isect, bxdfs);
 }
 
 bool _Metal::scatter(const sptr<Ray> &r_in,
@@ -136,16 +151,27 @@ bool _Metal::scatter(const sptr<Ray> &r_in,
 #pragma mark - Dieletric
 
 struct _Dielectric : Dielectric {
-    _Dielectric(float ri) : m_ref_idx(ri) {}
+    _Dielectric(float ri) : m_eta(ri) {}
 
     v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
     bool scatter(const sptr<Ray> &r_in,
                  const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
+    sptr<BSDF> computeBsdf(const Interaction &isect) const override;
 
-    float m_ref_idx;
+    float m_eta;
 };
+
+sptr<BSDF> _Dielectric::computeBsdf(const Interaction &isect) const
+{
+    std::vector<sptr<BxDF>> bxdfs = {
+        SpecularReflection::create(v3f{ 1.0f, 1.0f, 1.0f },
+                                   FresnelDielectric::create(1.0f, m_eta))
+    };
+
+    return BSDF::create(isect, bxdfs);
+}
 
 bool _Dielectric::scatter(const sptr<Ray> &r_in,
                           const Interaction &isect,
@@ -162,16 +188,16 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
     attenuation = { 1.0f, 1.0f, 1.0f };
     if (Dot(r_in->direction(), isect.n) > 0.0f) {
         norm_out = -isect.n;
-        ni_over_nt = m_ref_idx;
-        cosine = m_ref_idx * Dot(rdir, isect.n) / rdir.length();
+        ni_over_nt = m_eta;
+        cosine = m_eta * Dot(rdir, isect.n) / rdir.length();
     }
     else {
         norm_out = isect.n;
-        ni_over_nt = 1.0f / m_ref_idx;
+        ni_over_nt = 1.0f / m_eta;
         cosine = -Dot(rdir, isect.n) / rdir.length();
     }
     if (refract(r_in->direction(), norm_out, ni_over_nt, refracted)) {
-        p_reflected = schlick(cosine, m_ref_idx);
+        p_reflected = schlick(cosine, m_eta);
     }
     else {
         p_reflected = 1.0f;
