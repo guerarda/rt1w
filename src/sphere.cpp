@@ -63,6 +63,11 @@ bool _Sphere::intersect(const sptr<Ray> &r,
             isect.dpdv = v3f{ (float)(Pi * -p.y * sinPhi),
                               (float)(Pi * d),
                               (float)(Pi * -p.y * cosPhi) };
+
+            /* Shading Geometry */
+            isect.shading.n = isect.n;
+            isect.shading.dpdu = isect.dpdu;
+            isect.shading.dpdv = isect.dpdv;
             return true;
         }
     }
