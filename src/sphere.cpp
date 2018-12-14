@@ -4,6 +4,7 @@
 #include "params.hpp"
 #include "primitive.hpp"
 #include "ray.hpp"
+#include "sampling.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 
@@ -19,6 +20,7 @@ struct _Sphere : Sphere {
                    float max,
                    Interaction &isect) const override;
     bounds3f bounds() const override { return m_box; }
+    Interaction sample(const v2f &u) const override;
     v3f center() const override { return m_center; }
     float radius() const override { return m_radius; }
 
@@ -72,6 +74,15 @@ bool _Sphere::intersect(const sptr<Ray> &r,
         }
     }
     return false;
+}
+
+Interaction _Sphere::sample(const v2f &u) const
+{
+    Interaction it;
+    it.p = m_center + m_radius * UniformSampleSphere(u);
+    it.n = Normalize(it.p - m_center);
+
+    return it;
 }
 
 #pragma mark - Static constructors

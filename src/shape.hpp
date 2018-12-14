@@ -15,4 +15,5 @@ struct Shape : Object {
                            float max,
                            Interaction &isect) const = 0;
     virtual bounds3f bounds() const = 0;
+    virtual Interaction sample(const v2f &u) const = 0;
 };

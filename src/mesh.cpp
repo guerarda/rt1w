@@ -4,6 +4,7 @@
 #include "params.hpp"
 #include "primitive.hpp"
 #include "ray.hpp"
+#include "sampling.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 
@@ -48,6 +49,7 @@ struct Triangle : Shape {
                    float max,
                    Interaction &isect) const override;
     bounds3f bounds() const override;
+    Interaction sample(const v2f &u) const override;
 
     sptr<const MeshData> m_md;
     const uint32_t *const m_v;
@@ -163,6 +165,28 @@ bool Triangle::intersect(const sptr<Ray> &r,
     return true;
 }
 
+Interaction Triangle::sample(const v2f &u) const
+{
+    sptr<VertexData> vd = m_md->m_vd;
+
+    v3f p0 = vd->m_v[m_v[0]];
+    v3f p1 = vd->m_v[m_v[1]];
+    v3f p2 = vd->m_v[m_v[2]];
+
+    v2f b = UniformSampleTriangle(u);
+    Interaction it;
+    it.p = b.x * p0 + b.y * p1 + (1.0f - b.x - b.y) * p2;
+
+    if (vd->m_n) {
+        it.n = Normalize(b.x * vd->m_n[m_v[0]] + b.y * vd->m_n[m_v[1]]
+                         + (1.0f - b.x - b.y) * vd->m_n[m_v[2]]);
+    }
+    else {
+        it.n = Normalize(Cross(p1 - p0, p2 - p0));
+    }
+    return it;
+}
+
 bounds3f Triangle::bounds() const
 {
     sptr<VertexData> vd = m_md->m_vd;
@@ -184,6 +208,7 @@ struct _Mesh : Mesh {
                    float max,
                    Interaction &isect) const override;
     bounds3f bounds() const override { return m_box; };
+    Interaction sample(const v2f &u) const override;
 
     std::vector<sptr<Shape>> faces() const override;
 
@@ -212,6 +237,13 @@ bool _Mesh::intersect(const sptr<Ray> &r, float min, float max, Interaction &ise
         }
     }
     return false;
+}
+
+Interaction _Mesh::sample(const v2f &) const
+{
+    /* This function should not be called, Triangle::sample should be called instead. */
+    ASSERT(0);
+    return {};
 }
 
 std::vector<sptr<Shape>> _Mesh::faces() const
