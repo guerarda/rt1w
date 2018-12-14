@@ -14,6 +14,8 @@
 
 template <typename T>
 struct Vector2 {
+    static_assert(std::is_arithmetic<T>(), "Vector2 with non arithmetic type");
+
     Vector2() = default;
     Vector2(T x, T y) : x(x), y(y) {}
 
@@ -200,6 +202,8 @@ inline T DistanceSquared(const Vector2<T> &va, const Vector2<T> &vb)
 
 template <typename T>
 struct Vector3 {
+    static_assert(std::is_arithmetic<T>(), "Vector3 with non arithmetic type");
+
     Vector3() = default;
     Vector3(T x, T y, T z) : x(x), y(y), z(z) {}
 
@@ -417,6 +421,8 @@ inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
 
 template <typename T>
 struct Vector4 {
+    static_assert(std::is_arithmetic<T>(), "Vector4 with non arithmetic type");
+
     Vector4() = default;
     Vector4(T x, T y, T z, T w) : x(x), y(y), z(z), w(w) {}
 
@@ -433,6 +439,8 @@ typedef Vector4<double> v4d;
 
 template <typename T>
 struct Matrix4x4 {
+    static_assert(std::is_floating_point<T>(), "Matrix44 with non floating point type");
+
     Matrix4x4() = default;
     Matrix4x4(const Vector4<T> &vx,
               const Vector4<T> &vy,
@@ -579,6 +587,8 @@ inline m44d m44d_identity()
 
 template <typename T>
 struct Bounds3 {
+    static_assert(std::is_arithmetic<T>(), "Bounds3 with non arithmetic type");
+
     Bounds3()
     {
         T min = std::numeric_limits<T>::lowest();
