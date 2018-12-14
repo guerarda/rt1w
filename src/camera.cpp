@@ -2,18 +2,9 @@
 
 #include "params.hpp"
 #include "ray.hpp"
+#include "sampling.hpp"
 #include "transform.hpp"
 #include "value.hpp"
-
-#include <cmath>
-
-static v2f UniformSampleDisk(const v2f &p)
-{
-    double r = std::sqrt(p.x);
-    double a = 2 * M_PI * p.y;
-
-    return { (float)(r * std::cos(a)), (float)(r * std::sin(a)) };
-}
 
 enum struct ProjectionType { Perspective, Orthographic };
 

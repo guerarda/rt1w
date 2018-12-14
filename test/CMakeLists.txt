@@ -1,7 +1,9 @@
 
 SET(RT1W_TESTS
   camera.cpp
-  geometry.cpp)
+  geometry.cpp
+  sampling.cpp
+)
 
 ADD_EXECUTABLE(rt1w_test
   test.cpp

@@ -76,6 +76,7 @@ ADD_LIBRARY(rt1w
   src/primitive.cpp
   src/ray.cpp
   src/rng.cpp
+  src/sampling.cpp
   src/sampler.cpp
   src/scene.cpp
   src/shape.cpp
