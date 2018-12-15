@@ -6,6 +6,7 @@
 #include <map>
 #include <string>
 
+struct Shape;
 struct Texture;
 struct Value;
 
@@ -14,16 +15,19 @@ struct Params : Object {
 
     virtual void insert(const std::string &k, const sptr<Params> &v) = 0;
     virtual void insert(const std::string &k, const std::string &v) = 0;
+    virtual void insert(const std::string &k, const sptr<Shape> &v) = 0;
     virtual void insert(const std::string &k, const sptr<Texture> &v) = 0;
     virtual void insert(const std::string &k, const sptr<Value> &v) = 0;
 
     virtual void merge(const sptr<Params> &p) = 0;
     virtual void merge(const std::map<std::string, sptr<Params>> &p) = 0;
     virtual void merge(const std::map<std::string, std::string> &p) = 0;
+    virtual void merge(const std::map<std::string, sptr<Shape>> &p) = 0;
     virtual void merge(const std::map<std::string, sptr<Texture>> &p) = 0;
     virtual void merge(const std::map<std::string, sptr<Value>> &p) = 0;
 
     virtual sptr<Params> params(const std::string &k) const = 0;
+    virtual sptr<Shape> shape(const std::string &k) const = 0;
     virtual std::string string(const std::string &k) const = 0;
     virtual sptr<Texture> texture(const std::string &k) const = 0;
     virtual sptr<Value> value(const std::string &k) const = 0;

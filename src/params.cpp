@@ -7,22 +7,26 @@
 template <typename T> struct ptype { typedef T type; };
 template <> struct ptype<std::string> { typedef std::string type; };
 template <> struct ptype<Params> { typedef sptr<Params> type; };
+template <> struct ptype<Shape> { typedef sptr<Shape> type; };
 template <> struct ptype<Texture> { typedef sptr<Texture> type; };
 template <> struct ptype<Value> { typedef sptr<Value> type; };
 
 struct _Params : Params {
     void insert(const std::string &k, const sptr<Params> &v) override { insert<Params>(k, v); }
+    void insert(const std::string &k, const sptr<Shape> &v) override { insert<Shape>(k, v); }
     void insert(const std::string &k, const std::string &v) override { insert<std::string>(k, v); }
     void insert(const std::string &k, const sptr<Texture> &v) override { insert<Texture>(k, v); }
     void insert(const std::string &k, const sptr<Value> &v) override { insert<Value>(k, v); }
 
     void merge(const sptr<Params> &p) override;
     void merge(const std::map<std::string, sptr<Params>> &m) override { merge<Params>(m); }
+    void merge(const std::map<std::string, sptr<Shape>> &m) override { merge<Shape>(m); }
     void merge(const std::map<std::string, std::string> &m) override  { merge<std::string>(m); }
     void merge(const std::map<std::string, sptr<Texture>> &m) override { merge<Texture>(m); }
     void merge(const std::map<std::string, sptr<Value>> &m) override  { merge<Value>(m); }
 
     sptr<Params> params(const std::string &k) const override { return find_recursive<Params>(k); }
+    sptr<Shape> shape(const std::string &k) const override { return find_recursive<Shape>(k); }
     std::string string(const std::string &k) const override  { return find<std::string>(k); }
     sptr<Texture> texture(const std::string &k) const override { return find_create<Texture>(k); }
     sptr<Value> value(const std::string &k) const override { return find_recursive<Value>(k); }
@@ -87,6 +91,7 @@ struct _Params : Params {
     }
 
     std::map<std::string, sptr<Params>> m_params;
+    std::map<std::string, sptr<Shape>> m_shapes;
     std::map<std::string, std::string> m_strings;
     std::map<std::string, sptr<Texture>> m_textures;
     std::map<std::string, sptr<Value>> m_values;
@@ -98,6 +103,7 @@ void _Params::merge(const sptr<Params> &p)
         if (sptr<_Params> other = std::static_pointer_cast<_Params>(p)) {
             merge(other->m_params);
             merge(other->m_strings);
+            merge(other->m_shapes);
             merge(other->m_textures);
             merge(other->m_values);
         }
@@ -149,11 +155,13 @@ std::string Params::string(const sptr<Params> &p,
 // clang-format off
 template <> std::map<std::string, ptype<std::string>::type> &_Params::pmap<std::string>() { return m_strings; }
 template <> std::map<std::string, ptype<Params>::type>      &_Params::pmap<Params>()      { return m_params; }
+template <> std::map<std::string, ptype<Shape>::type>       &_Params::pmap<Shape>()       { return m_shapes; }
 template <> std::map<std::string, ptype<Texture>::type>     &_Params::pmap<Texture>()     { return m_textures; }
 template <> std::map<std::string, ptype<Value>::type>       &_Params::pmap<Value>()       { return m_values; }
 
 template <> const std::map<std::string, ptype<std::string>::type> &_Params::const_pmap<std::string>() const { return m_strings; }
 template <> const std::map<std::string, ptype<Params>::type>      &_Params::const_pmap<Params>() const      { return m_params; }
+template <> const std::map<std::string, ptype<Shape>::type>       &_Params::const_pmap<Shape>() const       { return m_shapes; }
 template <> const std::map<std::string, ptype<Texture>::type>     &_Params::const_pmap<Texture>() const     { return m_textures; }
 template <> const std::map<std::string, ptype<Value>::type>       &_Params::const_pmap<Value>() const       { return m_values; }
 
