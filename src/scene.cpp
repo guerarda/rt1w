@@ -174,9 +174,9 @@ struct _RenderDescFromJSON : RenderDescription {
     sptr<Camera> m_camera;
     sptr<Params> m_options;
 
-    std::map<const std::string, const sptr<Texture>> m_textures;
-    std::map<const std::string, const sptr<Material>> m_materials;
-    std::map<const std::string, const sptr<Shape>> m_shapes;
+    std::map<std::string, sptr<Texture>> m_textures;
+    std::map<std::string, sptr<Material>> m_materials;
+    std::map<std::string, sptr<Shape>> m_shapes;
 };
 
 int32_t _RenderDescFromJSON::init()
