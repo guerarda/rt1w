@@ -7,6 +7,7 @@ struct Params;
 struct Ray;
 struct Sampler;
 struct Scene;
+struct Shape;
 struct Interaction;
 
 struct VisibilityTester {
@@ -33,6 +34,14 @@ struct Light : Object {
 struct PointLight : Light {
     static sptr<PointLight> create(const v3f &pos, const v3f &intensity);
     static sptr<PointLight> create(const sptr<Params> &p);
+};
+
+struct AreaLight : Light {
+    static sptr<AreaLight> create(const sptr<Shape> &s, const v3f &Lemit);
+    static sptr<AreaLight> create(const sptr<Params> &p);
+
+    virtual v3f L(const Interaction &isect, const v3f &w) const = 0;
+    virtual sptr<Shape> shape() const = 0;
 };
 
 v3f EstimateDirect(const Interaction &isect,
