@@ -184,7 +184,7 @@ int32_t _RenderDescFromJSON::init()
     FILE *fp = fopen(m_path.c_str(), "r");
     char readBuffer[65536];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
-    rapidjson::ParseResult ok = m_doc.ParseStream(is);
+    rapidjson::ParseResult ok = m_doc.ParseStream<rapidjson::kParseCommentsFlag>(is);
     fclose(fp);
 
     /* Check that the file was parsed without error */
