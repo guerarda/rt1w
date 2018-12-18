@@ -50,7 +50,7 @@ bool _Sphere::intersect(const sptr<Ray> &r,
             isect.wo = -rdir;
 
             /* Compute sphere uv */
-            v3f p = 1.0f / m_radius * (isect.p - m_center);
+            v3f p = isect.n;
             double phi = std::atan2(p.x, p.z);
             double theta = std::acos(Clamp(p.y, -1.0, 1.0));
 
@@ -61,10 +61,10 @@ bool _Sphere::intersect(const sptr<Ray> &r,
             double d = std::sqrt(p.x * p.x + p.z * p.z);
             double sinPhi = p.x / d;
             double cosPhi = p.z / d;
-            isect.dpdu = { (float)(2.0 * Pi * p.x), 0.0, (float)(-2.0 * Pi * p.z) };
-            isect.dpdv = v3f{ (float)(Pi * -p.y * sinPhi),
-                              (float)(Pi * d),
-                              (float)(Pi * -p.y * cosPhi) };
+            isect.dpdu = { (float)(2.0 * Pi * p.z), 0.0, (float)(-2.0 * Pi * p.x) };
+            isect.dpdv = v3f{ (float)(Pi * p.y * sinPhi),
+                              (float)(Pi * -d),
+                              (float)(Pi * p.y * cosPhi) };
 
             /* Shading Geometry */
             isect.shading.n = isect.n;
