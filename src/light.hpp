@@ -9,6 +9,18 @@ struct Sampler;
 struct Scene;
 struct Interaction;
 
+struct VisibilityTester {
+    VisibilityTester() = default;
+    VisibilityTester(v3f p0, v3f p1) : m_p0(std::move(p0)), m_p1(std::move(p1)) {}
+    VisibilityTester(v3f &&p0, v3f &&p1) : m_p0(p0), m_p1(p1) {}
+
+    bool visible(const sptr<Scene> &scene) const;
+
+private:
+    v3f m_p0;
+    v3f m_p1;
+};
+
 struct Light : Object {
     static sptr<Light> create(const sptr<Params> &p);
 

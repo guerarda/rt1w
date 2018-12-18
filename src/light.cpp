@@ -10,6 +10,17 @@
 #include "scene.hpp"
 #include "value.hpp"
 
+#pragma mark - Visibility Tester
+
+bool VisibilityTester::visible(const sptr<Scene> &scene) const
+{
+    ASSERT(scene);
+
+    sptr<Ray> ray = Ray::create(m_p0, m_p1 - m_p0);
+    Interaction i;
+    return !scene->world()->intersect(ray, 0.1f, 0.99f, i);
+}
+
 #pragma mark - Light Sampling
 
 v3f EstimateDirect(const Interaction &isect,
