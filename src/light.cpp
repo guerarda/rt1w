@@ -28,10 +28,13 @@ v3f EstimateDirect(const Interaction &isect,
                    const sptr<Scene> &scene,
                    const sptr<Sampler> &)
 {
+    ASSERT(light);
+
     v3f wi;
-    v3f Li = light->sample_Li(isect, wi);
-    if (!light->visible(isect, scene)) {
-        return v3f();
+    VisibilityTester vis;
+    v3f Li = light->sample_Li(isect, wi, vis);
+    if (!vis.visible(scene)) {
+        return {};
     }
     v3f f = isect.mat->f(isect, isect.wo, wi);
 
@@ -42,9 +45,13 @@ v3f UniformSampleOneLight(const Interaction &isect,
                           const sptr<Scene> &scene,
                           const sptr<Sampler> &sampler)
 {
-    auto lights = scene->lights();
-    ASSERT(!lights.empty());
+    ASSERT(scene);
+    ASSERT(sampler);
 
+    auto lights = scene->lights();
+    if (lights.empty()) {
+        return {};
+    }
     /* Randomly pick one light */
     size_t n = lights.size();
     auto ix = (size_t)floor(sampler->sample1D() * n);
@@ -59,26 +66,21 @@ v3f UniformSampleOneLight(const Interaction &isect,
 struct _PointLight : PointLight {
     _PointLight(const v3f &p, const v3f &I) : m_p(p), m_I(I) {}
 
-    v3f sample_Li(const Interaction &isect, v3f &wi) const override;
-    v3f Le(const sptr<Ray> &) const override { return v3f(); }
-    bool visible(const Interaction &isect, const sptr<Scene> &scene) const override;
+    v3f sample_Li(const Interaction &isect,
+                  v3f &wi,
+                  VisibilityTester &vis) const override;
+    v3f Le(const sptr<Ray> &) const override { return {}; }
 
     v3f m_p;
     v3f m_I;
 };
 
-v3f _PointLight::sample_Li(const Interaction &isect, v3f &wi) const
+v3f _PointLight::sample_Li(const Interaction &isect, v3f &wi, VisibilityTester &vis) const
 {
     wi = Normalize(m_p - isect.p);
+    vis = { m_p, isect.p };
 
     return m_I / DistanceSquared(isect.p, m_p);
-}
-
-bool _PointLight::visible(const Interaction &isect, const sptr<Scene> &scene) const
-{
-    sptr<Ray> ray = Ray::create(m_p, isect.p - m_p);
-    Interaction i;
-    return !scene->world()->intersect(ray, 0.001f, 1.0f, i);
 }
 
 #pragma mark - Static Constructors
