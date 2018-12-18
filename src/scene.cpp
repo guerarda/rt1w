@@ -217,6 +217,7 @@ sptr<Light> _RenderDescFromJSON::read_light(const rapidjson::Value &v) const
 {
     sptr<Params> p = read_params(v, m_dir);
     p->merge(m_textures);
+    p->merge(m_shapes);
     return Light::create(p);
 }
 
@@ -299,6 +300,9 @@ void _RenderDescFromJSON::load_shapes()
     }
 }
 
+sptr<Material> NullMaterial = Lambertian::create(
+    Texture::create_color({ 0.0, 0.0, 0.0 }));
+
 void _RenderDescFromJSON::load_lights()
 {
     auto section = m_doc.FindMember("lights");
@@ -307,6 +311,12 @@ void _RenderDescFromJSON::load_lights()
         for (auto &v : section->value.GetArray()) {
             if (sptr<Light> light = read_light(v)) {
                 m_lights.push_back(light);
+                /* Area lights need to be added to the scene's primitives so it can part
+                 * of the interesection test */
+                if (sptr<AreaLight> area = std::dynamic_pointer_cast<AreaLight>(light)) {
+                    m_primitives.push_back(
+                        Primitive::create(area->shape(), NullMaterial, area));
+                }
             }
             else {
                 warning("Couldn't create light at index %lu", ix);
