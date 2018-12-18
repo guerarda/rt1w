@@ -6,13 +6,16 @@
 #include <string>
 #include <vector>
 
+struct AreaLight;
 struct Interaction;
 struct Material;
 struct Ray;
 struct Shape;
 
 struct Primitive : Object {
-    static sptr<Primitive> create(const sptr<Shape> &s, const sptr<Material> &m);
+    static sptr<Primitive> create(const sptr<Shape> &s,
+                                  const sptr<Material> &m,
+                                  const sptr<AreaLight> &l = nullptr);
     static sptr<Primitive> load_obj(const std::string &path);
 
     virtual bool intersect(const sptr<Ray> &r,
@@ -20,6 +23,7 @@ struct Primitive : Object {
                            float max,
                            Interaction &isect) const = 0;
     virtual bounds3f bounds() const = 0;
+    virtual sptr<AreaLight> light() const = 0;
 };
 
 struct Aggregate : Primitive {

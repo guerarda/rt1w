@@ -4,10 +4,15 @@
 #include "interaction.hpp"
 #include "shape.hpp"
 
+#include <memory>
+
 #pragma mark - Primitive
 
-struct _Primitive : Primitive {
-    _Primitive(const sptr<Shape> &s, const sptr<Material> &m) : m_shape(s), m_material(m)
+struct _Primitive : Primitive, std::enable_shared_from_this<Primitive> {
+    _Primitive(const sptr<Shape> &s, const sptr<Material> &m, const sptr<AreaLight> &l) :
+        m_shape(s),
+        m_material(m),
+        m_light(l)
     {}
 
     bool intersect(const sptr<Ray> &r,
@@ -15,9 +20,11 @@ struct _Primitive : Primitive {
                    float max,
                    Interaction &isect) const override;
     bounds3f bounds() const override;
+    sptr<AreaLight> light() const override { return m_light; }
 
     sptr<Shape> m_shape;
     sptr<Material> m_material;
+    sptr<AreaLight> m_light;
 };
 
 bool _Primitive::intersect(const sptr<Ray> &r,
@@ -39,10 +46,12 @@ bounds3f _Primitive::bounds() const
 
 #pragma mark - Static constructor;
 
-sptr<Primitive> Primitive::create(const sptr<Shape> &s, const sptr<Material> &m)
+sptr<Primitive> Primitive::create(const sptr<Shape> &s,
+                                  const sptr<Material> &m,
+                                  const sptr<AreaLight> &l)
 {
-    if (s && m) {
-        return std::make_shared<_Primitive>(s, m);
+    if (s && (m || l)) {
+        return std::make_shared<_Primitive>(s, m, l);
     }
     WARNING_IF(!s, "Primitive has no shape");
     WARNING_IF(!m, "Primitive has no material");
@@ -60,6 +69,7 @@ struct _Aggregate : Aggregate {
                    float max,
                    Interaction &isect) const override;
     bounds3f bounds() const override { return m_bounds; }
+    sptr<AreaLight> light() const override;
 
     const std::vector<sptr<Primitive>> &primitives() const override
     {
@@ -76,6 +86,12 @@ _Aggregate::_Aggregate(const std::vector<sptr<Primitive>> &prims)
     for (auto &p : m_primitives) {
         m_bounds = Union(m_bounds, p->bounds());
     }
+}
+
+sptr<AreaLight> _Aggregate::light() const
+{
+    trap("Aggregate::light() should never be called");
+    return nullptr;
 }
 
 bool _Aggregate::intersect(const sptr<Ray> &r,

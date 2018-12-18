@@ -79,13 +79,15 @@ struct BVHLinearNode {
 
 struct _BVHAccelerator : BVHAccelerator {
     _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
-    ~_BVHAccelerator() override;
+    ~_BVHAccelerator() override { free(m_nodes); }
 
     bool intersect(const sptr<Ray> &r,
                    float min,
                    float max,
                    Interaction &isect) const override;
     bounds3f bounds() const override { return m_bounds; }
+    sptr<AreaLight> light() const override;
+
     const std::vector<sptr<Primitive>> &primitives() const override { return m_prims; }
 
     void buildBVH();
@@ -103,9 +105,10 @@ struct _BVHAccelerator : BVHAccelerator {
     size_t m_count = 0;
 };
 
-_BVHAccelerator::~_BVHAccelerator()
+sptr<AreaLight> _BVHAccelerator::light() const
 {
-    free(m_nodes);
+    trap("BVHAccelerator::light() should never be called");
+    return nullptr;
 }
 
 void _BVHAccelerator::buildBVH()
