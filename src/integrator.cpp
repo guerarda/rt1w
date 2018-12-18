@@ -86,6 +86,11 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
                                                    0.001f,
                                                    std::numeric_limits<float>::max(),
                                                    isect);
+        if (bounces == 0) {
+            if (intersect) {
+                L += beta * LightEmitted(isect, -ray->direction());
+            }
+        }
         if (!intersect || bounces > m_maxDepth) {
             break;
         }
@@ -93,7 +98,7 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
 
         v3f wi;
         v3f f;
-        bool scatter = isect.mat->scatter(ray, isect, f, wi);
+        bool scatter = isect.mat ? isect.mat->scatter(ray, isect, f, wi) : false;
         if (!scatter) {
             break;
         }

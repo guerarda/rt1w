@@ -51,3 +51,4 @@ v3f EstimateDirect(const Interaction &isect,
 v3f UniformSampleOneLight(const Interaction &isect,
                           const sptr<Scene> &scene,
                           const sptr<Sampler> &sampler);
+v3f LightEmitted(const Interaction &isect, const v3f &wi);

@@ -62,6 +62,14 @@ v3f UniformSampleOneLight(const Interaction &isect,
     return n * EstimateDirect(isect, light, scene, sampler);
 }
 
+v3f LightEmitted(const Interaction &isect, const v3f &wi)
+{
+    if (auto light = isect.prim->light()) {
+        return light->L(isect, wi);
+    }
+    return {};
+}
+
 #pragma mark - Point Light
 
 struct _PointLight : PointLight {
