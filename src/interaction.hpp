@@ -4,6 +4,7 @@
 #include "sptr.hpp"
 
 struct Material;
+struct Primitive;
 
 struct Interaction {
     v3f p;
@@ -19,4 +20,5 @@ struct Interaction {
         v3f dpdv;
     } shading;
     sptr<Material> mat;
+    sptr<Primitive> prim;
 };

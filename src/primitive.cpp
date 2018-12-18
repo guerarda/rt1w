@@ -4,8 +4,6 @@
 #include "interaction.hpp"
 #include "shape.hpp"
 
-#include <memory>
-
 #pragma mark - Primitive
 
 struct _Primitive : Primitive, std::enable_shared_from_this<Primitive> {
@@ -34,6 +32,8 @@ bool _Primitive::intersect(const sptr<Ray> &r,
 {
     if (m_shape->intersect(r, min, max, isect)) {
         isect.mat = m_material;
+        /* This is ok because Primitive has only const methods */
+        isect.prim = std::const_pointer_cast<Primitive>(shared_from_this());
         return true;
     }
     return false;
