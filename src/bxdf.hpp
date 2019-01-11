@@ -38,11 +38,13 @@ struct BxDF : Object {
     virtual v3f sample_f(const v3f &wo, v3f &wi) const = 0;
 };
 
+#pragma mark - BSDF
+
 struct BSDF : Object {
     static sptr<BSDF> create(const Interaction &i, const std::vector<sptr<BxDF>> &bxdfs);
 
     virtual v3f f(const v3f &woW, const v3f &wiW) const = 0;
-    virtual v3f sample_f(const v3f &woW, v3f &wiW) const = 0;
+    virtual v3f sample_f(const v3f &woW, v3f &wiW, BxDFType &type) const = 0;
 };
 
 struct LambertianReflection : BxDF {

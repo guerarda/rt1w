@@ -81,6 +81,7 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
     sptr<Ray> ray = r;
     v3f L;
     v3f beta = { 1.0f, 1.0f, 1.0f };
+    bool specular = false;
 
     for (size_t bounces = 0;; bounces++) {
         Interaction isect;
@@ -88,7 +89,7 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
                                                    0.001f,
                                                    std::numeric_limits<float>::max(),
                                                    isect);
-        if (bounces == 0) {
+        if (bounces == 0 || specular) {
             if (intersect) {
                 L += beta * LightEmitted(isect, -ray->direction());
             }
@@ -100,14 +101,16 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
 
         v3f wi;
 
-        sptr<BSDF> bsdf = isect.mat->computeBsdf(isect);
+        sptr<BSDF> bsdf = ComputeBSDF(isect);
         if (!bsdf) {
             break;
         }
-        v3f f = bsdf->sample_f(isect.wo, wi);
+        BxDFType type;
+        v3f f = bsdf->sample_f(isect.wo, wi, type);
         if (FloatEqual(f.x, 0.0f) && FloatEqual(f.y, 0.0f) && FloatEqual(f.z, 0.0f)) {
             break;
         }
+        specular = type & BSDF_SPECULAR;
         beta *= f;
         ray = Ray::create(isect.p, wi);
 

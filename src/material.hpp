@@ -9,6 +9,12 @@ struct Interaction;
 struct Params;
 struct Texture;
 
+#pragma mark - Interaction
+
+sptr<BSDF> ComputeBSDF(const Interaction &isect);
+
+#pragma mark - Material Interface
+
 struct Material : Object {
     static sptr<Material> create(const sptr<Params> &p);
 

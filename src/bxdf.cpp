@@ -52,7 +52,7 @@ struct _BSDF : BSDF {
     {}
 
     v3f f(const v3f &woW, const v3f &wiW) const override;
-    v3f sample_f(const v3f &woW, v3f &wiW) const override;
+    v3f sample_f(const v3f &woW, v3f &wiW, BxDFType &Type) const override;
 
     v3f localToWorld(const v3f &v) const;
     v3f worldToLocal(const v3f &v) const;
@@ -85,7 +85,7 @@ v3f _BSDF::f(const v3f &woW, const v3f &wiW) const
     return f;
 }
 
-v3f _BSDF::sample_f(const v3f &woW, v3f &wiW) const
+v3f _BSDF::sample_f(const v3f &woW, v3f &wiW, BxDFType &type) const
 {
     /* Convert woW from world to local coordinates */
     v3f wo = worldToLocal(woW);
@@ -95,6 +95,7 @@ v3f _BSDF::sample_f(const v3f &woW, v3f &wiW) const
 
     v3f wi;
     v3f f = m_bxdfs[ix]->sample_f(wo, wi);
+    type = m_bxdfs[ix]->type();
 
     /* Convert wi to world coordinates */
     wiW = localToWorld(wi);
@@ -183,7 +184,6 @@ struct _SpecularReflection : SpecularReflection {
 v3f _SpecularReflection::sample_f(const v3f &wo, v3f &wi) const
 {
     wi = v3f{ -wo.x, -wo.y, wo.z };
-    return m_R;
 
     return m_fresnel->eval(CosTheta(wi)) * m_R / AbsCosTheta(wi);
 }

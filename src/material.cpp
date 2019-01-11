@@ -11,6 +11,8 @@
 
 #include <random>
 
+#pragma mark - Utils
+
 static std::random_device rd;
 static std::mt19937 __prng(rd());
 
@@ -46,6 +48,16 @@ static float schlick(float cos, float ri)
     float r = (1.0f - ri) / (1.0f + ri);
     r = r * r;
     return r + (1.0f - r) * powf((1.0f - cos), 5.0f);
+}
+
+#pragma mark - Interaction
+
+sptr<BSDF> ComputeBSDF(const Interaction &isect)
+{
+    if (isect.mat) {
+        return isect.mat->computeBsdf(isect);
+    }
+    return nullptr;
 }
 
 #pragma mark - Lambertian
