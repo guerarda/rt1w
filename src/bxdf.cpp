@@ -46,7 +46,7 @@ struct _BSDF : BSDF {
         m_ng(i.n),
         m_ns(i.shading.n),
         m_ss(Normalize(i.shading.dpdu)),
-        m_ts(Cross(m_ns, m_ts)),
+        m_ts(Cross(m_ns, m_ss)),
         m_bxdfs(bxdfs),
         m_rng(RNG::create())
     {}
