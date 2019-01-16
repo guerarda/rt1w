@@ -49,6 +49,12 @@ inline float Degrees(float rad)
 
 #pragma mark - Misc
 
+template <typename T>
+inline T Lerp(T t, T va, T vb)
+{
+    return (1 - t) * va + t * vb;
+}
+
 template <typename T, typename U, typename V>
 inline T Clamp(T v, U lo, V hi)
 {
