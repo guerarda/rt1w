@@ -417,6 +417,12 @@ inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
     return (va - vb).length_sq();
 }
 
+template <typename T>
+inline Vector3<T> FaceForward(const Vector3<T> &n, const Vector3<T> &v)
+{
+    return Dot(v, n) >= 0 ? n : -n;
+}
+
 #pragma mark - Vector 4 Declaration
 
 template <typename T>
