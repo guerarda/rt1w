@@ -31,6 +31,11 @@ bool _Primitive::intersect(const sptr<Ray> &r,
                            Interaction &isect) const
 {
     if (m_shape->intersect(r, min, max, isect)) {
+        ASSERT(FloatCompare(isect.uv.x, 0.0f) >= 0.0f);
+        ASSERT(FloatCompare(isect.uv.x, 1.0f) <= 0.0f);
+        ASSERT(FloatCompare(isect.uv.y, 0.0f) >= 0.0f);
+        ASSERT(FloatCompare(isect.uv.y, 1.0f) <= 0.0f);
+
         isect.mat = m_material;
         /* This is ok because Primitive has only const methods */
         isect.prim = std::const_pointer_cast<Primitive>(shared_from_this());
