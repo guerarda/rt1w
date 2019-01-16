@@ -15,6 +15,9 @@ constexpr double InvPi = 0.318309886183790671537767526745028724;
 constexpr double Inv2Pi = 0.636619772367581343075535053490057448;
 constexpr double Sqrt2 = 1.41421356237309504880168872420969808;
 
+constexpr float Epsilon = std::numeric_limits<float>::epsilon();
+constexpr float MinReal = std::numeric_limits<float>::min();
+
 #pragma mark - Floating Point comparisons
 
 template <typename T>
@@ -78,6 +81,11 @@ inline T NextFloatDown(T f)
     static_assert(std::is_floating_point<T>::value,
                   "Floating Point function with non-floating point argument");
     return std::nexttoward(f, -std::numeric_limits<T>::infinity());
+}
+
+inline constexpr float gamma(int32_t n)
+{
+    return (n * Epsilon) / (1.f - n * Epsilon);
 }
 
 #pragma mark - Trigonometric functions
