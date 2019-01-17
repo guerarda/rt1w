@@ -45,7 +45,8 @@ v3f _Integrator::Li(const sptr<Ray> &ray,
             for (const auto &light : scene->lights()) {
                 v3f lwi;
                 VisibilityTester vis;
-                v3f Li = light->sample_Li(isect, lwi, vis);
+                v2f u = sampler->sample2D();
+                v3f Li = light->sample_Li(isect, u, lwi, vis);
                 if (vis.visible(scene)) {
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }

@@ -26,6 +26,7 @@ struct Light : Object {
     static sptr<Light> create(const sptr<Params> &p);
 
     virtual v3f sample_Li(const Interaction &isect,
+                          v2f u,
                           v3f &wi,
                           VisibilityTester &vis) const = 0;
     virtual v3f Le(const sptr<Ray> &r) const = 0;

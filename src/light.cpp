@@ -27,13 +27,14 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
 v3f EstimateDirect(const Interaction &isect,
                    const sptr<Light> &light,
                    const sptr<Scene> &scene,
-                   const sptr<Sampler> &)
+                   const sptr<Sampler> &sampler)
 {
     ASSERT(light);
 
     v3f wi;
     VisibilityTester vis;
-    v3f Li = light->sample_Li(isect, wi, vis);
+    v2f u = sampler->sample2D();
+    v3f Li = light->sample_Li(isect, u, wi, vis);
     if (!vis.visible(scene)) {
         return {};
     }
@@ -76,6 +77,7 @@ struct _PointLight : PointLight {
     _PointLight(const v3f &p, const v3f &I) : m_p(p), m_I(I) {}
 
     v3f sample_Li(const Interaction &isect,
+                  v2f u,
                   v3f &wi,
                   VisibilityTester &vis) const override;
     v3f Le(const sptr<Ray> &) const override { return {}; }
@@ -84,7 +86,10 @@ struct _PointLight : PointLight {
     v3f m_I;
 };
 
-v3f _PointLight::sample_Li(const Interaction &isect, v3f &wi, VisibilityTester &vis) const
+v3f _PointLight::sample_Li(const Interaction &isect,
+                           v2f,
+                           v3f &wi,
+                           VisibilityTester &vis) const
 {
     wi = Normalize(m_p - isect.p);
     vis = { m_p, isect.p };
@@ -116,6 +121,7 @@ struct _AreaLight : AreaLight {
     _AreaLight(const sptr<Shape> &s, const v3f &Lemit) : m_shape(s), m_Lemit(Lemit) {}
 
     v3f sample_Li(const Interaction &isect,
+                  v2f u,
                   v3f &wi,
                   VisibilityTester &vis) const override;
     v3f Le(const sptr<Ray> &) const override { return {}; }
@@ -127,10 +133,13 @@ struct _AreaLight : AreaLight {
     v3f m_Lemit;
 };
 
-v3f _AreaLight::sample_Li(const Interaction &isect, v3f &wi, VisibilityTester &vis) const
+v3f _AreaLight::sample_Li(const Interaction &isect,
+                          v2f u,
+                          v3f &wi,
+                          VisibilityTester &vis) const
 {
-    Interaction it = m_shape->sample(v2f{});
-    wi = Normalize(isect.p - it.p);
+    Interaction it = m_shape->sample(u);
+    wi = Normalize(it.p - isect.p);
     vis = { isect.p, it.p };
     return L(it, -wi);
 }
