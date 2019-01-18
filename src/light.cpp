@@ -6,10 +6,19 @@
 #include "params.hpp"
 #include "primitive.hpp"
 #include "ray.hpp"
-#include "sampler.hpp"
 #include "scene.hpp"
 #include "shape.hpp"
 #include "value.hpp"
+
+#pragma mark - Interaction
+
+v3f LightEmitted(const Interaction &isect, const v3f &wi)
+{
+    if (auto light = isect.prim->light()) {
+        return light->L(isect, wi);
+    }
+    return {};
+}
 
 #pragma mark - Visibility Tester
 
@@ -20,55 +29,6 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
     sptr<Ray> ray = Ray::create(m_p0, m_p1 - m_p0);
     Interaction i;
     return !scene->world()->intersect(ray, 0.1f, 0.99f, i);
-}
-
-#pragma mark - Light Sampling
-
-v3f EstimateDirect(const Interaction &isect,
-                   const sptr<Light> &light,
-                   const sptr<Scene> &scene,
-                   const sptr<Sampler> &sampler)
-{
-    ASSERT(light);
-
-    v3f wi;
-    VisibilityTester vis;
-    v2f u = sampler->sample2D();
-    v3f Li = light->sample_Li(isect, u, wi, vis);
-    if (!vis.visible(scene)) {
-        return {};
-    }
-    v3f f = isect.mat->f(isect, isect.wo, wi);
-
-    return f * Li;
-}
-
-v3f UniformSampleOneLight(const Interaction &isect,
-                          const sptr<Scene> &scene,
-                          const sptr<Sampler> &sampler)
-{
-    ASSERT(scene);
-    ASSERT(sampler);
-
-    auto lights = scene->lights();
-    if (lights.empty()) {
-        return {};
-    }
-    /* Randomly pick one light */
-    size_t n = lights.size();
-    auto ix = (size_t)floor(sampler->sample1D() * n);
-
-    sptr<Light> light = lights[ix];
-
-    return n * EstimateDirect(isect, light, scene, sampler);
-}
-
-v3f LightEmitted(const Interaction &isect, const v3f &wi)
-{
-    if (auto light = isect.prim->light()) {
-        return light->L(isect, wi);
-    }
-    return {};
 }
 
 #pragma mark - Point Light

@@ -12,6 +12,47 @@
 
 #include <limits>
 
+#pragma mark - Light Sampling
+
+static v3f EstimateDirect(const Interaction &isect,
+                          const sptr<Light> &light,
+                          const sptr<Scene> &scene,
+                          const sptr<Sampler> &sampler)
+{
+    ASSERT(light);
+
+    v3f wi;
+    VisibilityTester vis;
+    v2f u = sampler->sample2D();
+    v3f Li = light->sample_Li(isect, u, wi, vis);
+    if (!vis.visible(scene)) {
+        return {};
+    }
+    v3f f = isect.mat->f(isect, isect.wo, wi);
+
+    return f * Li;
+}
+
+static v3f UniformSampleOneLight(const Interaction &isect,
+                                 const sptr<Scene> &scene,
+                                 const sptr<Sampler> &sampler)
+{
+    ASSERT(scene);
+    ASSERT(sampler);
+
+    auto lights = scene->lights();
+    if (lights.empty()) {
+        return {};
+    }
+    /* Randomly pick one light */
+    size_t n = lights.size();
+    auto ix = (size_t)floor(sampler->sample1D() * n);
+
+    sptr<Light> light = lights[ix];
+
+    return n * EstimateDirect(isect, light, scene, sampler);
+}
+
 #pragma mark - Integrator Implementation
 
 struct _Integrator : Integrator {

@@ -10,6 +10,8 @@ struct Scene;
 struct Shape;
 struct Interaction;
 
+v3f LightEmitted(const Interaction &isect, const v3f &wi);
+
 struct VisibilityTester {
     VisibilityTester() = default;
     VisibilityTester(v3f p0, v3f p1) : m_p0(std::move(p0)), m_p1(std::move(p1)) {}
@@ -44,12 +46,3 @@ struct AreaLight : Light {
     virtual v3f L(const Interaction &isect, const v3f &w) const = 0;
     virtual sptr<Shape> shape() const = 0;
 };
-
-v3f EstimateDirect(const Interaction &isect,
-                   const sptr<Light> &light,
-                   const sptr<Scene> &scene,
-                   const sptr<Sampler> &sampler);
-v3f UniformSampleOneLight(const Interaction &isect,
-                          const sptr<Scene> &scene,
-                          const sptr<Sampler> &sampler);
-v3f LightEmitted(const Interaction &isect, const v3f &wi);
