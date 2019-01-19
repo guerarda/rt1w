@@ -51,7 +51,7 @@ TEST_CASE("Perspective Camera")
         for (size_t i = 0; i < 10000; i++) {
             auto cs = randomCameraSample(res);
             auto ray = camera->generateRay(cs);
-            auto diff = ray->origin() - pos;
+            auto diff = ray.org() - pos;
 
             if (v2f{ diff.x, diff.y }.length() > aperture) {
                 n++;
@@ -64,7 +64,7 @@ TEST_CASE("Perspective Camera")
         size_t n = 0;
         for (size_t i = 0; i < 10000; i++) {
             auto ray = camera->generateRay(randomCameraSample(res));
-            if (!(ray->direction().length() == Approx(1.0))) {
+            if (!(ray.dir().length() == Approx(1.0))) {
                 n++;
             }
         }
@@ -76,7 +76,7 @@ TEST_CASE("Perspective Camera")
         v3f d = lookat - pos;
         for (size_t i = 0; i < 10000; i++) {
             auto ray = camera->generateRay(randomCameraSample(res));
-            if (!(Dot(d, ray->direction()) > 0.0)) {
+            if (!(Dot(d, ray.dir()) > 0.0)) {
                 n++;
             }
         }
@@ -118,7 +118,7 @@ TEST_CASE("Orthographic Camera")
         for (size_t i = 0; i < 10000; i++) {
             auto cs = randomCameraSample(res);
             auto ray = camera->generateRay(cs);
-            auto diff = ray->origin() - pos;
+            auto diff = ray.org() - pos;
 
             if (v2f{ diff.x, diff.y }.length() > aperture) {
                 n++;
@@ -131,7 +131,7 @@ TEST_CASE("Orthographic Camera")
         size_t n = 0;
         for (size_t i = 0; i < 10000; i++) {
             auto ray = camera->generateRay(randomCameraSample(res));
-            if (!(ray->direction().length() == Approx(1.0))) {
+            if (!(ray.dir().length() == Approx(1.0))) {
                 n++;
             }
         }
@@ -143,7 +143,7 @@ TEST_CASE("Orthographic Camera")
         v3f d = lookat - pos;
         for (size_t i = 0; i < 10000; i++) {
             auto ray = camera->generateRay(randomCameraSample(res));
-            if (!(Dot(d, ray->direction()) > 0.0)) {
+            if (!(Dot(d, ray.dir()) > 0.0)) {
                 n++;
             }
         }

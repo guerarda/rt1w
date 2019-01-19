@@ -26,7 +26,7 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
 {
     ASSERT(scene);
 
-    sptr<Ray> ray = Ray::create(m_p0, m_p1 - m_p0);
+    Ray ray = Ray(m_p0, m_p1 - m_p0);
     Interaction i;
     return !scene->world()->intersect(ray, 0.1f, 0.99f, i);
 }
@@ -40,7 +40,7 @@ struct _PointLight : PointLight {
                   v2f u,
                   v3f &wi,
                   VisibilityTester &vis) const override;
-    v3f Le(const sptr<Ray> &) const override { return {}; }
+    v3f Le(const Ray &) const override { return {}; }
 
     v3f m_p;
     v3f m_I;
@@ -84,7 +84,7 @@ struct _AreaLight : AreaLight {
                   v2f u,
                   v3f &wi,
                   VisibilityTester &vis) const override;
-    v3f Le(const sptr<Ray> &) const override { return {}; }
+    v3f Le(const Ray &) const override { return {}; }
 
     v3f L(const Interaction &isect, const v3f &w) const override;
     sptr<Shape> shape() const override { return m_shape; }

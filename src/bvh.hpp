@@ -9,7 +9,7 @@ struct Ray;
 struct BVHNode : Primitive {
     static sptr<BVHNode> create(const std::vector<sptr<Primitive>> &v);
 
-    bool intersect(const sptr<Ray> &r,
+    bool intersect(const Ray &r,
                    float min,
                    float max,
                    Interaction &isect) const override = 0;

@@ -31,7 +31,7 @@ struct Light : Object {
                           v2f u,
                           v3f &wi,
                           VisibilityTester &vis) const = 0;
-    virtual v3f Le(const sptr<Ray> &r) const = 0;
+    virtual v3f Le(const Ray &r) const = 0;
 };
 
 struct PointLight : Light {

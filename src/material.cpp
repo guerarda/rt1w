@@ -66,7 +66,7 @@ struct _Lambertian : Lambertian {
     _Lambertian(const sptr<Texture> &Kd) : m_Kd(Kd) {}
 
     v3f f(const Interaction &isect, const v3f &wo, const v3f &wi) const override;
-    bool scatter(const sptr<Ray> &r_in,
+    bool scatter(const Ray &r_in,
                  const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
@@ -80,7 +80,7 @@ v3f _Lambertian::f(const Interaction &isect, const v3f &, const v3f &) const
     return m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
 }
 
-bool _Lambertian::scatter(__unused const sptr<Ray> &r_in,
+bool _Lambertian::scatter(__unused const Ray &r_in,
                           const Interaction &isect,
                           v3f &attenuation,
                           v3f &wi) const
@@ -119,7 +119,7 @@ struct _Metal : Metal {
     _Metal(const sptr<Texture> &tex, float f);
 
     v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
-    bool scatter(const sptr<Ray> &r_in,
+    bool scatter(const Ray &r_in,
                  const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
@@ -148,12 +148,12 @@ sptr<BSDF> _Metal::computeBsdf(const Interaction &isect) const
     return BSDF::create(isect, bxdfs);
 }
 
-bool _Metal::scatter(const sptr<Ray> &r_in,
+bool _Metal::scatter(const Ray &r_in,
                      const Interaction &isect,
                      v3f &attenuation,
                      v3f &wi) const
 {
-    v3f reflected = Reflect(r_in->direction(), isect.n);
+    v3f reflected = Reflect(r_in.dir(), isect.n);
     v3f fuzz = m_fuzz * random_sphere_point();
     wi = Normalize(fuzz + reflected);
     attenuation = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
@@ -166,7 +166,7 @@ struct _Dielectric : Dielectric {
     _Dielectric(float ri) : m_eta(ri) {}
 
     v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
-    bool scatter(const sptr<Ray> &r_in,
+    bool scatter(const Ray &r_in,
                  const Interaction &isect,
                  v3f &attenuation,
                  v3f &wi) const override;
@@ -185,7 +185,7 @@ sptr<BSDF> _Dielectric::computeBsdf(const Interaction &isect) const
     return BSDF::create(isect, bxdfs);
 }
 
-bool _Dielectric::scatter(const sptr<Ray> &r_in,
+bool _Dielectric::scatter(const Ray &r_in,
                           const Interaction &isect,
                           v3f &attenuation,
                           v3f &wi) const
@@ -195,10 +195,10 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
     float p_reflected;
     v3f norm_out;
     v3f refracted;
-    v3f rdir = r_in->direction();
+    v3f rdir = r_in.dir();
 
     attenuation = { 1.0f, 1.0f, 1.0f };
-    if (Dot(r_in->direction(), isect.n) > 0.0f) {
+    if (Dot(r_in.dir(), isect.n) > 0.0f) {
         norm_out = -isect.n;
         ni_over_nt = m_eta;
         cosine = m_eta * Dot(rdir, isect.n) / rdir.length();
@@ -208,7 +208,7 @@ bool _Dielectric::scatter(const sptr<Ray> &r_in,
         ni_over_nt = 1.0f / m_eta;
         cosine = -Dot(rdir, isect.n) / rdir.length();
     }
-    if (refract(r_in->direction(), norm_out, ni_over_nt, refracted)) {
+    if (refract(r_in.dir(), norm_out, ni_over_nt, refracted)) {
         p_reflected = schlick(cosine, m_eta);
     }
     else {

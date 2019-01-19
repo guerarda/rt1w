@@ -76,7 +76,6 @@ ADD_LIBRARY(rt1w
   src/mesh.cpp
   src/params.cpp
   src/primitive.cpp
-  src/ray.cpp
   src/rng.cpp
   src/sampling.cpp
   src/sampler.cpp

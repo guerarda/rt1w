@@ -10,7 +10,7 @@ struct Ray;
 struct Shape : Object {
     static sptr<Shape> create(const sptr<Params> &p);
 
-    virtual bool intersect(const sptr<Ray> &r,
+    virtual bool intersect(const Ray &r,
                            float min,
                            float max,
                            Interaction &isect) const = 0;

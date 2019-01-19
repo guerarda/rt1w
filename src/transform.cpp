@@ -9,12 +9,12 @@ Transform Transform::operator*(const Transform &t) const
     return Transform(Mul(m_mat, t.mat()), Mul(t.inv(), m_inv));
 }
 
-sptr<Ray> Transform::operator()(const sptr<Ray> &r) const
+Ray Transform::operator()(const Ray &r) const
 {
-    v3f o = Mulp(*this, r->origin());
-    v3f d = Mulv(*this, r->direction());
+    v3f o = Mulp(*this, r.org());
+    v3f d = Mulv(*this, r.dir());
 
-    return Ray::create(o, d);
+    return Ray(o, d);
 }
 
 Transform Inverse(const Transform &t)

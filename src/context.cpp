@@ -3,6 +3,7 @@
 #include "camera.hpp"
 #include "event.hpp"
 #include "integrator.hpp"
+#include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
 #include "sync.h"
@@ -130,7 +131,7 @@ static void render_tile(const sptr<Object> &obj, const sptr<Object> &arg)
             sampler->startPixel({ orgx + (int32_t)x, orgy + (int32_t)y });
             do {
                 CameraSample cs = sampler->cameraSample();
-                sptr<Ray> r = ctx->m_camera->generateRay(cs);
+                Ray r = ctx->m_camera->generateRay(cs);
 
                 c = c + ctx->m_integrator->Li(r, ctx->m_scene, sampler, 0);
             } while (sampler->startNextSample());

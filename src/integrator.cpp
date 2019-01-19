@@ -59,7 +59,7 @@ struct _Integrator : Integrator {
     _Integrator(const sptr<Sampler> &s, size_t m) : m_sampler(s), m_maxDepth(m) {}
 
     sptr<const Sampler> sampler() const override { return m_sampler; }
-    v3f Li(const sptr<Ray> &ray,
+    v3f Li(const Ray &ray,
            const sptr<Scene> &scene,
            const sptr<Sampler> &sampler,
            size_t depth) const override;
@@ -69,7 +69,7 @@ struct _Integrator : Integrator {
     v3f m_background;
 };
 
-v3f _Integrator::Li(const sptr<Ray> &ray,
+v3f _Integrator::Li(const Ray &ray,
                     const sptr<Scene> &scene,
                     const sptr<Sampler> &sampler,
                     size_t depth) const
@@ -92,7 +92,7 @@ v3f _Integrator::Li(const sptr<Ray> &ray,
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
             }
-            sptr<Ray> scattered = Ray::create(isect.p, wi);
+            Ray scattered = Ray(isect.p, wi);
             L += attenuation * Li(scattered, scene, sampler, depth + 1);
             return L;
         }
@@ -106,7 +106,7 @@ struct _PathIntegrator : PathIntegrator {
     _PathIntegrator(const sptr<Sampler> &s, size_t m) : m_sampler(s), m_maxDepth(m) {}
 
     sptr<const Sampler> sampler() const override { return m_sampler; }
-    v3f Li(const sptr<Ray> &ray,
+    v3f Li(const Ray &ray,
            const sptr<Scene> &scene,
            const sptr<Sampler> &sampler,
            size_t depth) const override;
@@ -115,12 +115,12 @@ struct _PathIntegrator : PathIntegrator {
     size_t m_maxDepth;
 };
 
-v3f _PathIntegrator::Li(const sptr<Ray> &r,
+v3f _PathIntegrator::Li(const Ray &r,
                         const sptr<Scene> &scene,
                         const sptr<Sampler> &sampler,
                         size_t) const
 {
-    sptr<Ray> ray = r;
+    Ray ray = r;
     v3f L;
     v3f beta = { 1.0f, 1.0f, 1.0f };
     bool specular = false;
@@ -133,7 +133,7 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
                                                    isect);
         if (bounces == 0 || specular) {
             if (intersect) {
-                L += beta * LightEmitted(isect, -ray->direction());
+                L += beta * LightEmitted(isect, -ray.dir());
             }
         }
         if (!intersect || bounces > m_maxDepth) {
@@ -154,7 +154,7 @@ v3f _PathIntegrator::Li(const sptr<Ray> &r,
         }
         specular = type & BSDF_SPECULAR;
         beta *= f;
-        ray = Ray::create(isect.p, wi);
+        ray = Ray(isect.p, wi);
 
         if (bounces > 3) {
             float q = std::max(0.5f, 1 - beta.length());

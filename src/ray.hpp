@@ -1,13 +1,15 @@
 #pragma once
 
 #include "geometry.hpp"
-#include "sptr.hpp"
 
-struct Ray : Object {
-    static sptr<Ray> create(const v3f &org, const v3f &dir);
+struct Ray {
+    Ray(v3f org, v3f dir) : m_org(org), m_dir(dir) {}
 
-    virtual v3f origin() const = 0;
-    virtual v3f direction() const = 0;
+    v3f org() const { return m_org; }
+    v3f dir() const { return m_dir; }
+    v3f operator()(float t) const { return m_org + t * m_dir; }
 
-    virtual v3f point(float t) const = 0;
+private:
+    v3f m_org;
+    v3f m_dir;
 };

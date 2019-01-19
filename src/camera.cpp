@@ -17,7 +17,7 @@ struct _ProjectiveCamera : Camera {
                       float focusDist,
                       ProjectionType type);
 
-    sptr<Ray> generateRay(const CameraSample &cs) const override;
+    Ray generateRay(const CameraSample &cs) const override;
     v2u resolution() const override { return m_resolution; }
 
     Transform m_cameraToWorld;
@@ -55,24 +55,24 @@ _ProjectiveCamera::_ProjectiveCamera(const Transform &cameraToWorld,
     m_rasterToCamera = Inverse(screenToRaster * m_cameraToScreen);
 }
 
-sptr<Ray> _ProjectiveCamera::generateRay(const CameraSample &cs) const
+Ray _ProjectiveCamera::generateRay(const CameraSample &cs) const
 {
     v3f pCamera = Mulp(m_rasterToCamera, v3f{ cs.pFilm.x, cs.pFilm.y, 0.0f });
 
     v3f org = m_type == ProjectionType::Perspective ? v3f{ 0.0f, 0.0f, 0.0f } : pCamera;
     v3f dir = m_type == ProjectionType::Perspective ? Normalize(pCamera)
                                                     : v3f{ 0.0f, 0.0f, -1.0f };
-    sptr<Ray> r = Ray::create(org, dir);
+    Ray r = Ray(org, dir);
 
     if (m_lensRadius > 0.0f) {
         v2f pLens = m_lensRadius * UniformSampleDisk(cs.pLens);
         float t = m_focusDistance / std::abs(dir.z);
-        v3f pFocus = r->point(t);
+        v3f pFocus = r(t);
 
         org = { pLens.x, pLens.y, 0.0f };
         dir = Normalize(pFocus - org);
 
-        r = Ray::create(org, dir);
+        r = Ray(org, dir);
     }
     return m_cameraToWorld(r);
 }

@@ -44,10 +44,7 @@ struct Triangle : Shape {
     Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md), m_v(&md->m_i[3 * ix])
     {}
 
-    bool intersect(const sptr<Ray> &r,
-                   float min,
-                   float max,
-                   Interaction &isect) const override;
+    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
     bounds3f bounds() const override;
     Interaction sample(const v2f &u) const override;
 
@@ -65,10 +62,7 @@ static size_t max_dimension(const v3f &v)
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
 
-bool Triangle::intersect(const sptr<Ray> &r,
-                         float min,
-                         float max,
-                         Interaction &isect) const
+bool Triangle::intersect(const Ray &r, float min, float max, Interaction &isect) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -78,16 +72,16 @@ bool Triangle::intersect(const sptr<Ray> &r,
     v3f p2 = vd->m_v[m_v[2]];
 
     /* Transform triangle into ray-space coordinates */
-    v3f p0t = p0 - r->origin();
-    v3f p1t = p1 - r->origin();
-    v3f p2t = p2 - r->origin();
+    v3f p0t = p0 - r.org();
+    v3f p1t = p1 - r.org();
+    v3f p2t = p2 - r.org();
 
     /* Permute */
-    size_t kz = max_dimension(absv(r->direction()));
+    size_t kz = max_dimension(absv(r.dir()));
     size_t kx = (kz + 1) % 3;
     size_t ky = (kx + 1) % 3;
 
-    v3f d = { r->direction()[kx], r->direction()[ky], r->direction()[kz] };
+    v3f d = { r.dir()[kx], r.dir()[ky], r.dir()[kz] };
 
     p0t = { p0t[kx], p0t[ky], p0t[kz] };
     p1t = { p1t[kx], p1t[ky], p1t[kz] };
@@ -203,10 +197,7 @@ bounds3f Triangle::bounds() const
 struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
-    bool intersect(const sptr<Ray> &r,
-                   float min,
-                   float max,
-                   Interaction &isect) const override;
+    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
     bounds3f bounds() const override { return m_box; };
     Interaction sample(const v2f &u) const override;
 
@@ -229,7 +220,7 @@ _Mesh::_Mesh(const sptr<MeshData> &md)
     }
 }
 
-bool _Mesh::intersect(const sptr<Ray> &r, float min, float max, Interaction &isect) const
+bool _Mesh::intersect(const Ray &r, float min, float max, Interaction &isect) const
 {
     for (auto &t : m_tris) {
         if (t->intersect(r, min, max, isect)) {

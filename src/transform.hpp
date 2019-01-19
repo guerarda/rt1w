@@ -13,7 +13,7 @@ struct Transform {
     m44f inv() const { return m_inv; }
 
     Transform operator*(const Transform &)const;
-    sptr<Ray> operator()(const sptr<Ray> &r) const;
+    Ray operator()(const Ray &r) const;
     bounds3f operator()(const bounds3f &) const;
 
     static Transform Scale(float x, float y, float z);

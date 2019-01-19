@@ -13,10 +13,7 @@ struct _Primitive : Primitive, std::enable_shared_from_this<Primitive> {
         m_light(l)
     {}
 
-    bool intersect(const sptr<Ray> &r,
-                   float min,
-                   float max,
-                   Interaction &isect) const override;
+    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
     bounds3f bounds() const override;
     sptr<AreaLight> light() const override { return m_light; }
 
@@ -25,10 +22,7 @@ struct _Primitive : Primitive, std::enable_shared_from_this<Primitive> {
     sptr<AreaLight> m_light;
 };
 
-bool _Primitive::intersect(const sptr<Ray> &r,
-                           float min,
-                           float max,
-                           Interaction &isect) const
+bool _Primitive::intersect(const Ray &r, float min, float max, Interaction &isect) const
 {
     if (m_shape->intersect(r, min, max, isect)) {
         ASSERT(FloatCompare(isect.uv.x, 0.0f) >= 0.0f);
@@ -69,10 +63,7 @@ sptr<Primitive> Primitive::create(const sptr<Shape> &s,
 struct _Aggregate : Aggregate {
     _Aggregate(const std::vector<sptr<Primitive>> &prims);
 
-    bool intersect(const sptr<Ray> &r,
-                   float min,
-                   float max,
-                   Interaction &isect) const override;
+    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
     bounds3f bounds() const override { return m_bounds; }
     sptr<AreaLight> light() const override;
 
@@ -99,10 +90,7 @@ sptr<AreaLight> _Aggregate::light() const
     return nullptr;
 }
 
-bool _Aggregate::intersect(const sptr<Ray> &r,
-                           float min,
-                           float max,
-                           Interaction &isect) const
+bool _Aggregate::intersect(const Ray &r, float min, float max, Interaction &isect) const
 {
     bool hit = false;
     isect.t = std::numeric_limits<float>::max();

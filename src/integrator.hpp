@@ -11,7 +11,7 @@ struct Integrator : Object {
     static sptr<Integrator> create(const sptr<Sampler> &sampler, size_t maxDepth);
 
     virtual sptr<const Sampler> sampler() const = 0;
-    virtual v3f Li(const sptr<Ray> &ray,
+    virtual v3f Li(const Ray &ray,
                    const sptr<Scene> &scene,
                    const sptr<Sampler> &sampler,
                    size_t depth) const = 0;
