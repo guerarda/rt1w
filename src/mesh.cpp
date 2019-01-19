@@ -44,7 +44,7 @@ struct Triangle : Shape {
     Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md), m_v(&md->m_i[3 * ix])
     {}
 
-    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
+    bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bounds3f bounds() const override;
     Interaction sample(const v2f &u) const override;
 
@@ -62,7 +62,7 @@ static size_t max_dimension(const v3f &v)
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
 
-bool Triangle::intersect(const Ray &r, float min, float max, Interaction &isect) const
+bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -120,10 +120,10 @@ bool Triangle::intersect(const Ray &r, float min, float max, Interaction &isect)
 
     /* Value of parameter t & early rejections */
     float t = e0 * p0t.z + e1 * p1t.z + e2 * p2t.z;
-    if (det > 0 && (t <= min * det || t >= max * det)) {
+    if (det > 0 && (t <= .0f || t >= max * det)) {
         return false;
     }
-    if (det < 0 && (t >= min * det || t <= max * det)) {
+    if (det < 0 && (t >= .0f || t <= max * det)) {
         return false;
     }
 
@@ -197,7 +197,7 @@ bounds3f Triangle::bounds() const
 struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
-    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
+    bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bounds3f bounds() const override { return m_box; };
     Interaction sample(const v2f &u) const override;
 
@@ -220,10 +220,10 @@ _Mesh::_Mesh(const sptr<MeshData> &md)
     }
 }
 
-bool _Mesh::intersect(const Ray &r, float min, float max, Interaction &isect) const
+bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
 {
     for (auto &t : m_tris) {
-        if (t->intersect(r, min, max, isect)) {
+        if (t->intersect(r, isect, max)) {
             return true;
         }
     }

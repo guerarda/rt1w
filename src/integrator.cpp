@@ -75,10 +75,7 @@ v3f _Integrator::Li(const Ray &ray,
                     size_t depth) const
 {
     Interaction isect;
-    if (scene->world()->intersect(ray,
-                                  0.001f,
-                                  std::numeric_limits<float>::max(),
-                                  isect)) {
+    if (scene->world()->intersect(ray, isect, std::numeric_limits<float>::max())) {
         v3f attenuation;
         v3f wi;
         if (depth < m_maxDepth && isect.mat->scatter(ray, isect, attenuation, wi)) {
@@ -128,9 +125,8 @@ v3f _PathIntegrator::Li(const Ray &r,
     for (size_t bounces = 0;; bounces++) {
         Interaction isect;
         bool intersect = scene->world()->intersect(ray,
-                                                   0.001f,
-                                                   std::numeric_limits<float>::max(),
-                                                   isect);
+                                                   isect,
+                                                   std::numeric_limits<float>::max());
         if (bounces == 0 || specular) {
             if (intersect) {
                 L += beta * LightEmitted(isect, -ray.dir());

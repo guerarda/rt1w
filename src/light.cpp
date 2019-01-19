@@ -28,7 +28,7 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
 
     Ray ray = Ray(m_p0, m_p1 - m_p0);
     Interaction i;
-    return !scene->world()->intersect(ray, 0.1f, 0.99f, i);
+    return !scene->world()->intersect(ray, i, 0.99f);
 }
 
 #pragma mark - Point Light

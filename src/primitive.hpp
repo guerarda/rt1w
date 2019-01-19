@@ -18,10 +18,7 @@ struct Primitive : Object {
                                   const sptr<AreaLight> &l = nullptr);
     static sptr<Primitive> load_obj(const std::string &path);
 
-    virtual bool intersect(const Ray &r,
-                           float min,
-                           float max,
-                           Interaction &isect) const = 0;
+    virtual bool intersect(const Ray &r, Interaction &isect, float max) const = 0;
     virtual bounds3f bounds() const = 0;
     virtual sptr<AreaLight> light() const = 0;
 };

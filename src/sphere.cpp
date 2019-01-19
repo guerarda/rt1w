@@ -15,7 +15,7 @@ struct _Sphere : Sphere {
         m_box({ c - v3f{ r, r, r }, c + v3f{ r, r, r } })
     {}
 
-    bool intersect(const Ray &r, float min, float max, Interaction &isect) const override;
+    bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bounds3f bounds() const override { return m_box; }
     Interaction sample(const v2f &u) const override;
     v3f center() const override { return m_center; }
@@ -26,7 +26,7 @@ struct _Sphere : Sphere {
     bounds3f m_box;
 };
 
-bool _Sphere::intersect(const Ray &r, float min, float max, Interaction &isect) const
+bool _Sphere::intersect(const Ray &r, Interaction &isect, float max) const
 {
     v3f rdir = r.dir();
     v3f oc = r.org() - m_center;
@@ -36,8 +36,8 @@ bool _Sphere::intersect(const Ray &r, float min, float max, Interaction &isect) 
 
     double t0, t1;
     if (Quadratic(a, b, c, t0, t1)) {
-        double t = t0 > min && t0 < max ? t0 : t1;
-        if (t > min && t < max) {
+        double t = t0 > .0f && t0 < max ? t0 : t1;
+        if (t > .0f && t < max) {
             isect.t = (float)t;
             isect.p = r(isect.t);
             isect.n = Normalize((isect.p - m_center));
