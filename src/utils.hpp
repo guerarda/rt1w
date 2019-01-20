@@ -110,11 +110,13 @@ inline bool Quadratic(double a, double b, double c, double &t0, double &t1)
 {
     double delta = b * b - 4 * a * c;
     if (delta >= 0.0) {
-        double inv2a = 0.5 / a;
         double sqrtDelta = std::sqrt(delta);
-        t0 = (-b - sqrtDelta) * inv2a;
-        t1 = (-b + sqrtDelta) * inv2a;
-
+        double q = b < .0 ? -.5 * (b - sqrtDelta) : -.5 * (b + sqrtDelta);
+        t0 = q / a;
+        t1 = c / q;
+        if (t0 > t1) {
+            std::swap(t0, t1);
+        }
         return true;
     }
     return false;
