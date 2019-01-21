@@ -163,9 +163,27 @@ inline Vector2<T> operator*(U s, const Vector2<T> &v)
 }
 
 template <typename T>
+inline Vector2<T> Abs(const Vector2<T> &v)
+{
+    return { std::abs(v.x), std::abs(v.y) };
+}
+
+template <typename T>
 inline T Dot(const Vector2<T> &va, const Vector2<T> &vb)
 {
     return va.x * vb.x + va.y * vb.y;
+}
+
+template <typename T>
+inline T Distance(const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return (va - vb).length();
+}
+
+template <typename T>
+inline T DistanceSquared(const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return (va - vb).length_sq();
 }
 
 template <typename T>
@@ -184,18 +202,6 @@ template <typename T>
 inline Vector2<T> Reflect(const Vector2<T> &v, const Vector2<T> &n)
 {
     return v - 2 * Dot(v, n) * n;
-}
-
-template <typename T>
-inline T Distance(const Vector2<T> &va, const Vector2<T> &vb)
-{
-    return (va - vb).length();
-}
-
-template <typename T>
-inline T DistanceSquared(const Vector2<T> &va, const Vector2<T> &vb)
-{
-    return (va - vb).length_sq();
 }
 
 #pragma mark - Vector 3 Declaration
@@ -374,9 +380,9 @@ inline Vector3<T> operator*(U s, const Vector3<T> &v)
 }
 
 template <typename T>
-inline T Dot(const Vector3<T> &va, const Vector3<T> &vb)
+inline Vector3<T> Abs(const Vector3<T> &v)
 {
-    return va.x * vb.x + va.y * vb.y + va.z * vb.z;
+    return { std::abs(v.x), std::abs(v.y), std::abs(v.z) };
 }
 
 template <typename T>
@@ -385,6 +391,30 @@ inline Vector3<T> Cross(const Vector3<T> &va, const Vector3<T> &vb)
     return { va.y * vb.z - va.z * vb.y,    //
              va.z * vb.x - va.x * vb.z,    //
              va.x * vb.y - va.y * vb.x };
+}
+
+template <typename T>
+inline T Distance(const Vector3<T> &va, const Vector3<T> &vb)
+{
+    return (va - vb).length();
+}
+
+template <typename T>
+inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
+{
+    return (va - vb).length_sq();
+}
+
+template <typename T>
+inline T Dot(const Vector3<T> &va, const Vector3<T> &vb)
+{
+    return va.x * vb.x + va.y * vb.y + va.z * vb.z;
+}
+
+template <typename T>
+inline Vector3<T> FaceForward(const Vector3<T> &n, const Vector3<T> &v)
+{
+    return Dot(v, n) >= 0 ? n : -n;
 }
 
 template <typename T>
@@ -403,24 +433,6 @@ template <typename T>
 inline Vector3<T> Reflect(const Vector3<T> &v, const Vector3<T> &n)
 {
     return v - 2 * Dot(v, n) * n;
-}
-
-template <typename T>
-inline T Distance(const Vector3<T> &va, const Vector3<T> &vb)
-{
-    return (va - vb).length();
-}
-
-template <typename T>
-inline T DistanceSquared(const Vector3<T> &va, const Vector3<T> &vb)
-{
-    return (va - vb).length_sq();
-}
-
-template <typename T>
-inline Vector3<T> FaceForward(const Vector3<T> &n, const Vector3<T> &v)
-{
-    return Dot(v, n) >= 0 ? n : -n;
 }
 
 #pragma mark - Vector 4 Declaration
