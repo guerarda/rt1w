@@ -89,7 +89,7 @@ v3f _Integrator::Li(const Ray &ray,
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
             }
-            Ray scattered = Ray(isect.p, wi);
+            Ray scattered = SpawnRay(isect, wi);
             L += attenuation * Li(scattered, scene, sampler, depth + 1);
             return L;
         }
@@ -150,7 +150,7 @@ v3f _PathIntegrator::Li(const Ray &r,
         }
         specular = type & BSDF_SPECULAR;
         beta *= f;
-        ray = Ray(isect.p, wi);
+        ray = SpawnRay(isect, wi);
 
         if (bounces > 3) {
             float q = std::max(0.5f, 1 - beta.length());

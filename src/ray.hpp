@@ -2,6 +2,8 @@
 
 #include "geometry.hpp"
 
+struct Interaction;
+
 struct Ray {
     Ray(v3f org, v3f dir) : m_org(org), m_dir(dir) {}
 
@@ -13,3 +15,7 @@ private:
     v3f m_org;
     v3f m_dir;
 };
+
+Ray SpawnRay(const Interaction &i, v3f dir);
+Ray SpawnRayTo(const Interaction &i, v3f p);
+Ray SpawnRayTo(const Interaction &i, const Interaction &t);
