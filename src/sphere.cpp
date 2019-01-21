@@ -1,8 +1,8 @@
 #include "sphere.hpp"
 
+#include "efloat.hpp"
 #include "error.h"
 #include "params.hpp"
-#include "primitive.hpp"
 #include "ray.hpp"
 #include "sampling.hpp"
 #include "utils.hpp"
@@ -30,18 +30,22 @@ bool _Sphere::intersect(const Ray &r, Interaction &isect, float max) const
 {
     v3f rdir = r.dir();
     v3f oc = r.org() - m_center;
-    double a = Dot(rdir, rdir);
-    double b = 2 * Dot(rdir, oc);
-    double c = Dot(oc, oc) - m_radius * m_radius;
+    float a = Dot(rdir, rdir);
+    float b = 2 * Dot(rdir, oc);
+    float c = Dot(oc, oc) - m_radius * m_radius;
 
-    double t0, t1;
-    if (Quadratic(a, b, c, t0, t1)) {
-        double t = t0 > .0f && t0 < max ? t0 : t1;
-        if (t > .0f && t < max) {
+    EFloat t0, t1;
+    if (Quadratic(EFloat(a), EFloat(b), EFloat(c), t0, t1)) {
+        EFloat t = t0.lo() > .0f && t0.hi() < max ? t0 : t1;
+        if (t.lo() > .0f && t.hi() < max) {
             isect.t = (float)t;
             isect.p = r(isect.t);
             isect.n = Normalize((isect.p - m_center));
             isect.wo = -rdir;
+
+            /* Reproject p onto the sphere */
+            isect.p *= m_radius / Distance(isect.p, m_center);
+            isect.error = gamma(5) * Abs(isect.p);
 
             /* Compute sphere uv */
             v3f p = isect.n;

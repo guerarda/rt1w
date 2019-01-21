@@ -150,9 +150,15 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     v3f dp12 = p1 - p2;
     v3f n = Normalize(Cross(dp02, dp12));
 
+    /* Error */
+    v3f err = { std::abs(b0 * p0.x) + std::abs(b1 * p1.x) + std::abs(b2 * p2.x),
+                std::abs(b0 * p0.y) + std::abs(b1 * p1.y) + std::abs(b2 * p2.y),
+                std::abs(b0 * p0.z) + std::abs(b1 * p1.z) + std::abs(b2 * p2.z) };
+
     /* Update Interaction */
     isect.t = t;
     isect.p = b0 * p0 + b1 * p1 + b2 * p2;
+    isect.error = gamma(7) * err;
     isect.uv = b0 * uv0 + b1 * uv1 + b2 * uv2;
     isect.n = n;
 
