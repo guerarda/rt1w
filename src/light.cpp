@@ -26,7 +26,7 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
 {
     ASSERT(scene);
 
-    Ray ray = Ray(m_p0, m_p1 - m_p0);
+    Ray ray = SpawnRayTo(m_p0, m_p1);
     Interaction i;
     return !scene->world()->intersect(ray, i, 0.99f);
 }
@@ -52,7 +52,7 @@ v3f _PointLight::sample_Li(const Interaction &isect,
                            VisibilityTester &vis) const
 {
     wi = Normalize(m_p - isect.p);
-    vis = { m_p, isect.p };
+    vis = { Interaction(m_p), isect };
 
     return m_I / DistanceSquared(isect.p, m_p);
 }
@@ -100,7 +100,7 @@ v3f _AreaLight::sample_Li(const Interaction &isect,
 {
     Interaction it = m_shape->sample(u);
     wi = Normalize(it.p - isect.p);
-    vis = { isect.p, it.p };
+    vis = { it, isect };
     return L(it, -wi);
 }
 

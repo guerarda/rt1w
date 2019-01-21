@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geometry.hpp"
+#include "interaction.hpp"
 #include "sptr.hpp"
 
 struct Params;
@@ -8,20 +9,18 @@ struct Ray;
 struct Sampler;
 struct Scene;
 struct Shape;
-struct Interaction;
 
 v3f LightEmitted(const Interaction &isect, const v3f &wi);
 
 struct VisibilityTester {
     VisibilityTester() = default;
-    VisibilityTester(v3f p0, v3f p1) : m_p0(std::move(p0)), m_p1(std::move(p1)) {}
-    VisibilityTester(v3f &&p0, v3f &&p1) : m_p0(p0), m_p1(p1) {}
+    VisibilityTester(Interaction p0, Interaction p1) : m_p0(p0), m_p1(p1) {}
 
     bool visible(const sptr<Scene> &scene) const;
 
 private:
-    v3f m_p0;
-    v3f m_p1;
+    Interaction m_p0;
+    Interaction m_p1;
 };
 
 struct Light : Object {
