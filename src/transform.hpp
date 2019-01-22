@@ -14,6 +14,12 @@ struct Transform {
 
     Transform operator*(const Transform &)const;
     Ray operator()(const Ray &r) const;
+    Ray operator()(const Ray &r, v3f &oError, v3f &dError) const;
+    Ray operator()(const Ray &r,
+                   const v3f &oErrorIn,
+                   const v3f &dErrorIn,
+                   v3f &oErrorOut,
+                   v3f &dErrorOut) const;
     bounds3f operator()(const bounds3f &) const;
 
     static Transform Scale(float x, float y, float z);
@@ -32,29 +38,22 @@ private:
 
 Transform Inverse(const Transform &);
 
-#pragma mark - Inline Functions
+template <typename T>
+Vector3<T> Mulv(const Transform &t, const Vector3<T> &v);
+template <typename T>
+Vector3<T> Mulv(const Transform &t, const Vector3<T> &v, Vector3<T> &error);
+template <typename T>
+Vector3<T> Mulv(const Transform &t,
+                const Vector3<T> &v,
+                const Vector3<T> &vError,
+                Vector3<T> &tError);
 
 template <typename T>
-inline Vector3<T> Mulv(const Transform &t, const Vector3<T> &v)
-{
-    T x = v.x, y = v.y, z = v.z;
-    m44f mat = t.mat();
-    return { mat.vx.x * x + mat.vx.y * y + mat.vx.z * z,
-             mat.vy.x * x + mat.vy.y * y + mat.vy.z * z,
-             mat.vz.x * x + mat.vz.y * y + mat.vz.z * z };
-}
-
+Vector3<T> Mulp(const Transform &t, const Vector3<T> &p);
 template <typename T>
-inline Vector3<T> Mulp(const Transform &t, const Vector3<T> &p)
-{
-    m44f mat = t.mat();
-    T x = mat.vx.x * p.x + mat.vx.y * p.y + mat.vx.z * p.z + mat.vx.w;
-    T y = mat.vy.x * p.x + mat.vy.y * p.y + mat.vy.z * p.z + mat.vy.w;
-    T z = mat.vz.x * p.x + mat.vz.y * p.y + mat.vz.z * p.z + mat.vz.w;
-    T w = mat.vw.x * p.x + mat.vw.y * p.y + mat.vw.z * p.z + mat.vw.w;
-
-    if (FloatEqual(w, T{ 1.0 })) {
-        return { x, y, z };
-    }
-    return { x / w, y / w, z / w };
-}
+Vector3<T> Mulp(const Transform &t, const Vector3<T> &p, Vector3<T> &error);
+template <typename T>
+Vector3<T> Mulp(const Transform &t,
+                const Vector3<T> &p,
+                const Vector3<T> &pError,
+                Vector3<T> &tError);
