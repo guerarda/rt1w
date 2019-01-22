@@ -1,8 +1,8 @@
 #pragma once
 
 #include "geometry.hpp"
-#include "ray.hpp"
-#include "utils.hpp"
+
+struct Ray;
 
 struct Transform {
     Transform() : m_mat(m44f_identity()), m_inv(m44f_identity()) {}
@@ -31,29 +31,29 @@ struct Transform {
     static Transform Orthographic(float znear, float zfar);
     static Transform Perspective(float fov, float znear, float zfar);
 
+    friend Transform Inverse(const Transform &);
+
+    template <typename T>
+    friend Vector3<T> Mulv(const Transform &t, const Vector3<T> &v);
+    template <typename T>
+    friend Vector3<T> Mulv(const Transform &t, const Vector3<T> &v, Vector3<T> &error);
+    template <typename T>
+    friend Vector3<T> Mulv(const Transform &t,
+                           const Vector3<T> &v,
+                           const Vector3<T> &vError,
+                           Vector3<T> &tError);
+
+    template <typename T>
+    friend Vector3<T> Mulp(const Transform &t, const Vector3<T> &p);
+    template <typename T>
+    friend Vector3<T> Mulp(const Transform &t, const Vector3<T> &p, Vector3<T> &error);
+    template <typename T>
+    friend Vector3<T> Mulp(const Transform &t,
+                           const Vector3<T> &p,
+                           const Vector3<T> &pError,
+                           Vector3<T> &tError);
+
 private:
     m44f m_mat;
     m44f m_inv;
 };
-
-Transform Inverse(const Transform &);
-
-template <typename T>
-Vector3<T> Mulv(const Transform &t, const Vector3<T> &v);
-template <typename T>
-Vector3<T> Mulv(const Transform &t, const Vector3<T> &v, Vector3<T> &error);
-template <typename T>
-Vector3<T> Mulv(const Transform &t,
-                const Vector3<T> &v,
-                const Vector3<T> &vError,
-                Vector3<T> &tError);
-
-template <typename T>
-Vector3<T> Mulp(const Transform &t, const Vector3<T> &p);
-template <typename T>
-Vector3<T> Mulp(const Transform &t, const Vector3<T> &p, Vector3<T> &error);
-template <typename T>
-Vector3<T> Mulp(const Transform &t,
-                const Vector3<T> &p,
-                const Vector3<T> &pError,
-                Vector3<T> &tError);

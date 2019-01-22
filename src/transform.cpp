@@ -1,12 +1,14 @@
 #include "transform.hpp"
 
 #include "error.h"
+#include "ray.hpp"
+#include "utils.hpp"
 
 #include <cmath>
 
 Transform Transform::operator*(const Transform &t) const
 {
-    return Transform(Mul(m_mat, t.mat()), Mul(t.inv(), m_inv));
+    return Transform(Mul(m_mat, t.m_mat), Mul(t.m_inv, m_inv));
 }
 
 Ray Transform::operator()(const Ray &r) const
@@ -14,7 +16,7 @@ Ray Transform::operator()(const Ray &r) const
     v3f o = Mulp(*this, r.org());
     v3f d = Mulv(*this, r.dir());
 
-    return Ray(o, d);
+    return { o, d };
 }
 
 Ray Transform::operator()(const Ray &r, v3f &oError, v3f &dError) const
@@ -22,7 +24,7 @@ Ray Transform::operator()(const Ray &r, v3f &oError, v3f &dError) const
     v3f o = Mulp(*this, r.org(), oError);
     v3f d = Mulv(*this, r.dir(), dError);
 
-    return Ray(o, d);
+    return { o, d };
 }
 
 Ray Transform::operator()(const Ray &r,
@@ -34,12 +36,12 @@ Ray Transform::operator()(const Ray &r,
     v3f o = Mulp(*this, r.org(), oErrorIn, oErrorOut);
     v3f d = Mulv(*this, r.dir(), dErrorIn, dErrorOut);
 
-    return Ray(o, d);
+    return { o, d };
 }
 
 Transform Inverse(const Transform &t)
 {
-    return Transform(t.inv(), t.mat());
+    return Transform(t.m_inv, t.m_mat);
 }
 
 template <typename T>
@@ -57,18 +59,15 @@ template <typename T>
 Vector3<T> Mulv(const Transform &t, const Vector3<T> &v, Vector3<T> &e)
 {
     T x = v.x, y = v.y, z = v.z;
-    m44f mat = t.mat();
+    m44f m = t.m_mat;
 
-    e.x = gamma(3)
-          * (std::abs(mat.vx.x * x) + std::abs(mat.vx.y * y) + std::abs(mat.vx.z * z));
-    e.y = gamma(3)
-          * (std::abs(mat.vy.x * x) + std::abs(mat.vy.y * y) + std::abs(mat.vy.z * z));
-    e.z = gamma(3)
-          * (std::abs(mat.vz.x * x) + std::abs(mat.vz.y * y) + std::abs(mat.vz.z * z));
+    e.x = gamma(3) * (std::abs(m.vx.x * x) + std::abs(m.vx.y * y) + std::abs(m.vx.z * z));
+    e.y = gamma(3) * (std::abs(m.vy.x * x) + std::abs(m.vy.y * y) + std::abs(m.vy.z * z));
+    e.z = gamma(3) * (std::abs(m.vz.x * x) + std::abs(m.vz.y * y) + std::abs(m.vz.z * z));
 
-    return { mat.vx.x * x + mat.vx.y * y + mat.vx.z * z,
-             mat.vy.x * x + mat.vy.y * y + mat.vy.z * z,
-             mat.vz.x * x + mat.vz.y * y + mat.vz.z * z };
+    return { m.vx.x * x + m.vx.y * y + m.vx.z * z,
+             m.vy.x * x + m.vy.y * y + m.vy.z * z,
+             m.vz.x * x + m.vz.y * y + m.vz.z * z };
 }
 
 template <typename T>
@@ -78,40 +77,37 @@ Vector3<T> Mulv(const Transform &t,
                 Vector3<T> &tError)
 {
     T x = v.x, y = v.y, z = v.z;
-    m44f mat = t.mat();
+    m44f m = t.m_mat;
 
     tError.x = gamma(3)
-                   * (std::abs(mat.vx.x * x) + std::abs(mat.vx.y * y)
-                      + std::abs(mat.vx.z * z))
+                   * (std::abs(m.vx.x * x) + std::abs(m.vx.y * y) + std::abs(m.vx.z * z))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(mat.vx.x * vError.x) + std::abs(mat.vx.y) * vError.x
-                        + std::abs(mat.vx.z * vError.z));
+                     * (std::abs(m.vx.x * vError.x) + std::abs(m.vx.y) * vError.x
+                        + std::abs(m.vx.z * vError.z));
     tError.y = gamma(3)
-                   * (std::abs(mat.vy.x * x) + std::abs(mat.vy.y * y)
-                      + std::abs(mat.vy.z * z))
+                   * (std::abs(m.vy.x * x) + std::abs(m.vy.y * y) + std::abs(m.vy.z * z))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(mat.vy.x * vError.x) + std::abs(mat.vy.y) * vError.x
-                        + std::abs(mat.vy.z * vError.z));
+                     * (std::abs(m.vy.x * vError.x) + std::abs(m.vy.y) * vError.x
+                        + std::abs(m.vy.z * vError.z));
     tError.z = gamma(3)
-                   * (std::abs(mat.vz.x * x) + std::abs(mat.vx.z * y)
-                      + std::abs(mat.vz.z * z))
+                   * (std::abs(m.vz.x * x) + std::abs(m.vx.z * y) + std::abs(m.vz.z * z))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(mat.vz.x * vError.x) + std::abs(mat.vz.y) * vError.x
-                        + std::abs(mat.vz.z * vError.z));
+                     * (std::abs(m.vz.x * vError.x) + std::abs(m.vz.y) * vError.x
+                        + std::abs(m.vz.z * vError.z));
 
-    return { mat.vx.x * x + mat.vx.y * y + mat.vx.z * z,
-             mat.vy.x * x + mat.vy.y * y + mat.vy.z * z,
-             mat.vz.x * x + mat.vz.y * y + mat.vz.z * z };
+    return { m.vx.x * x + m.vx.y * y + m.vx.z * z,
+             m.vy.x * x + m.vy.y * y + m.vy.z * z,
+             m.vz.x * x + m.vz.y * y + m.vz.z * z };
 }
 
 template <typename T>
 Vector3<T> Mulp(const Transform &t, const Vector3<T> &p)
 {
-    m44f mat = t.mat();
-    T x = mat.vx.x * p.x + mat.vx.y * p.y + mat.vx.z * p.z + mat.vx.w;
-    T y = mat.vy.x * p.x + mat.vy.y * p.y + mat.vy.z * p.z + mat.vy.w;
-    T z = mat.vz.x * p.x + mat.vz.y * p.y + mat.vz.z * p.z + mat.vz.w;
-    T w = mat.vw.x * p.x + mat.vw.y * p.y + mat.vw.z * p.z + mat.vw.w;
+    m44f m = t.m_mat;
+    T x = m.vx.x * p.x + m.vx.y * p.y + m.vx.z * p.z + m.vx.w;
+    T y = m.vy.x * p.x + m.vy.y * p.y + m.vy.z * p.z + m.vy.w;
+    T z = m.vz.x * p.x + m.vz.y * p.y + m.vz.z * p.z + m.vz.w;
+    T w = m.vw.x * p.x + m.vw.y * p.y + m.vw.z * p.z + m.vw.w;
 
     if (FloatEqual(w, T{ 1.0 })) {
         return { x, y, z };
@@ -122,21 +118,21 @@ Vector3<T> Mulp(const Transform &t, const Vector3<T> &p)
 template <typename T>
 Vector3<T> Mulp(const Transform &t, const Vector3<T> &p, Vector3<T> &e)
 {
-    m44f mat = t.mat();
-    T x = mat.vx.x * p.x + mat.vx.y * p.y + mat.vx.z * p.z + mat.vx.w;
-    T y = mat.vy.x * p.x + mat.vy.y * p.y + mat.vy.z * p.z + mat.vy.w;
-    T z = mat.vz.x * p.x + mat.vz.y * p.y + mat.vz.z * p.z + mat.vz.w;
-    T w = mat.vw.x * p.x + mat.vw.y * p.y + mat.vw.z * p.z + mat.vw.w;
+    m44f m = t.m_mat;
+    T x = m.vx.x * p.x + m.vx.y * p.y + m.vx.z * p.z + m.vx.w;
+    T y = m.vy.x * p.x + m.vy.y * p.y + m.vy.z * p.z + m.vy.w;
+    T z = m.vz.x * p.x + m.vz.y * p.y + m.vz.z * p.z + m.vz.w;
+    T w = m.vw.x * p.x + m.vw.y * p.y + m.vw.z * p.z + m.vw.w;
 
     e.x = gamma(3)
-          * (std::abs(mat.vx.x * x) + std::abs(mat.vx.y * y) + std::abs(mat.vx.z * z)
-             + std::abs(mat.vx.w));
+          * (std::abs(m.vx.x * x) + std::abs(m.vx.y * y) + std::abs(m.vx.z * z)
+             + std::abs(m.vx.w));
     e.y = gamma(3)
-          * (std::abs(mat.vy.x * x) + std::abs(mat.vy.y * y) + std::abs(mat.vy.z * z)
-             + std::abs(mat.vy.w));
+          * (std::abs(m.vy.x * x) + std::abs(m.vy.y * y) + std::abs(m.vy.z * z)
+             + std::abs(m.vy.w));
     e.z = gamma(3)
-          * (std::abs(mat.vz.x * x) + std::abs(mat.vz.y * y) + std::abs(mat.vz.z * z)
-             + std::abs(mat.vz.w));
+          * (std::abs(m.vz.x * x) + std::abs(m.vz.y * y) + std::abs(m.vz.z * z)
+             + std::abs(m.vz.w));
 
     if (FloatEqual(w, T{ 1.0 })) {
         return { x, y, z };
@@ -150,30 +146,30 @@ Vector3<T> Mulp(const Transform &t,
                 const Vector3<T> &pError,
                 Vector3<T> &tError)
 {
-    m44f mat = t.mat();
-    T x = mat.vx.x * p.x + mat.vx.y * p.y + mat.vx.z * p.z + mat.vx.w;
-    T y = mat.vy.x * p.x + mat.vy.y * p.y + mat.vy.z * p.z + mat.vy.w;
-    T z = mat.vz.x * p.x + mat.vz.y * p.y + mat.vz.z * p.z + mat.vz.w;
-    T w = mat.vw.x * p.x + mat.vw.y * p.y + mat.vw.z * p.z + mat.vw.w;
+    m44f m = t.m_mat;
+    T x = m.vx.x * p.x + m.vx.y * p.y + m.vx.z * p.z + m.vx.w;
+    T y = m.vy.x * p.x + m.vy.y * p.y + m.vy.z * p.z + m.vy.w;
+    T z = m.vz.x * p.x + m.vz.y * p.y + m.vz.z * p.z + m.vz.w;
+    T w = m.vw.x * p.x + m.vw.y * p.y + m.vw.z * p.z + m.vw.w;
 
     tError.x = gamma(3)
-                   * (std::abs(mat.vx.x * x) + std::abs(mat.vx.y * y)
-                      + std::abs(mat.vx.z * z) + std::abs(mat.vx.w))
+                   * (std::abs(m.vx.x * x) + std::abs(m.vx.y * y) + std::abs(m.vx.z * z)
+                      + std::abs(m.vx.w))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(mat.vx.x * pError.x) + std::abs(mat.vx.y) * pError.x
-                        + std::abs(mat.vx.z * pError.z) + std::abs(mat.vx.w));
+                     * (std::abs(m.vx.x * pError.x) + std::abs(m.vx.y) * pError.x
+                        + std::abs(m.vx.z * pError.z) + std::abs(m.vx.w));
     tError.y = gamma(3)
-                   * (std::abs(mat.vy.x * x) + std::abs(mat.vy.y * y)
-                      + std::abs(mat.vy.z * z) + std::abs(mat.vy.w))
+                   * (std::abs(m.vy.x * x) + std::abs(m.vy.y * y) + std::abs(m.vy.z * z)
+                      + std::abs(m.vy.w))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(mat.vy.x * pError.x) + std::abs(mat.vy.y) * pError.x
-                        + std::abs(mat.vy.z * pError.z) + std::abs(mat.vy.w));
+                     * (std::abs(m.vy.x * pError.x) + std::abs(m.vy.y) * pError.x
+                        + std::abs(m.vy.z * pError.z) + std::abs(m.vy.w));
     tError.z = gamma(3)
-                   * (std::abs(mat.vz.x * x) + std::abs(mat.vx.z * y)
-                      + std::abs(mat.vz.z * z) + std::abs(mat.vz.w))
+                   * (std::abs(m.vz.x * x) + std::abs(m.vx.z * y) + std::abs(m.vz.z * z)
+                      + std::abs(m.vz.w))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(mat.vz.x * pError.x) + std::abs(mat.vz.y) * pError.x
-                        + std::abs(mat.vz.z * pError.z) + std::abs(mat.vz.w));
+                     * (std::abs(m.vz.x * pError.x) + std::abs(m.vz.y) * pError.x
+                        + std::abs(m.vz.z * pError.z) + std::abs(m.vz.w));
 
     if (FloatEqual(w, T{ 1.0 })) {
         return { x, y, z };
