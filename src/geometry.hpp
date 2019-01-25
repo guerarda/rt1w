@@ -412,9 +412,9 @@ inline T Dot(const Vector3<T> &va, const Vector3<T> &vb)
 }
 
 template <typename T>
-inline Vector3<T> FaceForward(const Vector3<T> &n, const Vector3<T> &v)
+inline Vector3<T> FaceForward(const Vector3<T> &v, const Vector3<T> &n)
 {
-    return Dot(v, n) >= 0 ? n : -n;
+    return Dot(v, n) >= 0 ? v : -v;
 }
 
 template <typename T>
