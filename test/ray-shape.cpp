@@ -8,8 +8,6 @@
 #include "sphere.hpp"
 #include "utils.hpp"
 
-#include <limits>
-
 static float pExp(RNG &rng, float minExp = -8.f, float maxExp = 8.f)
 {
     float logu = Lerp(rng.f32(), minExp, maxExp);
@@ -33,7 +31,7 @@ static bool ReintersectShape(const sptr<Shape> &shape, const v3f org, RNG &rng)
     Ray ray = { org, dst - org };
 
     Interaction isect;
-    if (!shape->intersect(ray, isect, std::numeric_limits<float>::infinity())) {
+    if (!shape->intersect(ray, isect)) {
         return false;
     }
 
@@ -46,7 +44,7 @@ static bool ReintersectShape(const sptr<Shape> &shape, const v3f org, RNG &rng)
         w = FaceForward(w, isect.n);
 
         Ray r = SpawnRay(isect, w);
-        if (shape->intersect(r, isect, std::numeric_limits<float>::infinity())) {
+        if (shape->intersect(r, isect)) {
             ++n;
         }
     }

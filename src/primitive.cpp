@@ -93,7 +93,7 @@ sptr<AreaLight> _Aggregate::light() const
 bool _Aggregate::intersect(const Ray &r, Interaction &isect, float max) const
 {
     bool hit = false;
-    isect.t = std::numeric_limits<float>::max();
+    isect.t = Infinity;
 
     for (auto &p : m_primitives) {
         Interaction hr;
