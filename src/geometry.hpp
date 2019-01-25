@@ -626,6 +626,7 @@ struct Bounds3 {
     T area() const;
     T volume() const;
     int32_t maxAxis() const;
+    bool includes(const Vector3<T> &p) const;
 
     Vector3<T> lo;
     Vector3<T> hi;
@@ -664,6 +665,14 @@ int32_t Bounds3<T>::maxAxis() const
 {
     Vector3<T> d = hi - lo;
     return d.x > d.y ? (d.x > d.z ? 0 : 2) : (d.y > d.z ? 1 : 2);
+}
+
+template <typename T>
+bool Bounds3<T>::includes(const Vector3<T> &p) const
+{
+    return (p.x >= lo.x && p.x <= hi.x       //
+            && p.y >= lo.y && p.y <= hi.y    //
+            && p.z >= lo.z && p.z <= hi.z);
 }
 
 #pragma mark Inline Functions
