@@ -15,8 +15,13 @@ constexpr double InvPi = 0.318309886183790671537767526745028724;
 constexpr double Inv2Pi = 0.636619772367581343075535053490057448;
 constexpr double Sqrt2 = 1.41421356237309504880168872420969808;
 
-constexpr float Epsilon = std::numeric_limits<float>::epsilon();
-constexpr float MinReal = std::numeric_limits<float>::min();
+constexpr double Infinity = std::numeric_limits<double>::infinity();
+
+template <typename T>
+constexpr T Epsilon = std::numeric_limits<T>::epsilon();
+
+template <typename T>
+constexpr T MinReal = std::numeric_limits<T>::min();
 
 #pragma mark - Floating Point comparisons
 
@@ -25,8 +30,7 @@ inline int32_t FloatCompare(T a, T b)
 {
     static_assert(std::is_floating_point<T>::value,
                   "FloatCompare with non floating-point type");
-    if (std::abs(a - b)
-        <= std::max(std::abs(a), std::abs(b)) * std::numeric_limits<T>::epsilon()) {
+    if (std::abs(a - b) <= std::max(std::abs(a), std::abs(b)) * Epsilon<T>) {
         return 0;
     }
     return a < b ? -1 : 1;
@@ -72,7 +76,7 @@ inline T NextFloatUp(T f)
 {
     static_assert(std::is_floating_point<T>::value,
                   "Floating Point function with non-floating point argument");
-    return std::nexttoward(f, std::numeric_limits<T>::infinity());
+    return std::nexttoward(f, Infinity);
 }
 
 template <typename T>
@@ -80,12 +84,12 @@ inline T NextFloatDown(T f)
 {
     static_assert(std::is_floating_point<T>::value,
                   "Floating Point function with non-floating point argument");
-    return std::nexttoward(f, -std::numeric_limits<T>::infinity());
+    return std::nexttoward(f, -Infinity);
 }
 
 inline constexpr float gamma(int32_t n)
 {
-    return (n * Epsilon) / (1.f - n * Epsilon);
+    return (n * Epsilon<float>) / (1.f - n * Epsilon<float>);
 }
 
 #pragma mark - Trigonometric functions

@@ -3,6 +3,7 @@
 #include "error.h"
 #include "utils.hpp"
 
+#include <algorithm>
 #include <cmath>
 
 struct EFloat {
@@ -22,29 +23,31 @@ struct EFloat {
 
     EFloat operator+(EFloat ef) const
     {
-        float a = Epsilon * std::fmax(std::abs(lo() + ef.lo()), std::abs(hi() + ef.hi()));
-        float b = (1 + Epsilon) * (e + ef.e);
-        return { v + ef.v, MinReal + a + b };
+        float a =
+            Epsilon<float> * std::max(std::abs(lo() + ef.lo()), std::abs(hi() + ef.hi()));
+        float b = (1 + Epsilon<float>)*(e + ef.e);
+        return { v + ef.v, MinReal<float> + a + b };
     }
     EFloat operator-(EFloat ef) const
     {
-        float a = Epsilon * std::fmax(std::abs(lo() - ef.hi()), std::abs(hi() - ef.lo()));
-        float b = (1 + Epsilon) * (e + ef.e);
-        return { v - ef.v, MinReal + a + b };
+        float a =
+            Epsilon<float> * std::max(std::abs(lo() - ef.hi()), std::abs(hi() - ef.lo()));
+        float b = (1 + Epsilon<float>)*(e + ef.e);
+        return { v - ef.v, MinReal<float> + a + b };
     }
     EFloat operator*(EFloat ef) const
     {
-        float a = Epsilon * max() * ef.max();
-        float b = (1 + Epsilon) * (max() * ef.e + ef.max() * e + e * ef.e);
-        return { v * ef.v, MinReal + a + b };
+        float a = Epsilon<float> * max() * ef.max();
+        float b = (1 + Epsilon<float>)*(max() * ef.e + ef.max() * e + e * ef.e);
+        return { v * ef.v, MinReal<float> + a + b };
     }
     EFloat operator/(EFloat ef) const
     {
         ASSERT(ef.e < .5f * ef.min());
         float a = 1 / (ef.min() - ef.e);
         float b = ef.e / ef.min();
-        float c = Epsilon + b + 2 * (b * b);
-        return { v / ef.v, MinReal + a * (e + (max() + e) * c) };
+        float c = Epsilon<float> + b + 2 * (b * b);
+        return { v / ef.v, MinReal<float> + a * (e + (max() + e) * c) };
     }
     EFloat operator-() const { return { -v, e }; }
 
@@ -79,9 +82,9 @@ inline bool Quadratic(EFloat a, EFloat b, EFloat c, EFloat &t0, EFloat &t1);
 EFloat sqrt(EFloat ef)
 {
     ASSERT(ef.lo() > ef.error() && ef.hi() > ef.error());
-    float a = ef.e * (1.0f + Epsilon);
-    float hlo = Epsilon * std::sqrt(ef.lo()) + a / (2 * std::sqrt(ef.lo() - ef.e));
-    float hhi = Epsilon * std::sqrt(ef.hi()) + a / (2 * std::sqrt(ef.hi() - ef.e));
+    float a = ef.e * (1.0f + Epsilon<float>);
+    float hlo = Epsilon<float> * std::sqrt(ef.lo()) + a / (2 * std::sqrt(ef.lo() - ef.e));
+    float hhi = Epsilon<float> * std::sqrt(ef.hi()) + a / (2 * std::sqrt(ef.hi() - ef.e));
 
     return { std::sqrt(ef.v), std::fmaxf(hlo, hhi) };
 }
