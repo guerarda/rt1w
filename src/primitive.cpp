@@ -14,6 +14,7 @@ struct _Primitive : Primitive, std::enable_shared_from_this<Primitive> {
     {}
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
     bounds3f bounds() const override;
     sptr<AreaLight> light() const override { return m_light; }
 
@@ -36,6 +37,11 @@ bool _Primitive::intersect(const Ray &r, Interaction &isect, float max) const
         return true;
     }
     return false;
+}
+
+bool _Primitive::qIntersect(const Ray &r, float max) const
+{
+    return m_shape->qIntersect(r, max);
 }
 
 bounds3f _Primitive::bounds() const
@@ -64,6 +70,7 @@ struct _Aggregate : Aggregate {
     _Aggregate(const std::vector<sptr<Primitive>> &prims);
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
     bounds3f bounds() const override { return m_bounds; }
     sptr<AreaLight> light() const override;
 
@@ -93,18 +100,24 @@ sptr<AreaLight> _Aggregate::light() const
 bool _Aggregate::intersect(const Ray &r, Interaction &isect, float max) const
 {
     bool hit = false;
-    isect.t = Infinity;
+    isect.t = max;
 
     for (auto &p : m_primitives) {
-        Interaction hr;
-        if (p->intersect(r, hr, max)) {
-            if (hr.t < isect.t) {
-                isect = hr;
-            }
+        if (p->intersect(r, isect, isect.t)) {
             hit = true;
         }
     }
     return hit;
+}
+
+bool _Aggregate::qIntersect(const Ray &r, float max) const
+{
+    for (auto &p : m_primitives) {
+        if (p->qIntersect(r, max)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 #pragma mark - Static Constructor

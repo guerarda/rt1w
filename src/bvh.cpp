@@ -83,6 +83,7 @@ struct _BVHAccelerator : BVHAccelerator {
     ~_BVHAccelerator() override { free(m_nodes); }
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
     bounds3f bounds() const override { return m_bounds; }
     sptr<AreaLight> light() const override;
 
@@ -307,6 +308,44 @@ bool _BVHAccelerator::intersect(const Ray &r, Interaction &isect, float max) con
         }
     }
     return hit;
+}
+
+bool _BVHAccelerator::qIntersect(const Ray &r, float max) const
+{
+    size_t index = 0;
+    size_t next[64] = { 0 };
+    size_t sp = 0;
+
+    while (true) {
+        if (box_hit(m_nodes[index].bounds, r, max)) {
+            size_t n = m_nodes[index].size;
+
+            if (n > 0) {
+                auto first = (size_t)m_nodes[index].primitivesOffset;
+
+                for (size_t i = first; i < first + n; ++i) {
+                    if (m_prims[i]->qIntersect(r, max)) {
+                        return true;
+                    }
+                }
+                if (sp == 0) {
+                    break;
+                }
+                index = next[--sp];
+            }
+            else {
+                next[sp++] = (size_t)m_nodes[index].secondChildOffset;
+                index += 1;
+            }
+        }
+        else {
+            if (sp == 0) {
+                break;
+            }
+            index = next[--sp];
+        }
+    }
+    return false;
 }
 
 sptr<BVHAccelerator> BVHAccelerator::create(const std::vector<sptr<Primitive>> &v)

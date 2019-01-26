@@ -45,6 +45,7 @@ struct Triangle : Shape {
     {}
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
     bounds3f bounds() const override;
     Interaction sample(const v2f &u) const override;
 
@@ -165,6 +166,70 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     return true;
 }
 
+bool Triangle::qIntersect(const Ray &r, float max) const
+{
+    sptr<VertexData> vd = m_md->m_vd;
+
+    /* Get triangle coordinates */
+    v3f p0 = vd->m_v[m_v[0]];
+    v3f p1 = vd->m_v[m_v[1]];
+    v3f p2 = vd->m_v[m_v[2]];
+
+    /* Transform triangle into ray-space coordinates */
+    v3f p0t = p0 - r.org();
+    v3f p1t = p1 - r.org();
+    v3f p2t = p2 - r.org();
+
+    /* Permute */
+    size_t kz = max_dimension(absv(r.dir()));
+    size_t kx = (kz + 1) % 3;
+    size_t ky = (kx + 1) % 3;
+
+    v3f d = { r.dir()[kx], r.dir()[ky], r.dir()[kz] };
+
+    p0t = { p0t[kx], p0t[ky], p0t[kz] };
+    p1t = { p1t[kx], p1t[ky], p1t[kz] };
+    p2t = { p2t[kx], p2t[ky], p2t[kz] };
+
+    /* Shear */
+    float Sx = -d.x / d.z;
+    float Sy = -d.y / d.z;
+    float Sz = 1 / d.z;
+
+    p0t.x += Sx * p0t.z;
+    p0t.y += Sy * p0t.z;
+    p0t.z *= Sz;
+
+    p1t.x += Sx * p1t.z;
+    p1t.y += Sy * p1t.z;
+    p1t.z *= Sz;
+
+    p2t.x += Sx * p2t.z;
+    p2t.y += Sy * p2t.z;
+    p2t.z *= Sz;
+
+    /* Edge functions */
+    auto e0 = p1t.x * p2t.y - p1t.y * p2t.x;
+    auto e1 = p2t.x * p0t.y - p2t.y * p0t.x;
+    auto e2 = p0t.x * p1t.y - p0t.y * p1t.x;
+
+    if ((e0 < 0.0f || e1 < 0.0f || e2 < 0.0f) && (e0 > 0.0f || e1 > 0.0f || e2 > 0.0f)) {
+        return false;
+    }
+    float det = e0 + e1 + e2;
+    if (FloatEqual(det, 0.0f)) {
+        return false;
+    }
+    float t = e0 * p0t.z + e1 * p1t.z + e2 * p2t.z;
+    if (det > 0 && (t <= .0f || t >= max * det)) {
+        return false;
+    }
+    if (det < 0 && (t >= .0f || t <= max * det)) {
+        return false;
+    }
+    return true;
+}
+
 Interaction Triangle::sample(const v2f &u) const
 {
     sptr<VertexData> vd = m_md->m_vd;
@@ -204,6 +269,7 @@ struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
     bounds3f bounds() const override { return m_box; };
     Interaction sample(const v2f &u) const override;
 
@@ -228,8 +294,21 @@ _Mesh::_Mesh(const sptr<MeshData> &md)
 
 bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
 {
+    bool hit = false;
+    isect.t = max;
+
+    for (auto &tri : m_tris) {
+        if (tri->intersect(r, isect, isect.t)) {
+            hit = true;
+        }
+    }
+    return hit;
+}
+
+bool _Mesh::qIntersect(const Ray &r, float max) const
+{
     for (auto &t : m_tris) {
-        if (t->intersect(r, isect, max)) {
+        if (t->qIntersect(r, max)) {
             return true;
         }
     }

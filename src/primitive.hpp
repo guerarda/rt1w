@@ -22,6 +22,7 @@ struct Primitive : Object {
     virtual bool intersect(const Ray &r,
                            Interaction &isect,
                            float max = Infinity) const = 0;
+    virtual bool qIntersect(const Ray &r, float max = Infinity) const = 0;
     virtual bounds3f bounds() const = 0;
     virtual sptr<AreaLight> light() const = 0;
 };

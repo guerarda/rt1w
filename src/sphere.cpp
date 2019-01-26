@@ -16,6 +16,7 @@ struct _Sphere : Sphere {
     {}
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
     bounds3f bounds() const override { return m_box; }
     Interaction sample(const v2f &u) const override;
     v3f center() const override { return m_center; }
@@ -68,6 +69,24 @@ bool _Sphere::intersect(const Ray &r, Interaction &isect, float max) const
             isect.shading.n = isect.n;
             isect.shading.dpdu = isect.dpdu;
             isect.shading.dpdv = isect.dpdv;
+            return true;
+        }
+    }
+    return false;
+}
+
+bool _Sphere::qIntersect(const Ray &r, float max) const
+{
+    v3f rdir = r.dir();
+    v3f oc = r.org() - m_center;
+    float a = Dot(rdir, rdir);
+    float b = 2 * Dot(rdir, oc);
+    float c = Dot(oc, oc) - m_radius * m_radius;
+
+    EFloat t0, t1;
+    if (Quadratic(EFloat(a), EFloat(b), EFloat(c), t0, t1)) {
+        EFloat t = t0.lo() > .0f && t0.hi() < max ? t0 : t1;
+        if (t.lo() > .0f && t.hi() < max) {
             return true;
         }
     }
