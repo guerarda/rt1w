@@ -142,7 +142,7 @@ v3f _PathIntegrator::Li(const Ray &r,
             break;
         }
         BxDFType type;
-        v3f f = bsdf->sample_f(isect.wo, wi, type);
+        v3f f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
         if (FloatEqual(f.x, 0.0f) && FloatEqual(f.y, 0.0f) && FloatEqual(f.z, 0.0f)) {
             break;
         }

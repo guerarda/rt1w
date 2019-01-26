@@ -47,12 +47,11 @@ struct _BSDF : BSDF {
         m_ns(i.shading.n),
         m_ss(Normalize(i.shading.dpdu)),
         m_ts(Cross(m_ns, m_ss)),
-        m_bxdfs(bxdfs),
-        m_rng(RNG::create())
+        m_bxdfs(bxdfs)
     {}
 
     v3f f(const v3f &woW, const v3f &wiW) const override;
-    v3f sample_f(const v3f &woW, v3f &wiW, BxDFType &Type) const override;
+    v3f sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &Type) const override;
 
     v3f localToWorld(const v3f &v) const;
     v3f worldToLocal(const v3f &v) const;
@@ -60,7 +59,6 @@ struct _BSDF : BSDF {
     v3f m_ng;
     v3f m_ns, m_ss, m_ts;
     std::vector<sptr<BxDF>> m_bxdfs;
-    uptr<RNG> m_rng;
 };
 
 v3f _BSDF::f(const v3f &woW, const v3f &wiW) const
@@ -85,16 +83,20 @@ v3f _BSDF::f(const v3f &woW, const v3f &wiW) const
     return f;
 }
 
-v3f _BSDF::sample_f(const v3f &woW, v3f &wiW, BxDFType &type) const
+v3f _BSDF::sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) const
 {
     /* Convert woW from world to local coordinates */
     v3f wo = worldToLocal(woW);
 
     /* Randomly chose a BxDF to sample */
-    size_t ix = m_rng->u32((uint32_t)m_bxdfs.size());
+    size_t n = m_bxdfs.size();
+    size_t ix = std::min((size_t)std::floor(u.x * n), n - 1);
+
+    /* Remap u */
+    v2f uRemap = { u.x * n - ix, u.y };
 
     v3f wi;
-    v3f f = m_bxdfs[ix]->sample_f(wo, wi);
+    v3f f = m_bxdfs[ix]->sample_f(wo, wi, u);
     type = m_bxdfs[ix]->type();
 
     /* Convert wi to world coordinates */
@@ -139,7 +141,7 @@ struct _LambertianReflection : LambertianReflection {
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
     v3f f(const v3f &wo, const v3f &wi) const override;
-    v3f sample_f(const v3f &wo, v3f &wi) const override;
+    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
     v3f m_R;
@@ -150,7 +152,7 @@ v3f _LambertianReflection::f(const v3f &, const v3f &) const
     return m_R / (float)Pi;
 }
 
-v3f _LambertianReflection::sample_f(const v3f &, v3f &wi) const
+v3f _LambertianReflection::sample_f(const v3f &, v3f &wi, const v2f &) const
 {
     wi = Normalize(random_sphere_point());
 
@@ -174,14 +176,14 @@ struct _SpecularReflection : SpecularReflection {
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
     v3f f(const v3f &, const v3f &) const override { return {}; }
-    v3f sample_f(const v3f &wo, v3f &wi) const override;
+    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
     v3f m_R;
     uptr<Fresnel> m_fresnel;
 };
 
-v3f _SpecularReflection::sample_f(const v3f &wo, v3f &wi) const
+v3f _SpecularReflection::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 {
     wi = v3f{ -wo.x, -wo.y, wo.z };
 
@@ -207,7 +209,7 @@ struct _SpecularTransmission : SpecularTransmission {
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
     v3f f(const v3f &, const v3f &) const override { return {}; }
-    v3f sample_f(const v3f &wo, v3f &wi) const override;
+    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
     v3f m_T;
@@ -216,7 +218,7 @@ struct _SpecularTransmission : SpecularTransmission {
     uptr<Fresnel> m_fresnel;
 };
 
-v3f _SpecularTransmission::sample_f(const v3f &wo, v3f &wi) const
+v3f _SpecularTransmission::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 {
     bool entering = CosTheta(wo) > 0;
     float etaI = entering ? m_etaA : m_etaB;
@@ -253,7 +255,7 @@ struct _FresnelSpecular : FresnelSpecular {
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
     v3f f(const v3f &, const v3f &) const override { return {}; }
-    v3f sample_f(const v3f &wo, v3f &wi) const override;
+    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
     v3f m_R;
@@ -270,7 +272,7 @@ static float schlick(float cos, float ri)
     return r + (1.0f - r) * powf((1.0f - cos), 5.0f);
 }
 
-v3f _FresnelSpecular::sample_f(const v3f &wo, v3f &wi) const
+v3f _FresnelSpecular::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 {
     bool entering = CosTheta(wo) > 0;
     float etaI = entering ? m_etaA : m_etaB;
