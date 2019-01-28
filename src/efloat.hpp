@@ -81,7 +81,10 @@ inline bool Quadratic(EFloat a, EFloat b, EFloat c, EFloat &t0, EFloat &t1);
 
 EFloat sqrt(EFloat ef)
 {
-    ASSERT(ef.lo() > ef.error() && ef.hi() > ef.error());
+    if (ef.lo() == .0f && ef.hi() == .0f && ef.error() == .0f) {
+        return .0f;
+    }
+    ASSERT(ef.error() == .0f || (ef.lo() > ef.error() && ef.hi() > ef.error()));
     float a = ef.e * (1.0f + Epsilon<float>);
     float hlo = Epsilon<float> * std::sqrt(ef.lo()) + a / (2 * std::sqrt(ef.lo() - ef.e));
     float hhi = Epsilon<float> * std::sqrt(ef.hi()) + a / (2 * std::sqrt(ef.hi() - ef.e));
