@@ -51,7 +51,7 @@ static bool ReintersectShape(const sptr<Shape> &shape, const v3f org, RNG &rng)
     return n != 0;
 }
 
-TEST_CASE("Sphere", "[shape], [isect]")
+TEST_CASE("Sphere", "[sphere], [isect]")
 {
     uptr<RNG> rng = RNG::create();
 
@@ -60,11 +60,8 @@ TEST_CASE("Sphere", "[shape], [isect]")
     float radius = pExp(*rng, .0f, 3.f);
     sptr<Sphere> sphere = Sphere::create(center, radius);
 
-    /* Random Ray origin outside the sphere' bounding box */
-    v3f org;
-    do {
-        org = RandomPoint(*rng);
-    } while (!sphere->bounds().includes(org));
+    /* Random Ray origin */
+    v3f org = RandomPoint(*rng);
 
     size_t n = 0;
     for (size_t i = 0; i < 1000; ++i) {
