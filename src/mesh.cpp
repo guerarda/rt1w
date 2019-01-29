@@ -376,6 +376,24 @@ sptr<Mesh> Mesh::create(size_t nt, const sptr<VertexData> &vd, const sptr<Value>
 }
 
 sptr<Mesh> Mesh::create(size_t nt,
+                        const sptr<VertexData> &vd,
+                        uptr<std::vector<uint32_t>> &indices)
+{
+    uptr<uint32_t[]> i = std::make_unique<uint32_t[]>(3 * nt);
+    std::copy(std::begin(*indices), std::end(*indices), i.get());
+
+    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, i);
+
+    return std::make_shared<_Mesh>(md);
+}
+
+sptr<Mesh> Mesh::create(size_t nt, const sptr<VertexData> &vd, uptr<uint32_t[]> &indices)
+{
+    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, indices);
+    return std::make_shared<_Mesh>(md);
+}
+
+sptr<Mesh> Mesh::create(size_t nt,
                         const sptr<Value> &vertices,
                         const sptr<Value> &indices,
                         const sptr<Value> &normals,

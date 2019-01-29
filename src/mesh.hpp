@@ -37,6 +37,12 @@ struct Mesh : Shape {
     static sptr<Mesh> create(size_t nt,
                              const sptr<VertexData> &vd,
                              const sptr<Value> &indices);
+    static sptr<Mesh> create(size_t nt,
+                             const sptr<VertexData> &vd,
+                             uptr<std::vector<uint32_t>> &indices);
+    static sptr<Mesh> create(size_t nt,
+                             const sptr<VertexData> &vd,
+                             uptr<uint32_t[]> &indices);
 
     static sptr<Mesh> create(const sptr<Params> &params);
 
