@@ -53,11 +53,6 @@ struct Triangle : Shape {
     const uint32_t *const m_v;
 };
 
-static v3f absv(const v3f &v)
-{
-    return { std::abs(v.x), std::abs(v.y), std::abs(v.z) };
-}
-
 static size_t max_dimension(const v3f &v)
 {
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
@@ -78,7 +73,7 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     v3f p2t = p2 - r.org();
 
     /* Permute */
-    size_t kz = max_dimension(absv(r.dir()));
+    size_t kz = max_dimension(Abs(r.dir()));
     size_t kx = (kz + 1) % 3;
     size_t ky = (kx + 1) % 3;
 
@@ -129,11 +124,30 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     }
 
     /* Barycentric coordinates */
-    float idet = 1.0f / det;
+    float idet = 1.f / det;
     float b0 = e0 * idet;
     float b1 = e1 * idet;
     float b2 = e2 * idet;
     t *= idet;
+
+    /* Make sure t is larger than its error bound */
+    float maxZt = MaxComponent(Abs(v3f{ p0t.z, p1t.z, p2t.z }));
+    float deltaZ = gamma(3) * maxZt;
+
+    float maxXt = MaxComponent(Abs(v3f{ p0t.x, p1t.x, p2t.x }));
+    float deltaX = gamma(5) * (maxXt + maxZt);
+
+    float maxYt = MaxComponent(Abs(v3f{ p0t.y, p1t.y, p2t.y }));
+    float deltaY = gamma(5) * (maxYt + maxZt);
+
+    float maxE = MaxComponent(Abs(v3f{ e0, e1, e2 }));
+    float deltaE = 2.f * (gamma(2) * maxXt * maxYt + deltaY * maxXt + deltaX * maxYt);
+
+    float deltaT = 3 * (gamma(3) * maxE * maxZt + deltaE * maxZt + deltaZ * maxE)
+                   * std::abs(idet);
+    if (t <= deltaT) {
+        return false;
+    }
 
     /* Texture coordinates */
     v2f uv0 = { 0.0, 0.0 };
@@ -181,7 +195,7 @@ bool Triangle::qIntersect(const Ray &r, float max) const
     v3f p2t = p2 - r.org();
 
     /* Permute */
-    size_t kz = max_dimension(absv(r.dir()));
+    size_t kz = max_dimension(Abs(r.dir()));
     size_t kx = (kz + 1) % 3;
     size_t ky = (kx + 1) % 3;
 
@@ -225,6 +239,28 @@ bool Triangle::qIntersect(const Ray &r, float max) const
         return false;
     }
     if (det < 0 && (t >= .0f || t <= max * det)) {
+        return false;
+    }
+    /* Barycentric coordinates */
+    float idet = 1.f / det;
+    t *= idet;
+
+    /* Make sure t is larger than its error bound */
+    float maxZt = MaxComponent(Abs(v3f{ p0t.z, p1t.z, p2t.z }));
+    float deltaZ = gamma(3) * maxZt;
+
+    float maxXt = MaxComponent(Abs(v3f{ p0t.x, p1t.x, p2t.x }));
+    float deltaX = gamma(5) * (maxXt + maxZt);
+
+    float maxYt = MaxComponent(Abs(v3f{ p0t.y, p1t.y, p2t.y }));
+    float deltaY = gamma(5) * (maxYt + maxZt);
+
+    float maxE = MaxComponent(Abs(v3f{ e0, e1, e2 }));
+    float deltaE = 2.f * (gamma(2) * maxXt * maxYt + deltaY * maxXt + deltaX * maxYt);
+
+    float deltaT = 3 * (gamma(3) * maxE * maxZt + deltaE * maxZt + deltaZ * maxE)
+                   * std::abs(idet);
+    if (t <= deltaT) {
         return false;
     }
     return true;
