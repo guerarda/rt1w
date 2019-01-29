@@ -193,6 +193,12 @@ inline Vector2<T> Lerp(T t, const Vector2<T> &va, const Vector2<T> &vb)
 }
 
 template <typename T>
+inline T MaxComponent(const Vector2<T> &v)
+{
+    return std::max(v.x, v.y);
+}
+
+template <typename T>
 inline Vector2<T> Normalize(const Vector2<T> &v)
 {
     return v / v.length();
@@ -421,6 +427,12 @@ template <typename T>
 inline Vector3<T> Lerp(T t, const Vector3<T> &va, const Vector3<T> &vb)
 {
     return (1 - t) * va + t * vb;
+}
+
+template <typename T>
+inline T MaxComponent(const Vector3<T> &v)
+{
+    return std::max(v.x, std::max(v.y, v.z));
 }
 
 template <typename T>
