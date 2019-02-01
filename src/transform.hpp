@@ -33,6 +33,7 @@ struct Transform {
 
     friend Transform Inverse(const Transform &);
 
+    /* Transform a Vector */
     template <typename T>
     friend Vector3<T> Mulv(const Transform &t, const Vector3<T> &v);
     template <typename T>
@@ -43,6 +44,7 @@ struct Transform {
                            const Vector3<T> &vError,
                            Vector3<T> &tError);
 
+    /* Transform a Point */
     template <typename T>
     friend Vector3<T> Mulp(const Transform &t, const Vector3<T> &p);
     template <typename T>
@@ -52,6 +54,10 @@ struct Transform {
                            const Vector3<T> &p,
                            const Vector3<T> &pError,
                            Vector3<T> &tError);
+
+    /* Transform a Normal */
+    template <typename T>
+    friend Vector3<T> Muln(const Transform &t, const Vector3<T> &n);
 
 private:
     m44f m_mat;

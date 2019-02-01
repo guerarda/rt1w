@@ -177,6 +177,16 @@ Vector3<T> Mulp(const Transform &t,
     return { x / w, y / w, z / w };
 }
 
+template <typename T>
+Vector3<T> Muln(const Transform &t, const Vector3<T> &n)
+{
+    T x = t.m_inv.vx.x * n.x + t.m_inv.vy.x * n.y + t.m_inv.vz.x * n.z;
+    T y = t.m_inv.vx.y * n.x + t.m_inv.vy.y * n.y + t.m_inv.vz.y * n.z;
+    T z = t.m_inv.vx.z * n.x + t.m_inv.vy.z * n.y + t.m_inv.vz.z * n.z;
+
+    return { x, y, z };
+}
+
 /* Explicit template instantiations */
 template Vector3<float> Mulv(const Transform &t, const Vector3<float> &v);
 template Vector3<double> Mulv(const Transform &t, const Vector3<double> &v);
@@ -211,6 +221,9 @@ template Vector3<double> Mulp(const Transform &t,
                               const Vector3<double> &p,
                               const Vector3<double> &pError,
                               Vector3<double> &tError);
+
+template Vector3<float> Muln(const Transform &t, const Vector3<float> &n);
+template Vector3<double> Muln(const Transform &t, const Vector3<double> &n);
 
 #pragma mark - Static Functions
 
