@@ -8,6 +8,7 @@
 #include "primitive.hpp"
 #include "shape.hpp"
 #include "texture.hpp"
+#include "transform.hpp"
 #include "value.hpp"
 
 #include <rapidjson/document.h>
@@ -48,12 +49,85 @@ static std::string resolve_path(const std::string &dir, const std::string &path)
     return absolute_path(dir + "/" + path);
 }
 
+static Transform read_transform_fromobj(const rapidjson::Value &v)
+{
+    if (v.MemberCount() == 1) {
+        auto itr = v.FindMember("rotate");
+        if (itr != v.MemberEnd()) {
+            if (itr->value.IsArray() && itr->value.Size() == 4) {
+                return Transform::Rotate(itr->value[0].GetFloat(),
+                                         { itr->value[1].GetFloat(),
+                                           itr->value[2].GetFloat(),
+                                           itr->value[3].GetFloat() });
+            }
+        }
+        auto its = v.FindMember("scale");
+        if (its != v.MemberEnd()) {
+            if (its->value.IsArray() && its->value.Size() == 3) {
+                return Transform::Scale(its->value[0].GetFloat(),
+                                        its->value[1].GetFloat(),
+                                        its->value[2].GetFloat());
+            }
+        }
+        auto itt = v.FindMember("translate");
+        if (itt != v.MemberEnd()) {
+            if (itt->value.IsArray() && itt->value.Size() == 3) {
+                return Transform::Translate({ itt->value[0].GetFloat(),
+                                              itt->value[1].GetFloat(),
+                                              itt->value[2].GetFloat() });
+            }
+        }
+        warning("Unrecognized Transform name");
+    }
+    else {
+        warning("Transform object should only have one member");
+    }
+    return {};
+}
+
+static Transform read_transform(const rapidjson::Value &v)
+{
+    if (v.IsObject()) {
+        return read_transform_fromobj(v);
+    }
+    if (v.IsArray()) {
+        if (v[0].IsNumber()) {
+            if (v.Size() == 16) {
+                m44f m;
+                for (rapidjson::SizeType i = 0; i < 16; ++i) {
+                    if (v[i].IsNumber()) {
+                        ((float *)&m.vx.x)[i] = v[i].GetFloat();
+                    }
+                    else {
+                        warning("Transform object should be an array of numbers");
+                        return {};
+                    }
+                }
+                return Transform(m);
+            }
+        }
+        Transform t;
+        for (auto &m : v.GetArray()) {
+            t = t * read_transform(m);
+        }
+        return t;
+    }
+    warning("Unrecognized Transform format");
+
+    return {};
+}
+
 static sptr<Params> read_params(const rapidjson::Value &v, const std::string &dir)
 {
     sptr<Params> p = Params::create();
 
     for (auto &m : v.GetObject()) {
         std::string name = m.name.GetString();
+        if (name == "transform") {
+            Transform t = read_transform(m.value);
+            m44f mat = t.inv();
+            p->insert(name, Value::create(&mat.vx.x, 16));
+        }
         if (m.value.IsString()) {
             std::string s = m.value.GetString();
             if (name == "filename") {
@@ -311,8 +385,8 @@ void _RenderDescFromJSON::load_lights()
         for (auto &v : section->value.GetArray()) {
             if (sptr<Light> light = read_light(v)) {
                 m_lights.push_back(light);
-                /* Area lights need to be added to the scene's primitives so it can part
-                 * of the interesection test */
+                /* Area lights need to be added to the scene's primitives so it can be
+                 * part of the interesection test */
                 if (sptr<AreaLight> area = std::dynamic_pointer_cast<AreaLight>(light)) {
                     m_primitives.push_back(
                         Primitive::create(area->shape(), NullMaterial, area));
