@@ -39,6 +39,40 @@ Ray Transform::operator()(const Ray &r,
     return { o, d };
 }
 
+bounds3f Transform::operator()(const bounds3f &b) const
+{
+    bounds3f rb;
+    rb = Union(rb, Mulp(*this, v3f{ b.lo.x, b.lo.y, b.lo.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.lo.x, b.hi.y, b.lo.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.hi.x, b.hi.y, b.lo.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.hi.x, b.lo.y, b.lo.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.lo.x, b.lo.y, b.hi.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.lo.x, b.hi.y, b.hi.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.hi.x, b.hi.y, b.hi.z }));
+    rb = Union(rb, Mulp(*this, v3f{ b.hi.x, b.lo.y, b.hi.z }));
+
+    return rb;
+}
+
+Interaction Transform::operator()(const Interaction &i) const
+{
+    Interaction ri;
+    ri.p = Mulp(*this, i.p, i.error, ri.error);
+    ri.t = i.t;
+    ri.uv = i.uv;
+    ri.wo = Normalize(Mulv(*this, i.wo));
+    ri.n = Normalize(Muln(*this, i.n));
+    ri.dpdu = Mulv(*this, i.dpdu);
+    ri.dpdv = Mulv(*this, i.dpdv);
+    ri.shading.n = Normalize(Muln(*this, i.shading.n));
+    ri.shading.dpdu = Mulv(*this, i.shading.dpdu);
+    ri.shading.dpdv = Mulv(*this, i.shading.dpdv);
+    ri.mat = i.mat;
+    ri.prim = i.prim;
+
+    return ri;
+}
+
 Transform Inverse(const Transform &t)
 {
     return Transform(t.m_inv, t.m_mat);
@@ -287,6 +321,31 @@ Transform Transform::RotateZ(float theta)
                       { 0.0f, 0.0f, 1.0f, 0.0f },
                       { 0.0f, 0.0f, 0.0f, 1.0f } };
     return Transform(m44f(m), Transpose(m44f(m)));
+}
+
+Transform Transform::Rotate(float theta, const v3f &axis)
+{
+    v3f a = Normalize(axis);
+    float sinTheta = std::sin(Radians(theta));
+    float cosTheta = std::cos(Radians(theta));
+    m44f m = m44f_identity();
+
+    m.vx.x = a.x * a.x + (1 - a.x * a.x) * cosTheta;
+    m.vx.y = a.x * a.y * (1 - cosTheta) - a.z * sinTheta;
+    m.vx.z = a.x * a.z * (1 - cosTheta) + a.y * sinTheta;
+    m.vx.w = 0;
+
+    m.vy.x = a.x * a.y * (1 - cosTheta) + a.z * sinTheta;
+    m.vy.y = a.y * a.y + (1 - a.y * a.y) * cosTheta;
+    m.vy.z = a.y * a.z * (1 - cosTheta) - a.x * sinTheta;
+    m.vy.w = 0;
+
+    m.vz.x = a.x * a.z * (1 - cosTheta) - a.y * sinTheta;
+    m.vz.y = a.y * a.z * (1 - cosTheta) + a.x * sinTheta;
+    m.vz.z = a.z * a.z + (1 - a.z * a.z) * cosTheta;
+    m.vz.w = 0;
+
+    return Transform(m, Transpose(m));
 }
 
 Transform Transform::LookAt(const v3f &p, const v3f &look, const v3f &up)

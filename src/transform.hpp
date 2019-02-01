@@ -1,6 +1,7 @@
 #pragma once
 
 #include "geometry.hpp"
+#include "interaction.hpp"
 
 struct Ray;
 
@@ -12,7 +13,7 @@ struct Transform {
     m44f mat() const { return m_mat; }
     m44f inv() const { return m_inv; }
 
-    Transform operator*(const Transform &)const;
+    Transform operator*(const Transform &t) const;
     Ray operator()(const Ray &r) const;
     Ray operator()(const Ray &r, v3f &oError, v3f &dError) const;
     Ray operator()(const Ray &r,
@@ -20,10 +21,12 @@ struct Transform {
                    const v3f &dErrorIn,
                    v3f &oErrorOut,
                    v3f &dErrorOut) const;
-    bounds3f operator()(const bounds3f &) const;
+    bounds3f operator()(const bounds3f &b) const;
+    Interaction operator()(const Interaction &i) const;
 
     static Transform Scale(float x, float y, float z);
     static Transform Translate(const v3f &v);
+    static Transform Rotate(float theta, const v3f &axis);
     static Transform RotateX(float theta);
     static Transform RotateY(float theta);
     static Transform RotateZ(float theta);
