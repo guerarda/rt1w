@@ -82,17 +82,17 @@ Vector3<T> Mulv(const Transform &t,
     tError.x = gamma(3)
                    * (std::abs(m.vx.x * x) + std::abs(m.vx.y * y) + std::abs(m.vx.z * z))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(m.vx.x * vError.x) + std::abs(m.vx.y) * vError.x
+                     * (std::abs(m.vx.x * vError.x) + std::abs(m.vx.y * vError.y)
                         + std::abs(m.vx.z * vError.z));
     tError.y = gamma(3)
                    * (std::abs(m.vy.x * x) + std::abs(m.vy.y * y) + std::abs(m.vy.z * z))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(m.vy.x * vError.x) + std::abs(m.vy.y) * vError.x
+                     * (std::abs(m.vy.x * vError.x) + std::abs(m.vy.y * vError.y)
                         + std::abs(m.vy.z * vError.z));
     tError.z = gamma(3)
                    * (std::abs(m.vz.x * x) + std::abs(m.vx.z * y) + std::abs(m.vz.z * z))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(m.vz.x * vError.x) + std::abs(m.vz.y) * vError.x
+                     * (std::abs(m.vz.x * vError.x) + std::abs(m.vz.y * vError.y)
                         + std::abs(m.vz.z * vError.z));
 
     return { m.vx.x * x + m.vx.y * y + m.vx.z * z,
@@ -156,20 +156,20 @@ Vector3<T> Mulp(const Transform &t,
                    * (std::abs(m.vx.x * x) + std::abs(m.vx.y * y) + std::abs(m.vx.z * z)
                       + std::abs(m.vx.w))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(m.vx.x * pError.x) + std::abs(m.vx.y) * pError.x
-                        + std::abs(m.vx.z * pError.z) + std::abs(m.vx.w));
+                     * (std::abs(m.vx.x * pError.x) + std::abs(m.vx.y * pError.y)
+                        + std::abs(m.vx.z * pError.z));
     tError.y = gamma(3)
                    * (std::abs(m.vy.x * x) + std::abs(m.vy.y * y) + std::abs(m.vy.z * z)
                       + std::abs(m.vy.w))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(m.vy.x * pError.x) + std::abs(m.vy.y) * pError.x
-                        + std::abs(m.vy.z * pError.z) + std::abs(m.vy.w));
+                     * (std::abs(m.vy.x * pError.x) + std::abs(m.vy.y * pError.y)
+                        + std::abs(m.vy.z * pError.z));
     tError.z = gamma(3)
                    * (std::abs(m.vz.x * x) + std::abs(m.vx.z * y) + std::abs(m.vz.z * z)
                       + std::abs(m.vz.w))
                + (T{ 1.0 } + gamma(3))
-                     * (std::abs(m.vz.x * pError.x) + std::abs(m.vz.y) * pError.x
-                        + std::abs(m.vz.z * pError.z) + std::abs(m.vz.w));
+                     * (std::abs(m.vz.x * pError.x) + std::abs(m.vz.y * pError.y)
+                        + std::abs(m.vz.z * pError.z));
 
     if (FloatEqual(w, T{ 1.0 })) {
         return { x, y, z };
