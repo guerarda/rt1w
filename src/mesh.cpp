@@ -5,21 +5,33 @@
 #include "primitive.hpp"
 #include "ray.hpp"
 #include "sampling.hpp"
+#include "shape.hpp"
+#include "transform.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 
 #pragma mark - Vertex Data
 
 struct _VertexData : VertexData {
-    _VertexData(size_t nv, uptr<v3f[]> &v, uptr<v3f[]> &n, uptr<v2f[]> &uv) :
-        VertexData(nv, v, n, uv)
+    _VertexData(size_t nv,
+                uptr<std::vector<v3f>> &v,
+                uptr<std::vector<v3f>> &n,
+                uptr<std::vector<v2f>> &uv) :
+        VertexData(nv, v->data(), n->data(), uv->data()),
+        m_v(std::move(v)),
+        m_n(std::move(n)),
+        m_uv(std::move(uv))
     {}
+
+    uptr<const std::vector<v3f>> m_v;
+    uptr<const std::vector<v3f>> m_n;
+    uptr<const std::vector<v2f>> m_uv;
 };
 
 sptr<VertexData> VertexData::create(size_t nv,
-                                    uptr<v3f[]> &v,
-                                    uptr<v3f[]> &n,
-                                    uptr<v2f[]> &uv)
+                                    uptr<std::vector<v3f>> &v,
+                                    uptr<std::vector<v3f>> &n,
+                                    uptr<std::vector<v2f>> &uv)
 {
     return std::make_shared<_VertexData>(nv, v, n, uv);
 }
@@ -27,33 +39,42 @@ sptr<VertexData> VertexData::create(size_t nv,
 #pragma mark - Mesh Data
 
 struct MeshData {
-    MeshData(size_t nt, const sptr<VertexData> &vd, uptr<uint32_t[]> &i) :
+    MeshData(size_t nt,
+             const sptr<VertexData> &vd,
+             const sptr<const std::vector<uint32_t>> &i,
+             const Transform &worldToObj) :
         m_nt(nt),
         m_vd(vd),
-        m_i(std::move(i))
+        m_i(i),
+        m_worldToObj(worldToObj)
     {}
 
     size_t m_nt;
     sptr<VertexData> m_vd;
-    uptr<uint32_t[]> m_i;
+    sptr<const std::vector<uint32_t>> m_i;
+    Transform m_worldToObj;
 };
 
 #pragma mark - Triangle
 
 struct Triangle : Shape {
-    Triangle(const sptr<const MeshData> &md, size_t ix) : m_md(md), m_v(&md->m_i[3 * ix])
+    Triangle(const sptr<const MeshData> &md, size_t ix) :
+        m_md(md),
+        m_v(&((*md->m_i)[3 * ix]))
     {}
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bool qIntersect(const Ray &r, float max) const override;
+
     bounds3f bounds() const override;
+    Transform worldToObj() const override { return {}; }
     Interaction sample(const v2f &u) const override;
 
     sptr<const MeshData> m_md;
     const uint32_t *const m_v;
 };
 
-static size_t max_dimension(const v3f &v)
+static size_t MaxDimension(const v3f &v)
 {
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
@@ -67,13 +88,18 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     v3f p1 = vd->m_v[m_v[1]];
     v3f p2 = vd->m_v[m_v[2]];
 
+    /* Transform to world space */
+    p0 = Mulp(Inverse(m_md->m_worldToObj), p0);
+    p1 = Mulp(Inverse(m_md->m_worldToObj), p1);
+    p2 = Mulp(Inverse(m_md->m_worldToObj), p2);
+
     /* Transform triangle into ray-space coordinates */
     v3f p0t = p0 - r.org();
     v3f p1t = p1 - r.org();
     v3f p2t = p2 - r.org();
 
     /* Permute */
-    size_t kz = max_dimension(Abs(r.dir()));
+    size_t kz = MaxDimension(Abs(r.dir()));
     size_t kx = (kz + 1) % 3;
     size_t ky = (kx + 1) % 3;
 
@@ -177,6 +203,8 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     isect.uv = b0 * uv0 + b1 * uv1 + b2 * uv2;
     isect.n = n;
 
+    // isect = Inverse(m_md->m_worldToObj)(isect);
+
     return true;
 }
 
@@ -189,13 +217,18 @@ bool Triangle::qIntersect(const Ray &r, float max) const
     v3f p1 = vd->m_v[m_v[1]];
     v3f p2 = vd->m_v[m_v[2]];
 
+    /* Transform to world space */
+    p0 = Mulp(Inverse(m_md->m_worldToObj), p0);
+    p1 = Mulp(Inverse(m_md->m_worldToObj), p1);
+    p2 = Mulp(Inverse(m_md->m_worldToObj), p2);
+
     /* Transform triangle into ray-space coordinates */
     v3f p0t = p0 - r.org();
     v3f p1t = p1 - r.org();
     v3f p2t = p2 - r.org();
 
     /* Permute */
-    size_t kz = max_dimension(Abs(r.dir()));
+    size_t kz = MaxDimension(Abs(r.dir()));
     size_t kx = (kz + 1) % 3;
     size_t ky = (kx + 1) % 3;
 
@@ -260,10 +293,7 @@ bool Triangle::qIntersect(const Ray &r, float max) const
 
     float deltaT = 3 * (gamma(3) * maxE * maxZt + deltaE * maxZt + deltaZ * maxE)
                    * std::abs(idet);
-    if (t <= deltaT) {
-        return false;
-    }
-    return true;
+    return t > deltaT;
 }
 
 Interaction Triangle::sample(const v2f &u) const
@@ -285,7 +315,7 @@ Interaction Triangle::sample(const v2f &u) const
     else {
         it.n = Normalize(Cross(p1 - p0, p2 - p0));
     }
-    return it;
+    return m_md->m_worldToObj(it);
 }
 
 bounds3f Triangle::bounds() const
@@ -296,7 +326,7 @@ bounds3f Triangle::bounds() const
     const v3f &p1 = vd->m_v[m_v[1]];
     const v3f &p2 = vd->m_v[m_v[2]];
 
-    return Union(bounds3f(p0, p1), p2);
+    return m_md->m_worldToObj(Union(bounds3f(p0, p1), p2));
 }
 
 #pragma mark - Mesh
@@ -306,25 +336,26 @@ struct _Mesh : Mesh {
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bool qIntersect(const Ray &r, float max) const override;
+
     bounds3f bounds() const override { return m_box; };
+    Transform worldToObj() const override { return m_worldToObj; }
     Interaction sample(const v2f &u) const override;
 
     std::vector<sptr<Shape>> faces() const override;
 
     bounds3f m_box;
     sptr<MeshData> m_md;
-    std::vector<sptr<Triangle>> m_tris;
+    std::vector<sptr<Triangle>> m_faces;
+    Transform m_worldToObj;
 };
 
 _Mesh::_Mesh(const sptr<MeshData> &md)
 {
-    m_md = md;
-
-    m_tris.reserve(md->m_nt);
-    for (size_t i = 0; i < md->m_nt; i++) {
-        sptr<Triangle> t = std::make_shared<Triangle>(md, i);
-        m_tris.push_back(t);
-        m_box = Union(m_box, t->bounds());
+    m_faces.reserve(md->m_nt);
+    ;
+    for (size_t j = 0; j < md->m_nt; j++) {
+        m_faces.emplace_back(std::make_shared<Triangle>(md, j));
+        m_box = Union(m_box, m_faces[j]->bounds());
     }
 }
 
@@ -333,7 +364,7 @@ bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
     bool hit = false;
     isect.t = max;
 
-    for (auto &tri : m_tris) {
+    for (auto &tri : m_faces) {
         if (tri->intersect(r, isect, isect.t)) {
             hit = true;
         }
@@ -343,7 +374,7 @@ bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
 
 bool _Mesh::qIntersect(const Ray &r, float max) const
 {
-    for (auto &t : m_tris) {
+    for (auto &t : m_faces) {
         if (t->qIntersect(r, max)) {
             return true;
         }
@@ -353,102 +384,40 @@ bool _Mesh::qIntersect(const Ray &r, float max) const
 
 Interaction _Mesh::sample(const v2f &) const
 {
-    /* This function should not be called, Triangle::sample should be called instead. */
+    /* This function should not be called, Triangle::sample should be called instead.
+     */
     ASSERT(0);
     return {};
 }
 
 std::vector<sptr<Shape>> _Mesh::faces() const
 {
-    return std::vector<sptr<Shape>>(m_tris.begin(), m_tris.end());
+    return std::vector<sptr<Shape>>(std::begin(m_faces), std::end(m_faces));
 }
 
 #pragma mark - Static Constructors
 
-sptr<Mesh> Mesh::create(size_t nt, const sptr<VertexData> &vd, const sptr<Value> &indices)
-{
-    uptr<uint32_t[]> i = std::make_unique<uint32_t[]>(3 * nt);
-    indices->value(TYPE_UINT32, i.get(), 0, 3 * nt);
-
-    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, i);
-
-    return std::make_shared<_Mesh>(md);
-}
-
 sptr<Mesh> Mesh::create(size_t nt,
                         const sptr<VertexData> &vd,
-                        uptr<std::vector<uint32_t>> &indices)
+                        const sptr<const std::vector<uint32_t>> &i,
+                        const Transform &worldToObj)
 {
-    uptr<uint32_t[]> i = std::make_unique<uint32_t[]>(3 * nt);
-    std::copy(std::begin(*indices), std::end(*indices), i.get());
-
-    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, i);
-
+    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, i, worldToObj);
     return std::make_shared<_Mesh>(md);
 }
-
-sptr<Mesh> Mesh::create(size_t nt, const sptr<VertexData> &vd, uptr<uint32_t[]> &indices)
-{
-    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, indices);
-    return std::make_shared<_Mesh>(md);
-}
-
 sptr<Mesh> Mesh::create(size_t nt,
-                        const sptr<Value> &vertices,
-                        const sptr<Value> &indices,
-                        const sptr<Value> &normals,
-                        const sptr<Value> &uvs)
+                        uptr<std::vector<v3f>> &v,
+                        uptr<std::vector<v3f>> &n,
+                        uptr<std::vector<v2f>> &uv,
+                        const sptr<const std::vector<uint32_t>> &i,
+                        const Transform &worldToObj)
 {
-    ASSERT(vertices);
-    ASSERT(indices);
-
-    size_t nv = vertices->count() / 3;
-
-    uptr<v3f[]> v = std::make_unique<v3f[]>(nv);
-    vertices->value(TYPE_FLOAT32, v.get(), 0, 3 * nv);
-
-    uptr<v3f[]> n;
-    if (normals) {
-        n = std::make_unique<v3f[]>(3 * nv);
-        normals->value(TYPE_FLOAT32, n.get(), 0, 3 * nv);
-    }
-    uptr<v2f[]> uv;
-    if (uv) {
-        uv = std::make_unique<v2f[]>(2 * nv);
-        uvs->value(TYPE_FLOAT32, uv.get(), 0, 2 * nv);
-    }
-
-    sptr<VertexData> vd = VertexData::create(nv, v, n, uv);
-
-    return Mesh::create(nt, vd, indices);
+    sptr<VertexData> vd = VertexData::create(v->size(), v, n, uv);
+    return Mesh::create(nt, vd, i, worldToObj);
 }
 
-sptr<Mesh> Mesh::create(const sptr<Params> &p)
+sptr<Mesh> Mesh::create(const sptr<Params> &)
 {
-    sptr<Value> c = p->value("count");
-    sptr<Value> v = p->value("vertices");
-    sptr<Value> n = p->value("normals");
-    sptr<Value> uv = p->value("uv");
-    sptr<Value> i = p->value("indices");
-
-    if (c && v && i) {
-        auto nt = (size_t)c->u64();
-        bool ok_i = 3 * nt == i->count();
-        bool ok_n = n ? n->count() == v->count() : true;
-        bool ok_uv = uv ? 2 * v->count() == 3 * uv->count() : true;
-
-        if (ok_i && ok_n && ok_uv) {
-            return Mesh::create(nt, v, i, n, uv);
-        }
-        WARNING_IF(!ok_i, "Triangle count doesn't match index count");
-        WARNING_IF(!ok_n, "Normal count doesn't match vertex count");
-        WARNING_IF(!ok_uv, "UV count doesn't match vertex count");
-    }
-    ERROR_IF(!c, "Mesh parameter \"count\" not specified");
-    ERROR_IF(!v, "Mesh parameter \"vertices\" not specified");
-    ERROR_IF(!i, "Mesh parameter \"indices\" not specified");
-    WARNING_IF(!n, "Mesh parameter \"normals\" not specified");
-    WARNING_IF(!uv, "Mesh parameter \"uv\" not specified");
-
+    ASSERT(0);
     return nullptr;
 }

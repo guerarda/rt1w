@@ -4,6 +4,7 @@
 #include "material.hpp"
 #include "mesh.hpp"
 #include "texture.hpp"
+#include "transform.hpp"
 #include "value.hpp"
 
 #include <functional>
@@ -14,27 +15,29 @@
 
 /* Hash & Equal fucntion for index_t so they can be put in an unordered_map */
 namespace std {
-    /* See https://stackoverflow.com/questions/4948780/magic-number-in-boosthash-combine */
-    template <>
-    struct hash<tinyobj::index_t> {
-        std::size_t operator()(const tinyobj::index_t &ix) const noexcept {
-            std::size_t seed = 0;
-            seed ^= (size_t)ix.vertex_index + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            seed ^= (size_t)ix.normal_index + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-            seed ^= (size_t)ix.texcoord_index + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+/* See https://stackoverflow.com/questions/4948780/magic-number-in-boosthash-combine */
+template <>
+struct hash<tinyobj::index_t> {
+    std::size_t operator()(const tinyobj::index_t &ix) const noexcept
+    {
+        std::size_t seed = 0;
+        seed ^= (size_t)ix.vertex_index + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= (size_t)ix.normal_index + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= (size_t)ix.texcoord_index + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 
-            return seed;
-        }
-    };
-    template<>
-    struct equal_to<tinyobj::index_t> {
-        std::size_t operator()(const tinyobj::index_t &lhs,
-                               const tinyobj::index_t &rhs) const noexcept {
-            return lhs.vertex_index == rhs.vertex_index
-                && lhs.normal_index == rhs.normal_index
-                && lhs.texcoord_index == rhs.texcoord_index;
-        }
-    };
+        return seed;
+    }
+};
+template <>
+struct equal_to<tinyobj::index_t> {
+    std::size_t operator()(const tinyobj::index_t &lhs, const tinyobj::index_t &rhs) const
+        noexcept
+    {
+        return lhs.vertex_index == rhs.vertex_index
+               && lhs.normal_index == rhs.normal_index
+               && lhs.texcoord_index == rhs.texcoord_index;
+    }
+};
 }
 
 sptr<Primitive> Primitive::load_obj(const std::string &path)
@@ -44,11 +47,7 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::vector<tinyobj::material_t> obj_materials;
 
     std::string err;
-    bool ok = tinyobj::LoadObj(&attrib,
-                               &obj_shapes,
-                               &obj_materials,
-                               &err,
-                               path.c_str());
+    bool ok = tinyobj::LoadObj(&attrib, &obj_shapes, &obj_materials, &err, path.c_str());
     ERROR_IF(!err.empty(), "load_obj: %s", err.c_str());
     if (!ok) {
         return nullptr;
@@ -63,11 +62,10 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
      * vertex data */
     std::unordered_map<tinyobj::index_t, uint32_t> remap;
 
-    /* For each mesh, store a value that contains the mesh indices */
-    std::vector<sptr<Value>> mesh_indices;
+    /* For each mesh, store a vector that contains the mesh indices */
+    std::vector<sptr<std::vector<uint32_t>>> mesh_indices;
 
     for (auto &s : obj_shapes) {
-
         std::vector<uint32_t> indices;
 
         for (auto &idx : s.mesh.indices) {
@@ -80,9 +78,12 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
             else {
                 /* 'index' represent a vertex we haven't seen yet, had it to
                  * the vertex data and create a remaped index for it */
-                const auto *vp = (const float *)(&attrib.vertices[3 * (size_t)idx.vertex_index]);
-                const auto *np = (const float *)(&attrib.vertices[3 * (size_t)idx.normal_index]);
-                const auto *tp = (const float *)(&attrib.vertices[3 * (size_t)idx.texcoord_index]);
+                const auto *vp =
+                    (const float *)(&attrib.vertices[3 * (size_t)idx.vertex_index]);
+                const auto *np =
+                    (const float *)(&attrib.vertices[3 * (size_t)idx.normal_index]);
+                const auto *tp =
+                    (const float *)(&attrib.vertices[3 * (size_t)idx.texcoord_index]);
 
                 vertices.push_back({ vp[0], vp[1], vp[2] });
                 normals.push_back({ np[0], np[1], np[2] });
@@ -93,21 +94,14 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
             }
             indices.push_back(i);
         }
-        mesh_indices.push_back(Value::create(TYPE_UINT32,
-                                             indices.data(),
-                                             indices.size()));
+        mesh_indices.push_back(std::make_shared<std::vector<uint32_t>>(indices));
     }
 
     /* Now that we went through all the indices, create the VertexData struct */
     size_t nv = vertices.size();
-    uptr<v3f[]> v = std::make_unique<v3f[]>(vertices.size());
-    std::copy(vertices.begin(), vertices.end(), v.get());
-
-    uptr<v3f[]> n = std::make_unique<v3f[]>(normals.size());
-    std::copy(normals.begin(), normals.end(), n.get());
-
-    uptr<v2f[]> uv = std::make_unique<v2f[]>(texcoords.size());
-    std::copy(texcoords.begin(), texcoords.end(), uv.get());
+    auto v = std::make_unique<std::vector<v3f>>(vertices);
+    auto n = std::make_unique<std::vector<v3f>>(normals);
+    auto uv = std::make_unique<std::vector<v2f>>(texcoords);
 
     sptr<VertexData> vd = VertexData::create(nv, v, n, uv);
 
@@ -117,14 +111,14 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::vector<sptr<Mesh>> meshes;
 
     for (auto &indices_value : mesh_indices) {
-        size_t nt = indices_value->count() / 3;
-        sptr<Mesh> m = Mesh::create(nt, vd, indices_value);
-        const std::vector<sptr<Shape>> shapes = m->faces();
+        size_t nt = indices_value->size() / 3;
+        auto faces = Mesh::create(nt, vd, indices_value, Transform())->faces();
 
-        for (auto &shp : shapes) {
-            primitives.push_back(Primitive::create(shp,
-                                                   Lambertian::create(Texture::create_color({ .5f, .5f, .5f }))));
-
+        for (auto &f : faces) {
+            primitives.push_back(
+                Primitive::create(f,
+                                  Lambertian::create(
+                                      Texture::create_color({ .5f, .5f, .5f }))));
         }
     }
     return Aggregate::create(primitives);

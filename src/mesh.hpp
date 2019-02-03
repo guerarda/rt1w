@@ -1,50 +1,48 @@
 #pragma once
 
-#include <vector>
-
+#include "geometry.hpp"
 #include "shape.hpp"
 #include "sptr.hpp"
 
+#include <vector>
+
 struct Params;
-struct Value;
+struct Transform;
+struct Triangle;
 
 struct VertexData : Object {
     static sptr<VertexData> create(size_t nv,
-                                   uptr<v3f[]> &v,
-                                   uptr<v3f[]> &n,
-                                   uptr<v2f[]> &uv);
-    const size_t m_nv;
-    const uptr<const v3f[]> m_v;
-    const uptr<const v3f[]> m_n;
-    const uptr<const v2f[]> m_uv;
+                                   uptr<std::vector<v3f>> &v,
+                                   uptr<std::vector<v3f>> &n,
+                                   uptr<std::vector<v2f>> &uv);
+    friend Triangle;
 
 protected:
-    VertexData(size_t nv, uptr<v3f[]> &v, uptr<v3f[]> &n, uptr<v2f[]> &uv) :
+    VertexData(size_t nv, const v3f *v, const v3f *n, const v2f *uv) :
         m_nv(nv),
-        m_v(std::move(v)),
-        m_n(std::move(n)),
-        m_uv(std::move(uv))
+        m_v(v),
+        m_n(n),
+        m_uv(uv)
     {}
+
+    const size_t m_nv;
+    const v3f *m_v;
+    const v3f *m_n;
+    const v2f *m_uv;
 };
 
 struct Mesh : Shape {
-    static sptr<Mesh> create(size_t nt,
-                             const sptr<Value> &vertices,
-                             const sptr<Value> &indices,
-                             const sptr<Value> &normals,
-                             const sptr<Value> &uvs);
-
+    static sptr<Mesh> create(const sptr<Params> &p);
     static sptr<Mesh> create(size_t nt,
                              const sptr<VertexData> &vd,
-                             const sptr<Value> &indices);
+                             const sptr<const std::vector<uint32_t>> &i,
+                             const Transform &worldToObj);
     static sptr<Mesh> create(size_t nt,
-                             const sptr<VertexData> &vd,
-                             uptr<std::vector<uint32_t>> &indices);
-    static sptr<Mesh> create(size_t nt,
-                             const sptr<VertexData> &vd,
-                             uptr<uint32_t[]> &indices);
-
-    static sptr<Mesh> create(const sptr<Params> &params);
+                             uptr<std::vector<v3f>> &v,
+                             uptr<std::vector<v3f>> &n,
+                             uptr<std::vector<v2f>> &uv,
+                             const sptr<const std::vector<uint32_t>> &i,
+                             const Transform &worldToObj);
 
     virtual std::vector<sptr<Shape>> faces() const = 0;
 };

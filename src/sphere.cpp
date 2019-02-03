@@ -5,47 +5,60 @@
 #include "params.hpp"
 #include "ray.hpp"
 #include "sampling.hpp"
+#include "transform.hpp"
 #include "utils.hpp"
 #include "value.hpp"
 
 struct _Sphere : Sphere {
-    _Sphere(const v3f &c, float r) :
-        m_center(c),
-        m_radius(r),
-        m_box({ c - v3f{ r, r, r }, c + v3f{ r, r, r } })
+    _Sphere(const Transform &t, float r) :
+        m_worldToObj(t),
+        m_box(Inverse(t)(bounds3f{ -v3f{ r, r, r }, v3f{ r, r, r } })),
+        m_radius(r)
     {}
 
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bool qIntersect(const Ray &r, float max) const override;
+
     bounds3f bounds() const override { return m_box; }
+    Transform worldToObj() const override { return m_worldToObj; }
     Interaction sample(const v2f &u) const override;
-    v3f center() const override { return m_center; }
+
     float radius() const override { return m_radius; }
 
-    v3f m_center;
-    float m_radius;
+    Transform m_worldToObj;
     bounds3f m_box;
+    float m_radius;
 };
 
-static inline bool SphereQuadratic(const v3f center,
+static inline bool SphereQuadratic(const Ray &r,
+                                   const v3f &oError,
+                                   const v3f &dError,
                                    float radius,
-                                   const Ray &r,
                                    EFloat &t0,
                                    EFloat &t1)
 {
-    v3f rdir = r.dir();
-    v3f oc = r.org() - center;
-    EFloat a = rdir.x * rdir.x + rdir.y * rdir.y + rdir.z * rdir.z;
-    EFloat b = 2.f * (rdir.x * oc.x + rdir.y * oc.y + rdir.z * oc.z);
-    EFloat c = oc.x * oc.x + oc.y * oc.y + oc.z * oc.z - radius * radius;
+    EFloat ox = { r.org().x, oError.x };
+    EFloat oy = { r.org().y, oError.y };
+    EFloat oz = { r.org().z, oError.z };
+
+    EFloat dx = { r.dir().x, dError.x };
+    EFloat dy = { r.dir().y, dError.y };
+    EFloat dz = { r.dir().z, dError.z };
+
+    EFloat a = dx * dx + dy * dy + dz * dz;
+    EFloat b = 2.f * (dx * ox + dy * oy + dz * oz);
+    EFloat c = ox * ox + oy * oy + oz * oz - radius * radius;
 
     return Quadratic(a, b, c, t0, t1);
 }
 
-bool _Sphere::intersect(const Ray &r, Interaction &isect, float max) const
+bool _Sphere::intersect(const Ray &ray, Interaction &isect, float max) const
 {
+    v3f oError, dError;
+    Ray r = m_worldToObj(ray, oError, dError);
+
     EFloat t0, t1;
-    if (!SphereQuadratic(m_center, m_radius, r, t0, t1)) {
+    if (!SphereQuadratic(r, oError, dError, m_radius, t0, t1)) {
         return false;
     }
     EFloat t = t0.lo() > .0f && t0.hi() < max ? t0 : t1;
@@ -54,11 +67,11 @@ bool _Sphere::intersect(const Ray &r, Interaction &isect, float max) const
     }
     isect.t = (float)t;
     isect.p = r(isect.t);
-    isect.n = Normalize((isect.p - m_center));
+    isect.n = Normalize(isect.p);
     isect.wo = -r.dir();
 
     /* Reproject p onto the sphere */
-    isect.p *= m_radius / Distance(isect.p, m_center);
+    isect.p *= m_radius / isect.p.length();
     isect.error = gamma(5) * Abs(isect.p);
 
     /* Compute sphere uv */
@@ -83,13 +96,18 @@ bool _Sphere::intersect(const Ray &r, Interaction &isect, float max) const
     isect.shading.dpdu = isect.dpdu;
     isect.shading.dpdv = isect.dpdv;
 
+    isect = Inverse(m_worldToObj)(isect);
+
     return true;
 }
 
-bool _Sphere::qIntersect(const Ray &r, float max) const
+bool _Sphere::qIntersect(const Ray &ray, float max) const
 {
+    v3f oError, dError;
+    Ray r = m_worldToObj(ray, oError, dError);
+
     EFloat t0, t1;
-    if (SphereQuadratic(m_center, m_radius, r, t0, t1)) {
+    if (SphereQuadratic(r, oError, dError, m_radius, t0, t1)) {
         EFloat t = t0.lo() > .0f && t0.hi() < max ? t0 : t1;
         if (t.lo() > .0f && t.hi() < max) {
             return true;
@@ -101,29 +119,24 @@ bool _Sphere::qIntersect(const Ray &r, float max) const
 Interaction _Sphere::sample(const v2f &u) const
 {
     Interaction it;
-    it.p = m_center + m_radius * UniformSampleSphere(u);
-    it.n = Normalize(it.p - m_center);
+    it.p = m_radius * UniformSampleSphere(u);
+    it.n = Normalize(it.p);
 
-    return it;
+    return Inverse(m_worldToObj)(it);
 }
 
 #pragma mark - Static constructors
 
-sptr<Sphere> Sphere::create(const v3f &c, float r)
+sptr<Sphere> Sphere::create(const Transform &worldToObj, float radius)
 {
-    return std::make_shared<_Sphere>(c, r);
+    return std::make_shared<_Sphere>(worldToObj, radius);
 }
 
 sptr<Sphere> Sphere::create(const sptr<Params> &p)
 {
-    sptr<Value> org = p->value("center");
-    sptr<Value> rad = p->value("radius");
+    float radius = Params::f32(p, "radius", 1.f);
+    m44f mat = Params::matrix44f(p, "transform", m44f_identity());
+    Transform t = Transform(mat);
 
-    if (org && rad) {
-        return Sphere::create(org->vector3f(), rad->f32());
-    }
-    WARNING_IF(!org, "Sphere parameter \"center\" not specified");
-    WARNING_IF(!rad, "Sphere parameter \"radius\" not specified");
-
-    return nullptr;
+    return Sphere::create(t, radius);
 }

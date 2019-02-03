@@ -7,6 +7,7 @@
 #include "rng.hpp"
 #include "sampling.hpp"
 #include "sphere.hpp"
+#include "transform.hpp"
 #include "utils.hpp"
 
 static float pExp(RNG &rng, float minExp = -8.f, float maxExp = 8.f)
@@ -23,31 +24,31 @@ static v3f RandomPoint(RNG &rng, float minExp = -8.f, float maxExp = 8)
              pExp(rng, minExp, maxExp) };
 }
 
-static sptr<Sphere> RandomSphere(RNG &rng)
+static sptr<Shape> RandomSphere(RNG &rng)
 {
-    v3f center = RandomPoint(rng);
+    Transform t = Transform::Translate(RandomPoint(rng));
     float radius = pExp(rng, .0f, 3.f);
-    return Sphere::create(center, radius);
+    return Sphere::create(t, radius);
 }
 
-static sptr<Mesh> RandomTriangle(RNG &rng)
+static sptr<Shape> RandomTriangle(RNG &rng)
 {
-    auto vertices = std::make_unique<v3f[]>(3);
-    vertices[0] = RandomPoint(rng, .0f, 3.f);
-    vertices[1] = RandomPoint(rng, .0f, 3.f);
-    vertices[2] = RandomPoint(rng, .0f, 3.f);
+    auto vertices = std::make_unique<std::vector<v3f>>(3);
+    vertices->push_back(RandomPoint(rng, .0f, 3.f));
+    vertices->push_back(RandomPoint(rng, .0f, 3.f));
+    vertices->push_back(RandomPoint(rng, .0f, 3.f));
 
-    auto normals = uptr<v3f[]>();
-    auto texcoords = uptr<v2f[]>();
+    auto normals = uptr<std::vector<v3f>>();
+    auto texcoords = uptr<std::vector<v2f>>();
 
     sptr<VertexData> vd = VertexData::create(3, vertices, normals, texcoords);
 
-    auto indices = std::make_unique<uint32_t[]>(3);
-    indices[0] = 0;
-    indices[1] = 1;
-    indices[2] = 2;
+    auto indices = std::make_shared<std::vector<uint32_t>>(3);
+    indices->push_back(0);
+    indices->push_back(1);
+    indices->push_back(2);
 
-    return Mesh::create(1, vd, indices);
+    return Mesh::create(1, vd, indices, Transform());
 }
 
 static bool ReintersectShape(const sptr<Shape> &shape, const v3f org, RNG &rng)
@@ -105,7 +106,7 @@ static bool QIintersect(const sptr<Shape> &shape, const v3f &org, RNG &rng)
 TEST_CASE("Sphere reintersection", "[sphere], [isect]")
 {
     uptr<RNG> rng = RNG::create();
-    sptr<Sphere> sphere = RandomSphere(*rng);
+    sptr<Shape> sphere = RandomSphere(*rng);
 
     /* Random Ray origin */
     v3f org = RandomPoint(*rng);
@@ -122,7 +123,7 @@ TEST_CASE("Sphere reintersection", "[sphere], [isect]")
 TEST_CASE("Sphere qIntersect", "[sphere], [qisect]")
 {
     uptr<RNG> rng = RNG::create();
-    sptr<Sphere> sphere = RandomSphere(*rng);
+    sptr<Shape> sphere = RandomSphere(*rng);
 
     v3f org = RandomPoint(*rng);
 
@@ -139,14 +140,14 @@ TEST_CASE("Mesh Reintersection", "[mesh], [isect]")
 {
     uptr<RNG> rng = RNG::create();
 
-    sptr<Mesh> mesh = RandomTriangle(*rng);
+    sptr<Shape> triangle = RandomTriangle(*rng);
 
     /* Random Ray origin */
     v3f org = RandomPoint(*rng);
 
     size_t n = 0;
     for (size_t i = 0; i < 1000; ++i) {
-        if (ReintersectShape(mesh, org, *rng)) {
+        if (ReintersectShape(triangle, org, *rng)) {
             ++n;
         }
     }
@@ -156,13 +157,13 @@ TEST_CASE("Mesh Reintersection", "[mesh], [isect]")
 TEST_CASE("Mesh qIntersect", "[mesh], [qisect]")
 {
     uptr<RNG> rng = RNG::create();
-    sptr<Mesh> mesh = RandomTriangle(*rng);
+    sptr<Shape> triangle = RandomTriangle(*rng);
 
     v3f org = RandomPoint(*rng);
 
     size_t n = 0;
     for (size_t i = 0; i < 1000; ++i) {
-        if (QIintersect(mesh, org, *rng)) {
+        if (QIintersect(triangle, org, *rng)) {
             ++n;
         }
     }
