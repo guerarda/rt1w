@@ -428,10 +428,21 @@ void _RenderDescFromJSON::load_primitives()
                 auto itf = v.FindMember("file");
                 if (itf != v.MemberEnd()) {
                     if (itf->value.IsString()) {
-                        std::string file = itf->value.GetString();
-                        m_primitives.emplace_back(Primitive::load_obj(file));
+                        std::string file = resolve_path(m_dir, itf->value.GetString());
+                        sptr<Primitive> obj = Primitive::load_obj(file);
+                        if (auto agg = std::dynamic_pointer_cast<Aggregate>(obj)) {
+                            auto prims = agg->primitives();
+                            m_primitives.insert(std::end(m_primitives),
+                                                std::begin(prims),
+                                                std::end(prims));
+                        }
+                        else {
+                            m_primitives.emplace_back(obj);
+                        }
                     }
-                    warning("Expected filename for primitive at index %lu", ix);
+                    else {
+                        warning("Expected filename for primitive at index %lu", ix);
+                    }
                     continue;
                 }
 
