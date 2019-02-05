@@ -26,11 +26,6 @@ struct _Primitive : Primitive, std::enable_shared_from_this<Primitive> {
 bool _Primitive::intersect(const Ray &r, Interaction &isect, float max) const
 {
     if (m_shape->intersect(r, isect, max)) {
-        ASSERT(FloatCompare(isect.uv.x, 0.0f) >= 0.0f);
-        ASSERT(FloatCompare(isect.uv.x, 1.0f) <= 0.0f);
-        ASSERT(FloatCompare(isect.uv.y, 0.0f) >= 0.0f);
-        ASSERT(FloatCompare(isect.uv.y, 1.0f) <= 0.0f);
-
         isect.mat = m_material;
         /* This is ok because Primitive has only const methods */
         isect.prim = std::const_pointer_cast<Primitive>(shared_from_this());
