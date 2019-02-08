@@ -194,6 +194,27 @@ bool Triangle::intersect(const Ray &ray, Interaction &isect, float max) const
     v3f dp12 = p1 - p2;
     v3f n = Normalize(Cross(dp02, dp12));
 
+    /* Compute dp/du & dp/dv */
+    v3f dpdu, dpdv;
+    v2f duv02 = uv0 - uv2;
+    v2f duv12 = uv1 - uv2;
+
+    float uvdet = duv02.x * duv12.y + duv12.x * duv02.y;
+    if (!FloatEqual(uvdet, .0f)) {
+        float invdet = 1.f / uvdet;
+        dpdu = (duv12.y * dp02 - duv02.y * dp12) * invdet;
+        dpdv = (-duv12.x * dp02 + duv02.x * dp12) * invdet;
+    }
+    else {
+        CoordinateSystem(n, dpdu, dpdv);
+    }
+
+    /* Shading */
+    v3f ns = n;
+    if (vd->m_n) {
+        ns = (b0 * vd->m_n[m_v[0]] + b1 * vd->m_n[m_v[1]] + b2 * vd->m_n[m_v[2]]);
+    }
+
     /* Error */
     v3f err = { std::abs(b0 * p0.x) + std::abs(b1 * p1.x) + std::abs(b2 * p2.x),
                 std::abs(b0 * p0.y) + std::abs(b1 * p1.y) + std::abs(b2 * p2.y),
@@ -205,15 +226,21 @@ bool Triangle::intersect(const Ray &ray, Interaction &isect, float max) const
     isect.wo = -r.dir();
     isect.error = gamma(7) * err;
     isect.uv = b0 * uv0 + b1 * uv1 + b2 * uv2;
-    isect.n = n;
+    isect.n = FaceForward(n, ns);
+    isect.dpdu = dpdu;
+    isect.dpdv = dpdv;
 
-    // isect = Inverse(m_md->m_worldToObj)(isect);
+    /* Shading Geometry */
+    isect.shading.n = ns;
+    isect.shading.dpdu = dpdu;
+    isect.shading.dpdv = dpdv;
+
     isect = m_md->m_objToWorld(isect);
 
     return true;
 }
 
-bool Triangle::qIntersect(const Ray &r, float max) const
+bool Triangle::qIntersect(const Ray &ray, float max) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 

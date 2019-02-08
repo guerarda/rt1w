@@ -392,6 +392,13 @@ inline Vector3<T> Abs(const Vector3<T> &v)
 }
 
 template <typename T>
+inline void CoordinateSystem(const Vector3<T> &n, Vector3<T> &u, Vector3<T> &v)
+{
+    u = std::abs(n.x) > std::abs(n.y) ? v3f{ -n.z, 0, n.x } : v3f{ 0, n.z, -n.y };
+    v = Cross(n, u);
+}
+
+template <typename T>
 inline Vector3<T> Cross(const Vector3<T> &va, const Vector3<T> &vb)
 {
     return { va.y * vb.z - va.z * vb.y,    //
