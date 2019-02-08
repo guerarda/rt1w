@@ -27,7 +27,7 @@ struct _Texture_checker : Texture {
 
 v3f _Texture_checker::value(float u, float v, const v3f &p) const
 {
-    float sines = sinf(10.0f * p.x) * sinf(10.0f * p.y) * sinf(10.0f * p.z);
+    float sines = sinf(10.0f * u) * sinf(10.0f * v);
     return sines > 0.0f ? m_even->value(u, v, p) : m_odd->value(u, v, p);
 }
 
