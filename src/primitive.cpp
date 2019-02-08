@@ -27,7 +27,7 @@ bool _Primitive::intersect(const Ray &r, Interaction &isect, float max) const
 {
     if (m_shape->intersect(r, isect, max)) {
         isect.mat = m_material;
-        /* This is ok because Primitive has only const methods */
+        /* This is ok because Primitive only has const methods */
         isect.prim = std::const_pointer_cast<Primitive>(shared_from_this());
         return true;
     }

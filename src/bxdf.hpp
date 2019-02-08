@@ -1,7 +1,6 @@
 #pragma once
 
 #include "geometry.hpp"
-#include "params.hpp"
 #include "sptr.hpp"
 
 struct Interaction;

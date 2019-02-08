@@ -48,7 +48,12 @@ struct _BSDF : BSDF {
         m_ss(Normalize(i.shading.dpdu)),
         m_ts(Cross(m_ns, m_ss)),
         m_bxdfs(bxdfs)
-    {}
+    {
+        ASSERT(!HasNaN(m_ng));
+        ASSERT(!HasNaN(m_ns));
+        ASSERT(!HasNaN(m_ss));
+        ASSERT(!HasNaN(m_ts));
+    }
 
     v3f f(const v3f &woW, const v3f &wiW) const override;
     v3f sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &Type) const override;

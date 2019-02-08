@@ -739,6 +739,37 @@ typedef struct rectf {
     v2f size;
 } rectf;
 
+#pragma mark - NaN Check
+
+template <typename T>
+inline bool HasNaN(const Vector2<T> &v)
+{
+    return IsNaN(v.x) || IsNaN(v.y);
+}
+template <typename T>
+inline bool HasNaN(const Vector3<T> &v)
+{
+    return IsNaN(v.x) || IsNaN(v.y) || IsNaN(v.z);
+}
+
+template <typename T>
+inline bool HasNaN(const Vector4<T> &v)
+{
+    return IsNaN(v.x) || IsNaN(v.y) || IsNaN(v.z) || IsNaN(v.w);
+}
+
+template <typename T>
+inline bool HasNaN(const Matrix4x4<T> &m)
+{
+    return HasNaN(m.x) || HasNaN(m.y) || HasNaN(m.z) || HasNaN(m.w);
+}
+
+template <typename T>
+inline bool HasNaN(const Bounds3<T> &b)
+{
+    return HasNaN(b.lo) || HasNaN(b.hi);
+}
+
 #else
 
 #include <math.h>

@@ -14,7 +14,11 @@ v3f LightEmitted(const Interaction &isect, const v3f &wi);
 
 struct VisibilityTester {
     VisibilityTester() = default;
-    VisibilityTester(Interaction p0, Interaction p1) : m_p0(p0), m_p1(p1) {}
+    VisibilityTester(Interaction p0, Interaction p1) : m_p0(p0), m_p1(p1)
+    {
+        ASSERT(!HasNaN(m_p0));
+        ASSERT(!HasNaN(m_p1));
+    }
 
     bool visible(const sptr<Scene> &scene) const;
 

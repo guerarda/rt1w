@@ -133,3 +133,18 @@ inline bool Quadratic(double a, double b, double c, double &t0, double &t1)
     }
     return false;
 }
+
+#pragma mark - Checks
+
+template <typename T, typename std::enable_if_t<std::is_integral<T>::value> * = nullptr>
+inline bool IsNaN(T)
+{
+    return false;
+}
+
+template <typename T,
+          typename std::enable_if_t<std::is_floating_point<T>::value> * = nullptr>
+inline bool IsNaN(T x)
+{
+    return std::isnan(x);
+}

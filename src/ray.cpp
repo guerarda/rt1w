@@ -24,12 +24,18 @@ static inline v3f OffsetRayOrigin(const v3f &p,
 
 Ray SpawnRay(const Interaction &i, v3f dir)
 {
+    ASSERT(!HasNaN(i));
+    ASSERT(!HasNaN(dir));
+
     v3f org = OffsetRayOrigin(i.p, i.error, i.n, dir);
     return { org, dir };
 }
 
 Ray SpawnRayTo(const Interaction &i, v3f p)
 {
+    ASSERT(!HasNaN(i));
+    ASSERT(!HasNaN(p));
+
     v3f org = OffsetRayOrigin(i.p, i.error, i.n, p - i.p);
     v3f dir = p - org;
     return { org, dir };
@@ -37,6 +43,9 @@ Ray SpawnRayTo(const Interaction &i, v3f p)
 
 Ray SpawnRayTo(const Interaction &i, const Interaction &t)
 {
+    ASSERT(!HasNaN(i));
+    ASSERT(!HasNaN(t));
+
     v3f org = OffsetRayOrigin(i.p, i.error, i.n, t.p - i.p);
     v3f dst = OffsetRayOrigin(t.p, t.error, t.n, org - t.p);
     v3f dir = dst - org;
