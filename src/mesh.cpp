@@ -17,7 +17,10 @@ struct _VertexData : VertexData {
                 uptr<std::vector<v3f>> &v,
                 uptr<std::vector<v3f>> &n,
                 uptr<std::vector<v2f>> &uv) :
-        VertexData(nv, v->data(), n->data(), uv->data()),
+        VertexData(nv,
+                   v ? v->data() : nullptr,
+                   n ? n->data() : nullptr,
+                   uv ? uv->data() : nullptr),
         m_v(std::move(v)),
         m_n(std::move(n)),
         m_uv(std::move(uv))
@@ -46,13 +49,15 @@ struct MeshData {
         m_nt(nt),
         m_vd(vd),
         m_i(i),
-        m_worldToObj(worldToObj)
+        m_worldToObj(worldToObj),
+        m_objToWorld(Inverse(worldToObj))
     {}
 
     size_t m_nt;
     sptr<VertexData> m_vd;
     sptr<const std::vector<uint32_t>> m_i;
     Transform m_worldToObj;
+    Transform m_objToWorld;
 };
 
 #pragma mark - Triangle
@@ -67,7 +72,7 @@ struct Triangle : Shape {
     bool qIntersect(const Ray &r, float max) const override;
 
     bounds3f bounds() const override;
-    Transform worldToObj() const override { return {}; }
+    Transform worldToObj() const override { return m_md->m_worldToObj; }
     Interaction sample(const v2f &u) const override;
 
     sptr<const MeshData> m_md;
@@ -79,7 +84,7 @@ static size_t MaxDimension(const v3f &v)
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
 
-bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
+bool Triangle::intersect(const Ray &ray, Interaction &isect, float max) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -88,10 +93,8 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     v3f p1 = vd->m_v[m_v[1]];
     v3f p2 = vd->m_v[m_v[2]];
 
-    /* Transform to world space */
-    p0 = Mulp(Inverse(m_md->m_worldToObj), p0);
-    p1 = Mulp(Inverse(m_md->m_worldToObj), p1);
-    p2 = Mulp(Inverse(m_md->m_worldToObj), p2);
+    /* Transform to object space */
+    Ray r = m_md->m_worldToObj(ray);
 
     /* Transform triangle into ray-space coordinates */
     v3f p0t = p0 - r.org();
@@ -199,11 +202,13 @@ bool Triangle::intersect(const Ray &r, Interaction &isect, float max) const
     /* Update Interaction */
     isect.t = t;
     isect.p = b0 * p0 + b1 * p1 + b2 * p2;
+    isect.wo = -r.dir();
     isect.error = gamma(7) * err;
     isect.uv = b0 * uv0 + b1 * uv1 + b2 * uv2;
     isect.n = n;
 
     // isect = Inverse(m_md->m_worldToObj)(isect);
+    isect = m_md->m_objToWorld(isect);
 
     return true;
 }
@@ -218,9 +223,7 @@ bool Triangle::qIntersect(const Ray &r, float max) const
     v3f p2 = vd->m_v[m_v[2]];
 
     /* Transform to world space */
-    p0 = Mulp(Inverse(m_md->m_worldToObj), p0);
-    p1 = Mulp(Inverse(m_md->m_worldToObj), p1);
-    p2 = Mulp(Inverse(m_md->m_worldToObj), p2);
+    Ray r = m_md->m_worldToObj(ray);
 
     /* Transform triangle into ray-space coordinates */
     v3f p0t = p0 - r.org();
@@ -315,7 +318,7 @@ Interaction Triangle::sample(const v2f &u) const
     else {
         it.n = Normalize(Cross(p1 - p0, p2 - p0));
     }
-    return m_md->m_worldToObj(it);
+    return m_md->m_objToWorld(it);
 }
 
 bounds3f Triangle::bounds() const
@@ -326,7 +329,7 @@ bounds3f Triangle::bounds() const
     const v3f &p1 = vd->m_v[m_v[1]];
     const v3f &p2 = vd->m_v[m_v[2]];
 
-    return m_md->m_worldToObj(Union(bounds3f(p0, p1), p2));
+    return m_md->m_objToWorld(Union(bounds3f(p0, p1), p2));
 }
 
 #pragma mark - Mesh

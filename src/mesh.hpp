@@ -43,6 +43,5 @@ struct Mesh : Shape {
                              uptr<std::vector<v2f>> &uv,
                              const sptr<const std::vector<uint32_t>> &i,
                              const Transform &worldToObj);
-
     virtual std::vector<sptr<Shape>> faces() const = 0;
 };
