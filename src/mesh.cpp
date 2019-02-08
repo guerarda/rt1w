@@ -419,8 +419,39 @@ sptr<Mesh> Mesh::create(size_t nt,
     return Mesh::create(nt, vd, i, worldToObj);
 }
 
-sptr<Mesh> Mesh::create(const sptr<Params> &)
+sptr<Mesh> Mesh::create(const sptr<Params> &p)
 {
-    ASSERT(0);
+    sptr<Value> vertices = p->value("vertices");
+    sptr<Value> indices = p->value("indices");
+    sptr<Value> count = p->value("count");
+
+    if (count && vertices && indices) {
+        sptr<Value> normals = p->value("normals");
+        sptr<Value> texcoords = p->value("uv");
+        Transform t = Transform(Params::matrix44f(p, "transform", m44f_identity()));
+
+        size_t nt = count->u64();
+        auto v = std::make_unique<std::vector<v3f>>(vertices->count());
+        auto i = std::make_shared<std::vector<uint32_t>>(indices->count());
+
+        vertices->value(TYPE_FLOAT32, v->data(), 0, 3 * vertices->count());
+        indices->value(i->data(), 0, indices->count());
+
+        uptr<std::vector<v3f>> n;
+        if (normals) {
+            n = std::make_unique<std::vector<v3f>>(normals->count());
+            normals->value(TYPE_FLOAT32, n->data(), 0, 3 * normals->count());
+        }
+        uptr<std::vector<v2f>> uv;
+        if (texcoords) {
+            uv = std::make_unique<std::vector<v2f>>(texcoords->count());
+            texcoords->value(TYPE_FLOAT32, uv->data(), 0, 2 * texcoords->count());
+        }
+        return Mesh::create(nt, v, n, uv, i, t);
+    }
+    ERROR_IF(!count, "Mesh parameter \"count\" not specified");
+    ERROR_IF(!vertices, "Mesh parameter \"vertices\" not specified");
+    ERROR_IF(!indices, "Mesh parameter \"indices\" not specified");
+
     return nullptr;
 }
