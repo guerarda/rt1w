@@ -3,6 +3,7 @@
 #include "context.hpp"
 #include "error.h"
 #include "event.hpp"
+#include "image.hpp"
 #include "imageio.h"
 #include "integrator.hpp"
 #include "params.hpp"
@@ -100,9 +101,9 @@ int main(int argc, char *argv[])
     }
 
     /* Create rendering context */
-    sptr<RenderingContext> context = RenderingContext::create(scene, camera, integrator);
+    sptr<Render> rdr = Render::create(scene, camera, integrator);
 
-    buffer_t buf = context->buffer();
+    buffer_t buf = rdr->image()->buffer();
 
     std::string output = render->options()->string("output");
     if (!output.empty()) {

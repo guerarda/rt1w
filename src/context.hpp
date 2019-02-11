@@ -1,18 +1,16 @@
 #pragma once
 
 #include "sptr.hpp"
-#include "types.h"
 
 struct Camera;
-struct Event;
+struct Image;
 struct Integrator;
 struct Scene;
 
-struct RenderingContext : Object {
-    static sptr<RenderingContext> create(const sptr<Scene> &scene,
-                                         const sptr<Camera> &camera,
-                                         const sptr<Integrator> &integrator);
+struct Render : Object {
+    static sptr<Render> create(const sptr<Scene> &scene,
+                               const sptr<Camera> &camera,
+                               const sptr<Integrator> &integrator);
 
-    virtual sptr<Event> schedule() = 0;
-    virtual buffer_t buffer() = 0;
+    virtual sptr<Image> image() const = 0;
 };
