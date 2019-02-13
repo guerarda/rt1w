@@ -13,6 +13,8 @@
 #include <memory>
 #include <vector>
 
+constexpr uint32_t TileSize = 32;
+
 struct ImageTile : Object {
     static sptr<ImageTile> create(rect_t r, uint8_t *dp, size_t bpr)
     {
@@ -63,20 +65,20 @@ sptr<Event> RenderingContext::schedule()
     m_buffer.bpr = size.x * m_buffer.format.size;
     m_buffer.data = malloc(size.y * m_buffer.bpr);
 
-    /* Divide in tiles 32x32 */
-    int32_t ntx = size.x / 32 + 1;
-    int32_t nty = size.y / 32 + 1;
+    /* Divide in tiles 16x16 */
+    uint32_t ntx = size.x / TileSize + 1;
+    uint32_t nty = size.y / TileSize + 1;
 
     std::vector<sptr<ImageTile>> tiles;
-    for (int32_t i = 0; i < ntx; i++) {
-        for (int32_t j = 0; j < nty; j++) {
-            uint8_t *ptr = (uint8_t *)m_buffer.data + (uint32_t)j * 32 * m_buffer.bpr
-                           + (uint32_t)i * 32 * m_buffer.format.size;
+    for (size_t i = 0; i < ntx; i++) {
+        for (size_t j = 0; j < nty; j++) {
+            uint8_t *ptr = (uint8_t *)m_buffer.data + j * TileSize * m_buffer.bpr
+                           + i * TileSize * m_buffer.format.size;
             rect_t r;
-            r.org.x = i * 32;
-            r.org.y = j * 32;
-            r.size.x = i < ntx - 1 ? 32 : 32 - ((uint32_t)ntx * 32 - size.x);
-            r.size.y = j < nty - 1 ? 32 : 32 - ((uint32_t)nty * 32 - size.y);
+            r.org.x = (int32_t)(i * TileSize);
+            r.org.y = (int32_t)(j * TileSize);
+            r.size.x = i < ntx - 1 ? TileSize : TileSize - (ntx * TileSize - size.x);
+            r.size.y = j < nty - 1 ? TileSize : TileSize - (nty * TileSize - size.y);
 
             sptr<ImageTile> tile = ImageTile::create(r, ptr, m_buffer.bpr);
             tiles.push_back(tile);
