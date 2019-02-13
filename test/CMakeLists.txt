@@ -1,23 +1,21 @@
 
-SET(RT1W_TESTS
-  efloat.cpp
-  camera.cpp
-  geometry.cpp
-  ray-shape.cpp
-  sampling.cpp
-)
+add_executable(rt1w_test test.cpp)
 
-ADD_EXECUTABLE(rt1w_test
-  test.cpp
-  ${RT1W_TESTS}
-)
-
-TARGET_LINK_LIBRARIES(rt1w_test
+target_sources(rt1w_test
   PRIVATE
-  rt1w
+    efloat.cpp
+    camera.cpp
+    geometry.cpp
+    ray-shape.cpp
+    sampling.cpp
 )
 
-INCLUDE(CTest)
-INCLUDE(Catch)
+target_link_libraries(rt1w_test
+  PRIVATE
+    rt1w
+)
 
-CATCH_DISCOVER_TESTS(rt1w_test)
+include(CTest)
+include(Catch)
+
+catch_discover_tests(rt1w_test)

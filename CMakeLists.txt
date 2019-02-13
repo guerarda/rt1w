@@ -1,64 +1,52 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.6 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.6 FATAL_ERROR)
 
-PROJECT(RT1W)
+project(RT1W)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
-SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-SET(WARNING_FLAGS
-  ""
-  "all"
-  "cast-align"
-  "conversion"
-  "extra"
-  "float-equal"
-  "format=2"
-  "missing-declarations"
-  "missing-noreturn"
-  "missing-prototypes"
-  "non-virtual-dtor"
-  "null-dereference"
-  "overloaded-virtual"
-  "shadow"
-  "sign-conversion"
-  "unreachable-code"
-  "unused"
-)
-SET(NO_WARNING_FLAGS
-  ""
-  "c++98-compat"
-  "old-style-cast"
-  "pragma-once-outside-header"
-  "weak-vtables"
-)
-STRING(REGEX REPLACE ";" " -W" WARNING_FLAGS "${WARNING_FLAGS}")
-STRING(REGEX REPLACE ";" " -Wno-" NO_WARNING_FLAGS "${NO_WARNING_FLAGS}")
-SET(WARNING_FLAGS "-pedantic ${WARNING_FLAGS} ${NO_WARNING_FLAGS}")
-
-SET(CMAKE_C_STANDARD 11)
-SET(CMAKE_C_STANDARD_REQUIRED YES)
-SET(CMAKE_C_EXTENSIONS OFF)
-
-SET(CMAKE_CXX_STANDARD 14)
-SET(CMAKE_CXX_STANDARD_REQUIRED YES)
-SET(CMAKE_CXX_EXTENSIONS OFF)
-
-SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${WARNING_FLAGS}")
-SET(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -g -O0")
-SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2")
-
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${WARNING_FLAGS}")
-SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -g -O0")
-SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # External dependencies
-
 ## Lib PNG
-FIND_PACKAGE(PNG REQUIRED)
+find_package(PNG REQUIRED)
 
 # RT1W
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-ADD_LIBRARY(rt1w
+set(WARNING_FLAGS
+  -pedantic
+  -Wall
+  -Wcast-align
+  -Wconversion
+  -Wextra
+  -Wfloat-equal
+  -Wformat=2
+  -Wmissing-declarations
+  -Wmissing-noreturn
+  -Wmissing-prototypes
+  -Wnon-virtual-dtor
+  -Wnull-dereference
+  -Woverloaded-virtual
+  -Wshadow
+  -Wsign-conversion
+  -Wunreachable-code
+  -Wunused
+)
+set(NOWARNING_FLAGS
+  -Wno-c++98-compat
+  -Wno-old-style-cast
+  -Wno-pragma-once-outside-header
+  -Wno-weak-vtables
+)
+
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED YES)
+set(CMAKE_C_EXTENSIONS OFF)
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED YES)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+## Core
+add_library(rt1w
   src/arena.cpp
   src/bxdf.cpp
   src/bvh.cpp
@@ -92,28 +80,41 @@ ADD_LIBRARY(rt1w
   src/tools/loader_obj.cpp
 )
 
-TARGET_INCLUDE_DIRECTORIES(rt1w
+target_compile_options(rt1w
+  PRIVATE
+    ${WARNING_FLAGS} ${NOWARNING_FLAGS}
+    $<$<CONFIG:DEBUG>:-g -O0>
+    $<$<CONFIG:RELEASE>:-O2>
+)
+
+target_include_directories(rt1w
   PUBLIC
-  src
+    src
   PRIVATE
-  src/thirdparty
-  ${PNG_INCLUDE_DIRS}
+    src/thirdparty
+    ${PNG_INCLUDE_DIRS}
+)
+target_link_libraries(rt1w
+  PRIVATE
+    PNG::PNG
 )
 
-TARGET_LINK_LIBRARIES(rt1w
+## Executable
+add_executable(rt1w_exe src/main.cpp)
+set_target_properties(rt1w_exe PROPERTIES OUTPUT_NAME rt1w)
+
+target_compile_options(rt1w_exe
   PRIVATE
-  PNG::PNG
+    ${WARNING_FLAGS} ${NOWARNING_FLAGS}
+    $<$<CONFIG:DEBUG>:-g -O0>
+    $<$<CONFIG:RELEASE>:-O2>
 )
 
-ADD_EXECUTABLE(rt1w_exe src/main.cpp)
-SET_TARGET_PROPERTIES(rt1w_exe PROPERTIES OUTPUT_NAME rt1w)
-
-TARGET_LINK_LIBRARIES(rt1w_exe
+target_link_libraries(rt1w_exe
   PRIVATE
   rt1w
 )
 
-# Test
-
-ENABLE_TESTING()
-ADD_SUBDIRECTORY(test)
+## Tests
+enable_testing()
+add_subdirectory(test)
