@@ -101,7 +101,8 @@ int main(int argc, char *argv[])
     }
 
     /* Create rendering context */
-    sptr<Render> rdr = Render::create(scene, camera, integrator);
+    sptr<Render> rdr =
+        Render::create(scene, camera, integrator, { TYPE_UINT8, ORDER_RGB });
 
     buffer_t buf = rdr->image()->buffer();
 

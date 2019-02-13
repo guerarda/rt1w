@@ -37,7 +37,6 @@ typedef enum {
     TYPE_UINT64,
     TYPE_FLOAT32,
     TYPE_FLOAT64,
-    TYPE_STRING,
 } buffer_type_t;
 
 typedef enum {
