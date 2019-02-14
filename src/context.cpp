@@ -7,10 +7,10 @@
 #include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
-#include "sync.h"
 #include "workq.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <memory>
 #include <vector>
 
@@ -228,13 +228,13 @@ static void render_tile(const sptr<Object> &obj, const sptr<Object> &arg)
 
 static void progress(const sptr<Object> &obj, const sptr<Object> &)
 {
-    static int32_t volatile progress = -1;
+    static std::atomic<int32_t> progress(1);
 
-    int32_t done = sync_add_i32(&progress, 1);
+    int32_t done = progress.fetch_add(1, std::memory_order_relaxed);
     sptr<RenderingContext> ctx = std::static_pointer_cast<RenderingContext>(obj);
+    ASSERT(ctx);
 
-    double p = ctx ? (double)done / ctx->m_ntiles * 100.0 : 0.0;
-
+    float p = (float)done / ctx->m_ntiles * 100.f;
     char buf[256];
     auto offset = (size_t)snprintf(buf, 256, "\r%.1f%% [", p);
     int64_t n = lrint(floor(p)) / 2;
@@ -245,9 +245,8 @@ static void progress(const sptr<Object> &obj, const sptr<Object> &)
     }
     snprintf(&buf[offset], 256 - offset, "]");
     fprintf(stderr, "%s", buf);
-    fflush(stderr);
-
     if ((uint32_t)done == ctx->m_ntiles) {
         fprintf(stderr, "\nDone!\n");
     }
+    fflush(stderr);
 }
