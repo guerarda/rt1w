@@ -101,10 +101,10 @@ int main(int argc, char *argv[])
     }
 
     /* Create rendering context */
-    sptr<Render> rdr =
-        Render::create(scene, camera, integrator, { TYPE_UINT8, ORDER_RGB });
-
-    buffer_t buf = rdr->image()->buffer();
+    sptr<Render> rdr = Render::create(scene, camera, integrator);
+    sptr<Image> img = rdr->image();
+    img = Image::create(img, buffer_format_init(TYPE_UINT8, ORDER_RGB));
+    buffer_t buf = img->buffer();
 
     std::string output = render->options()->string("output");
     if (!output.empty()) {

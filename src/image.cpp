@@ -65,6 +65,8 @@ struct ImageConvert : Image {
     {
         buffer_t b = m_img->buffer();
 
+        ASSERT(b.format.order == fmt.order);
+
         /* Alloc Buffer */
         m_buffer.rect = b.rect;
         m_buffer.format = m_format;
