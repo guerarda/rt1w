@@ -16,14 +16,13 @@
 
 constexpr uint32_t TileSize = 32;
 
-struct ImageTile : Object {
-    static sptr<ImageTile> create(const buffer_t &buffer)
-    {
-        return std::make_shared<ImageTile>(buffer);
-    }
-    ImageTile(const buffer_t &buffer) : m_buffer(buffer) {}
+static void Progress(const sptr<Object> &, const sptr<Object> &);
+static void RenderTile(const sptr<Object> &, const sptr<Object> &);
 
-    buffer_t m_buffer;
+struct ImageTile : Object {
+    ImageTile(const rect_t &rect) : m_rect(rect) {}
+
+    rect_t m_rect;
 };
 
 struct RenderingContext : Object, std::enable_shared_from_this<RenderingContext> {
@@ -34,91 +33,109 @@ struct RenderingContext : Object, std::enable_shared_from_this<RenderingContext>
         m_scene(scene),
         m_camera(camera),
         m_integrator(integrator),
-        m_func(func)
+        m_func(func),
+        m_scheduled(0)
     {}
+
     ~RenderingContext() override
     {
-        if (m_buffer.data) {
-            free(m_buffer.data);
+        if (m_image.data) {
+            free(m_image.data);
+        }
+        if (m_normals.data) {
+            free(m_normals.data);
+        }
+        if (m_albedo.data) {
+            free(m_albedo.data);
         }
     }
     sptr<Event> schedule();
-    buffer_t buffer();
 
     sptr<Scene> m_scene;
     sptr<Camera> m_camera;
     sptr<Integrator> m_integrator;
-    sptr<Event> m_event;
-    buffer_t m_buffer;
+
     size_t m_ntiles;
     workq_func m_func;
-};
 
-static void progress(const sptr<Object> &, const sptr<Object> &);
-static void render_tile(const sptr<Object> &, const sptr<Object> &);
+    buffer_t m_image;
+    buffer_t m_normals;
+    buffer_t m_albedo;
+
+    sptr<Event> m_event;
+    std::atomic<int32_t> m_scheduled;
+};
 
 sptr<Event> RenderingContext::schedule()
 {
-    v2u size = m_camera->resolution();
+    while (m_scheduled.load() != 1) {
+        int32_t expected = 0;
+        if (m_scheduled.compare_exchange_strong(expected, -1)) {
+            buffer_format_t fmt = buffer_format_init(TYPE_FLOAT32, ORDER_RGB);
+            v2u size = m_camera->resolution();
+            size_t bpr = size.x * fmt.size;
+            size_t bsize = size.y * bpr;
 
-    m_buffer.format = buffer_format_init(TYPE_FLOAT32, ORDER_RGB);
-    m_buffer.rect = { { 0, 0 }, { size.x, size.y } };
-    m_buffer.bpr = size.x * m_buffer.format.size;
+            ASSERT(bpr > 0);
+            ASSERT(bsize > 0);
 
-    ASSERT(m_buffer.bpr > 0);
+            m_image = { malloc(bsize), bpr, { { 0, 0 }, { size.x, size.y } }, fmt };
+            m_normals = { malloc(bsize), bpr, { { 0, 0 }, { size.x, size.y } }, fmt };
+            m_albedo = { malloc(bsize), bpr, { { 0, 0 }, { size.x, size.y } }, fmt };
 
-    m_buffer.data = malloc(size.y * m_buffer.bpr);
+            /* Divide in tiles */
+            uint32_t ntx = size.x / TileSize + 1;
+            uint32_t nty = size.y / TileSize + 1;
 
-    /* Divide in tiles */
-    uint32_t ntx = size.x / TileSize + 1;
-    uint32_t nty = size.y / TileSize + 1;
+            std::vector<sptr<ImageTile>> tiles;
+            for (size_t i = 0; i < ntx; ++i) {
+                for (size_t j = 0; j < nty; ++j) {
+                    rect_t r;
+                    r.org.x = (int32_t)(i * TileSize);
+                    r.org.y = (int32_t)(j * TileSize);
+                    r.size.x = i < ntx - 1 ? TileSize
+                                           : TileSize - (ntx * TileSize - size.x);
+                    r.size.y = j < nty - 1 ? TileSize
+                                           : TileSize - (nty * TileSize - size.y);
 
-    std::vector<sptr<ImageTile>> tiles;
-    for (size_t i = 0; i < ntx; ++i) {
-        for (size_t j = 0; j < nty; ++j) {
-            rect_t r;
-            r.org.x = (int32_t)(i * TileSize);
-            r.org.y = (int32_t)(j * TileSize);
-            r.size.x = i < ntx - 1 ? TileSize : TileSize - (ntx * TileSize - size.x);
-            r.size.y = j < nty - 1 ? TileSize : TileSize - (nty * TileSize - size.y);
+                    tiles.emplace_back(std::make_shared<ImageTile>(r));
+                }
+            }
+            m_event = Event::create((int32_t)tiles.size());
+            m_ntiles = tiles.size();
 
-            sptr<ImageTile> tile = ImageTile::create(
-                { m_buffer.data, m_buffer.bpr, r, m_buffer.format });
-            tiles.push_back(tile);
+            sptr<RenderingContext> ctx = shared_from_this();
+            for (const auto &t : tiles) {
+                sptr<Event> e = workq_execute(workq_get_queue(), m_func, ctx, t);
+                e->notify(nullptr, Progress, ctx, sptr<Object>());
+            }
+            m_scheduled.store(1);
         }
     }
-    m_event = Event::create((int32_t)tiles.size());
-    m_ntiles = tiles.size();
-
-    for (const auto &t : tiles) {
-        sptr<RenderingContext> ctx = shared_from_this();
-        sptr<Event> e = workq_execute(workq_get_queue(), m_func, ctx, t);
-        e->notify(nullptr, progress, ctx, sptr<Object>());
-    }
     return m_event;
-}
-
-buffer_t RenderingContext::buffer()
-{
-    schedule()->wait();
-    return m_buffer;
 }
 
 #pragma mark - Image from RenderingContext
 
 struct ImageFromCtx : Image {
-    static sptr<Image> create(const sptr<RenderingContext> &ctx)
+    static sptr<Image> create(const sptr<RenderingContext> &ctx, buffer_t *b)
     {
-        return std::make_shared<ImageFromCtx>(ctx);
+        return std::make_shared<ImageFromCtx>(ctx, b);
     }
 
-    ImageFromCtx(const sptr<RenderingContext> &ctx) : m_ctx(ctx) {}
+    ImageFromCtx(const sptr<RenderingContext> &ctx, buffer_t *b) : m_ctx(ctx), m_buffer(b)
+    {}
 
-    buffer_t buffer() override { return m_ctx->buffer(); }
+    buffer_t buffer() override
+    {
+        schedule()->wait();
+        return *m_buffer;
+    }
     sptr<Event> schedule() override { return m_ctx->schedule(); }
     v2u size() const override { return m_ctx->m_camera->resolution(); }
 
     sptr<RenderingContext> m_ctx;
+    buffer_t *m_buffer;
 };
 
 #pragma mark - Render
@@ -127,22 +144,20 @@ struct _Render : Render {
     _Render(const sptr<Scene> &scene,
             const sptr<Camera> &camera,
             const sptr<Integrator> &integrator) :
-        m_scene(scene),
-        m_camera(camera),
-        m_integrator(integrator)
+        m_ctx(std::make_shared<RenderingContext>(scene, camera, integrator, RenderTile)),
+        m_image(ImageFromCtx::create(m_ctx, &m_ctx->m_image)),
+        m_normals(ImageFromCtx::create(m_ctx, &m_ctx->m_normals)),
+        m_albedo(ImageFromCtx::create(m_ctx, &m_ctx->m_albedo))
     {}
 
-    sptr<Image> image() const override
-    {
-        return ImageFromCtx::create(std::make_shared<RenderingContext>(m_scene,
-                                                                       m_camera,
-                                                                       m_integrator,
-                                                                       render_tile));
-    }
+    sptr<Image> image() const override { return m_image; }
+    sptr<Image> normals() const override { return m_normals; }
+    sptr<Image> albedo() const override { return m_albedo; }
 
-    sptr<Scene> m_scene;
-    sptr<Camera> m_camera;
-    sptr<Integrator> m_integrator;
+    sptr<RenderingContext> m_ctx;
+    sptr<Image> m_image;
+    sptr<Image> m_normals;
+    sptr<Image> m_albedo;
 };
 
 #pragma mark - Static constructor
@@ -156,47 +171,72 @@ sptr<Render> Render::create(const sptr<Scene> &scene,
 
 #pragma mark - Static functions
 
-static void render_tile(const sptr<Object> &obj, const sptr<Object> &arg)
+static inline IntegratorResult AddResult(const IntegratorResult &a,
+                                         const IntegratorResult &b)
+{
+    return { a.N + b.N, a.A + b.A, a.Li + b.Li };
+}
+
+static inline uint8_t *PixelPtr(const buffer_t &b, int32_t x, int32_t y)
+{
+    return (uint8_t *)b.data + y * (ptrdiff_t)b.bpr + x * (ptrdiff_t)b.format.size;
+}
+
+static inline v3f ApproxGammaCorrection(const v3f &c)
+{
+    return { std::min(1.f, std::sqrt(c.x)),
+             std::min(1.f, std::sqrt(c.y)),
+             std::min(1.f, std::sqrt(c.z)) };
+}
+static void RenderTile(const sptr<Object> &obj, const sptr<Object> &arg)
 {
     sptr<RenderingContext> ctx = std::static_pointer_cast<RenderingContext>(obj);
     sptr<ImageTile> tile = std::static_pointer_cast<ImageTile>(arg);
 
-    buffer_t b = tile->m_buffer;
+    rect_t rect = tile->m_rect;
+    int32_t orgx = rect.org.x;
+    int32_t orgy = rect.org.y;
+    int32_t maxx = orgx + (int32_t)rect.size.x;
+    int32_t maxy = orgy + (int32_t)rect.size.y;
 
-    int32_t orgx = b.rect.org.x;
-    int32_t orgy = b.rect.org.y;
-    int32_t maxx = orgx + (int32_t)b.rect.size.x;
-    int32_t maxy = orgy + (int32_t)b.rect.size.y;
+    buffer_t image = ctx->m_image;
+    buffer_t normals = ctx->m_normals;
+    buffer_t albedo = ctx->m_albedo;
 
     sptr<Sampler> sampler = ctx->m_integrator->sampler()->clone();
     float ns_inv = 1.0f / sampler->samplesPerPixel();
 
     for (int32_t y = orgy; y < maxy; ++y) {
-        uint8_t *dp = (uint8_t *)b.data + (size_t)y * b.bpr
-                      + (size_t)orgx * b.format.size;
+        uint8_t *idp = PixelPtr(image, orgx, y);
+        uint8_t *ndp = PixelPtr(normals, orgx, y);
+        uint8_t *adp = PixelPtr(albedo, orgx, y);
+
         for (int32_t x = orgx; x < maxx; ++x) {
-            v3f c = {};
+            IntegratorResult c = {};
             sampler->startPixel({ x, y });
             do {
                 CameraSample cs = sampler->cameraSample();
                 Ray r = ctx->m_camera->generateRay(cs);
-                c = c + ctx->m_integrator->Li(r, ctx->m_scene, sampler, 0);
+                c = AddResult(c, ctx->m_integrator->NALi(r, ctx->m_scene, sampler, 0));
             } while (sampler->startNextSample());
 
-            c *= ns_inv;
+            c.N *= ns_inv;
+            c.A = ApproxGammaCorrection(c.A * ns_inv);
+            c.Li = ApproxGammaCorrection(c.Li * ns_inv);
 
-            /* Approx Gamma correction */
-            c = { std::min(1.f, std::sqrt(c.x)),
-                  std::min(1.f, std::sqrt(c.y)),
-                  std::min(1.f, std::sqrt(c.z)) };
-            memcpy(dp, &c.x, b.format.size);
-            dp += b.format.size;
+            memcpy(idp, &c.Li.x, image.format.size);
+            memcpy(ndp, &c.N.x, normals.format.size);
+            memcpy(adp, &c.A.x, albedo.format.size);
+
+            idp += image.format.size;
+            ndp += normals.format.size;
+            adp += albedo.format.size;
         }
     }
     ctx->m_event->signal();
 }
 
-static void progress(const sptr<Object> &obj, const sptr<Object> &)
+static void Progress(const sptr<Object> &obj, const sptr<Object> &)
 {
     static std::atomic<int32_t> progress(1);
 

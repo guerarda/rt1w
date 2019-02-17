@@ -147,6 +147,6 @@
     },
     "options": {
         "integrator" : "path",
-        "output": "pointlight.png"
+        "output": "pointlight"
     }
 }

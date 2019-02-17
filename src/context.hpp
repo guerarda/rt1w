@@ -14,4 +14,6 @@ struct Render : Object {
                                const sptr<Integrator> &integrator);
 
     virtual sptr<Image> image() const = 0;
+    virtual sptr<Image> normals() const = 0;
+    virtual sptr<Image> albedo() const = 0;
 };
