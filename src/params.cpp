@@ -120,7 +120,7 @@ sptr<Params> Params::create()
 #pragma mark - Static Getter Functions
 
 template <typename T>
-T Params::scalarp(const sptr<Params> &p, const std::string &k, T v)
+T Params::scalarp(const sptr<const Params> &p, const std::string &k, T v)
 {
     ASSERT(p);
     if (auto value = p->value(k)) {
@@ -131,7 +131,7 @@ T Params::scalarp(const sptr<Params> &p, const std::string &k, T v)
     return v;
 }
 template <typename T, typename U>
-U Params::vectorp(const sptr<Params> &p, const std::string &k, U v)
+U Params::vectorp(const sptr<const Params> &p, const std::string &k, U v)
 {
     ASSERT(p);
     if (auto value = p->value(k)) {
@@ -142,7 +142,7 @@ U Params::vectorp(const sptr<Params> &p, const std::string &k, U v)
     return v;
 }
 
-std::string Params::string(const sptr<Params> &p,
+std::string Params::string(const sptr<const Params> &p,
                            const std::string &k,
                            const std::string &v)
 {
@@ -165,18 +165,18 @@ template <> const std::map<std::string, ptype<Shape>::type>       &_Params::cons
 template <> const std::map<std::string, ptype<Texture>::type>     &_Params::const_pmap<Texture>() const     { return m_textures; }
 template <> const std::map<std::string, ptype<Value>::type>       &_Params::const_pmap<Value>() const       { return m_values; }
 
-template int32_t  Params::scalarp(const sptr<Params> &p, const std::string &k, int32_t v);
-template int64_t  Params::scalarp(const sptr<Params> &p, const std::string &k, int64_t v);
-template uint32_t Params::scalarp(const sptr<Params> &p, const std::string &k, uint32_t v);
-template uint64_t Params::scalarp(const sptr<Params> &p, const std::string &k, uint64_t v);
-template float    Params::scalarp(const sptr<Params> &p, const std::string &k, float v);
-template double   Params::scalarp(const sptr<Params> &p, const std::string &k, double v);
+template int32_t  Params::scalarp(const sptr<const Params> &p, const std::string &k, int32_t v);
+template int64_t  Params::scalarp(const sptr<const Params> &p, const std::string &k, int64_t v);
+template uint32_t Params::scalarp(const sptr<const Params> &p, const std::string &k, uint32_t v);
+template uint64_t Params::scalarp(const sptr<const Params> &p, const std::string &k, uint64_t v);
+template float    Params::scalarp(const sptr<const Params> &p, const std::string &k, float v);
+template double   Params::scalarp(const sptr<const Params> &p, const std::string &k, double v);
 
-template v2i  Params::vectorp<int32_t, v2i>(const sptr<Params> &p, const std::string &k, v2i v);
-template v2u  Params::vectorp<uint32_t, v2u>(const sptr<Params> &p, const std::string &k, v2u v);
-template v2f  Params::vectorp<float, v2f>(const sptr<Params> &p, const std::string &k, v2f v);
-template v2d  Params::vectorp<double, v2d>(const sptr<Params> &p, const std::string &k, v2d v);
-template v3f  Params::vectorp<float, v3f>(const sptr<Params> &p, const std::string &k, v3f v);
-template v3d  Params::vectorp<double, v3d>(const sptr<Params> &p, const std::string &k, v3d v);
-template m44f Params::vectorp<float, m44f>(const sptr<Params> &p, const std::string &k, m44f v);
+template v2i  Params::vectorp<int32_t, v2i>(const sptr<const Params> &p, const std::string &k, v2i v);
+template v2u  Params::vectorp<uint32_t, v2u>(const sptr<const Params> &p, const std::string &k, v2u v);
+template v2f  Params::vectorp<float, v2f>(const sptr<const Params> &p, const std::string &k, v2f v);
+template v2d  Params::vectorp<double, v2d>(const sptr<const Params> &p, const std::string &k, v2d v);
+template v3f  Params::vectorp<float, v3f>(const sptr<const Params> &p, const std::string &k, v3f v);
+template v3d  Params::vectorp<double, v3d>(const sptr<const Params> &p, const std::string &k, v3d v);
+template m44f Params::vectorp<float, m44f>(const sptr<const Params> &p, const std::string &k, m44f v);
 // clang-format on
