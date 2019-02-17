@@ -115,6 +115,7 @@ struct ImageFromCtx : Image {
     ImageFromCtx(const sptr<RenderingContext> &ctx) : m_ctx(ctx) {}
 
     buffer_t buffer() override { return m_ctx->buffer(); }
+    sptr<Event> schedule() override { return m_ctx->schedule(); }
     v2u size() const override { return m_ctx->m_camera->resolution(); }
 
     sptr<RenderingContext> m_ctx;

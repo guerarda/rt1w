@@ -72,6 +72,7 @@ add_library(rt1w
   src/shape.cpp
   src/sphere.cpp
   src/sync.c
+  src/task.cpp
   src/transform.cpp
   src/texture.cpp
   src/utils.cpp

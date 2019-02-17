@@ -2,13 +2,14 @@
 
 #include "geometry.hpp"
 #include "sptr.hpp"
+#include "task.hpp"
 #include "types.h"
 
 #include <string>
 
 struct Params;
 
-struct Image : Object {
+struct Image : Task {
     static sptr<Image> create(const std::string &filename);
     static sptr<Image> create(const sptr<Image> &img, buffer_format_t fmt);
     static sptr<Image> create(const sptr<Params> &p);

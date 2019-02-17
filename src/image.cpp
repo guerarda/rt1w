@@ -1,8 +1,11 @@
 #include "image.hpp"
 
 #include "error.h"
+#include "event.hpp"
 #include "imageio.h"
 #include "params.hpp"
+
+#include <atomic>
 
 #pragma mark - Image File
 
@@ -16,6 +19,7 @@ struct ImageFile : Image {
     }
 
     buffer_t buffer() override { return m_buffer; }
+    sptr<Event> schedule() override { return sptr<Event>(); }
     v2u size() const override { return m_size; }
 
     std::string m_filename;
@@ -61,63 +65,9 @@ template <> float Scale<float, uint16_t>()   { return 1.f / 65535.f; }
 struct ImageConvert : Image {
     ImageConvert(const sptr<Image> &image, buffer_format_t fmt) :
         m_img(image),
-        m_format(fmt)
-    {
-        buffer_t b = m_img->buffer();
-
-        ASSERT(b.format.order == fmt.order);
-
-        /* Alloc Buffer */
-        m_buffer.rect = b.rect;
-        m_buffer.format = m_format;
-        m_buffer.bpr = m_buffer.rect.size.x * m_buffer.format.size;
-        m_buffer.data = malloc(m_buffer.rect.size.y * m_buffer.bpr);
-
-        /* Check if a conversion is needed */
-        if (m_format.type == b.format.type) {
-            memcpy(m_buffer.data, b.data, m_buffer.rect.size.y * m_buffer.bpr);
-            return;
-        }
-
-        /* Convert */
-        buffer_type_t srcType = b.format.type;
-        buffer_type_t dstType = m_buffer.format.type;
-        size_t nx = m_img->size().x;
-        size_t ny = m_img->size().y;
-
-        for (size_t y = 0; y < ny; ++y) {
-            const uint8_t *sp = (const uint8_t *)b.data + y * b.bpr;
-            uint8_t *dp = (uint8_t *)m_buffer.data + y * m_buffer.bpr;
-            for (size_t x = 0; x < nx; ++x) {
-                if (srcType == TYPE_UINT8) {
-                    if (dstType == TYPE_UINT16) {
-                        ConvertPixel<uint16_t, uint8_t>((void *)dp, (const void *)sp);
-                    }
-                    else if (dstType == TYPE_FLOAT32) {
-                        ConvertPixel<float, uint8_t>((void *)dp, (const void *)sp);
-                    }
-                }
-                else if (srcType == TYPE_UINT16) {
-                    if (dstType == TYPE_UINT8) {
-                        ConvertPixel<uint8_t, uint16_t>((void *)dp, (const void *)sp);
-                    }
-                    else if (dstType == TYPE_FLOAT32) {
-                        ConvertPixel<float, uint16_t>((void *)dp, (const void *)sp);
-                    }
-                }
-                else if (srcType == TYPE_FLOAT32) {
-                    if (dstType == TYPE_UINT8) {
-                        ConvertPixel<uint8_t, float>((void *)dp, (const void *)sp);
-                    }
-                    else if (dstType == TYPE_UINT16) {
-                        ConvertPixel<uint16_t, float>((void *)dp, (const void *)sp);
-                    }
-                }
-                dp += m_buffer.format.size;
-                sp += b.format.size;
-            }
-        }
-    }
+        m_format(fmt),
+        m_scheduled(0)
+    {}
 
     ~ImageConvert() override
     {
@@ -126,13 +76,92 @@ struct ImageConvert : Image {
         }
     }
 
-    buffer_t buffer() override { return m_buffer; }
+    sptr<Event> schedule() override;
+    buffer_t buffer() override
+    {
+        schedule()->wait();
+        return m_buffer;
+    }
     v2u size() const override { return m_img->size(); }
 
     sptr<Image> m_img;
     buffer_format_t m_format;
     buffer_t m_buffer;
+    sptr<Event> m_event;
+    std::atomic<int32_t> m_scheduled;
 };
+
+sptr<Event> ImageConvert::schedule()
+{
+    while (m_scheduled.load() != 1) {
+        int32_t expected = 0;
+        if (m_scheduled.compare_exchange_strong(expected, -1)) {
+            buffer_t b = m_img->buffer();
+
+            ASSERT(b.format.order == m_format.order);
+
+            /* Alloc Buffer */
+            m_buffer.rect = b.rect;
+            m_buffer.format = m_format;
+            m_buffer.bpr = m_buffer.rect.size.x * m_buffer.format.size;
+            m_buffer.data = malloc(m_buffer.rect.size.y * m_buffer.bpr);
+
+            /* Check if a conversion is needed */
+            if (m_format.type == b.format.type) {
+                memcpy(m_buffer.data, b.data, m_buffer.rect.size.y * m_buffer.bpr);
+            }
+            else {
+                /* Convert */
+                buffer_type_t srcType = b.format.type;
+                buffer_type_t dstType = m_buffer.format.type;
+                size_t nx = m_img->size().x;
+                size_t ny = m_img->size().y;
+
+                for (size_t y = 0; y < ny; ++y) {
+                    const uint8_t *sp = (const uint8_t *)b.data + y * b.bpr;
+                    uint8_t *dp = (uint8_t *)m_buffer.data + y * m_buffer.bpr;
+                    for (size_t x = 0; x < nx; ++x) {
+                        if (srcType == TYPE_UINT8) {
+                            if (dstType == TYPE_UINT16) {
+                                ConvertPixel<uint16_t, uint8_t>((void *)dp,
+                                                                (const void *)sp);
+                            }
+                            else if (dstType == TYPE_FLOAT32) {
+                                ConvertPixel<float, uint8_t>((void *)dp,
+                                                             (const void *)sp);
+                            }
+                        }
+                        else if (srcType == TYPE_UINT16) {
+                            if (dstType == TYPE_UINT8) {
+                                ConvertPixel<uint8_t, uint16_t>((void *)dp,
+                                                                (const void *)sp);
+                            }
+                            else if (dstType == TYPE_FLOAT32) {
+                                ConvertPixel<float, uint16_t>((void *)dp,
+                                                              (const void *)sp);
+                            }
+                        }
+                        else if (srcType == TYPE_FLOAT32) {
+                            if (dstType == TYPE_UINT8) {
+                                ConvertPixel<uint8_t, float>((void *)dp,
+                                                             (const void *)sp);
+                            }
+                            else if (dstType == TYPE_UINT16) {
+                                ConvertPixel<uint16_t, float>((void *)dp,
+                                                              (const void *)sp);
+                            }
+                        }
+                        dp += m_buffer.format.size;
+                        sp += b.format.size;
+                    }
+                }
+            }
+            m_event = Event::create(0);
+            m_scheduled.store(1);
+        }
+    }
+    return m_event;
+}
 
 #pragma mark - Static constructor
 
