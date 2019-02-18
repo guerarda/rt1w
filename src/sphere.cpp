@@ -122,7 +122,10 @@ Interaction _Sphere::sample(const v2f &u) const
     it.p = m_radius * UniformSampleSphere(u);
     it.n = Normalize(it.p);
 
-    return Inverse(m_worldToObj)(it);
+    it.p = Mulp(Inverse(m_worldToObj), it.p);
+    it.n = Muln(Inverse(m_worldToObj), it.n);
+
+    return it;
 }
 
 #pragma mark - Static constructors

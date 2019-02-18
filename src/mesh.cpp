@@ -345,7 +345,10 @@ Interaction Triangle::sample(const v2f &u) const
     else {
         it.n = Normalize(Cross(p1 - p0, p2 - p0));
     }
-    return m_md->m_objToWorld(it);
+    it.p = Mulp(m_md->m_objToWorld, it.p);
+    it.n = Muln(m_md->m_objToWorld, it.n);
+
+    return it;
 }
 
 bounds3f Triangle::bounds() const
