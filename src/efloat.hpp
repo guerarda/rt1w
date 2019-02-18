@@ -43,7 +43,7 @@ struct EFloat {
     }
     EFloat operator/(EFloat ef) const
     {
-        ASSERT(ef.e < .5f * ef.min());
+        WARNING_IF(ef.e > .5f * ef.min(), "EFloat division, error is too large.");
         float a = 1 / (ef.min() - ef.e);
         float b = ef.e / ef.min();
         float c = Epsilon<float> + b + 2 * (b * b);
