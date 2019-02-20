@@ -28,3 +28,8 @@ sptr<Event> workq_execute(struct workq *workq,
                           workq_func func,
                           const sptr<Object> &obj,
                           const sptr<Object> &arg);
+void workq_execute(struct workq *workq,
+                   const sptr<Event> &event,
+                   workq_func func,
+                   const sptr<Object> &obj,
+                   const sptr<Object> &arg);

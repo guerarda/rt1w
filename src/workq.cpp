@@ -18,7 +18,7 @@ struct _job {
 };
 
 struct workq {
-    workq(uint32_t concurrency);
+    workq(uint32_t concurrency) : m_concurrency(concurrency) {}
 
     void init();
     void work() NORETURN;
@@ -27,19 +27,12 @@ struct workq {
     _job *dequeue();
 
     uint32_t m_concurrency;
-    void *volatile m_head;
-    void *volatile m_queue;
+    void *volatile m_head = nullptr;
+    void *volatile m_queue = nullptr;
     std::mutex m_mutex;
     std::condition_variable m_cv;
     std::vector<std::thread> m_threads;
 };
-
-workq::workq(uint32_t concurrency)
-{
-    m_concurrency = concurrency;
-    m_head = nullptr;
-    m_queue = nullptr;
-}
 
 void workq::init()
 {
@@ -136,4 +129,24 @@ sptr<Event> workq_execute(workq *workq,
         event = Event::create(0);
     }
     return event;
+}
+
+void workq_execute(workq *workq,
+                   const sptr<Event> &event,
+                   workq_func func,
+                   const sptr<Object> &obj,
+                   const sptr<Object> &arg)
+{
+    if (workq) {
+        _job *job = new _job;
+        job->m_arg = arg;
+        job->m_obj = obj;
+        job->m_func = func;
+        job->m_event = event;
+        workq->enqueue(job);
+    }
+    else if (func) {
+        func(obj, arg);
+        event->signal();
+    }
 }
