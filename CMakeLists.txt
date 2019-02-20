@@ -4,9 +4,18 @@ project(RT1W)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
+# Options
+option(RT1W_WITH_OIDN "Build with OpenImageDenoise Library" OFF)
+
 # External dependencies
 ## Lib PNG
 find_package(PNG REQUIRED)
+
+## Open Image Denoise
+if (RT1W_WITH_OIDN)
+  message("Building with OpenImageDenoise")
+  find_package(OpenImageDenoise REQUIRED)
+endif()
 
 # RT1W
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -52,6 +61,7 @@ add_library(rt1w
   src/bvh.cpp
   src/camera.cpp
   src/context.cpp
+  src/denoise.cpp
   src/event.cpp
   src/error.cpp
   src/fresnel.cpp
@@ -97,6 +107,21 @@ target_link_libraries(rt1w
   PRIVATE
     PNG::PNG
 )
+
+if (RT1W_WITH_OIDN)
+  target_compile_definitions(rt1w
+    PRIVATE
+      RT1W_WITH_OIDN
+  )
+  target_compile_options(rt1w
+    PRIVATE
+      ${OPENIMAGEDENOISE_INCLUDE_DIRS}
+  )
+  target_link_libraries(rt1w
+    PRIVATE
+      OpenImageDenoise
+  )
+endif()
 
 ## Executable
 add_executable(rt1w_exe src/main.cpp)

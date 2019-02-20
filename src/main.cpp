@@ -1,6 +1,7 @@
 #include "bvh.hpp"
 #include "camera.hpp"
 #include "context.hpp"
+#include "denoise.hpp"
 #include "error.h"
 #include "event.hpp"
 #include "image.hpp"
@@ -126,6 +127,9 @@ int main(int argc, char *argv[])
 
     /* Render and write out */
     sptr<Image> img = rdr->image();
+    if (options.flags & OPTION_DENOISE) {
+        img = Denoise(img, rdr->normals(), rdr->albedo());
+    }
     img = Image::create(img, buffer_format_init(TYPE_UINT8, ORDER_RGB));
 
     buffer_t buf = img->buffer();
