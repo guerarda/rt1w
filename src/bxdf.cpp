@@ -3,6 +3,7 @@
 #include "fresnel.hpp"
 #include "interaction.hpp"
 #include "rng.hpp"
+#include "spectrum.hpp"
 #include "utils.hpp"
 
 #include <random>
@@ -55,8 +56,11 @@ struct _BSDF : BSDF {
         ASSERT(!HasNaN(m_ts));
     }
 
-    v3f f(const v3f &woW, const v3f &wiW) const override;
-    v3f sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &Type) const override;
+    Spectrum f(const v3f &woW, const v3f &wiW) const override;
+    Spectrum sample_f(const v3f &woW,
+                      v3f &wiW,
+                      const v2f &u,
+                      BxDFType &Type) const override;
 
     v3f localToWorld(const v3f &v) const;
     v3f worldToLocal(const v3f &v) const;
@@ -66,7 +70,7 @@ struct _BSDF : BSDF {
     std::vector<sptr<BxDF>> m_bxdfs;
 };
 
-v3f _BSDF::f(const v3f &woW, const v3f &wiW) const
+Spectrum _BSDF::f(const v3f &woW, const v3f &wiW) const
 {
     /* Convert woW and wiW from world to local coordinates */
     v3f wo = worldToLocal(woW);
@@ -77,7 +81,7 @@ v3f _BSDF::f(const v3f &woW, const v3f &wiW) const
      */
     bool reflect = Dot(woW, m_ng) * Dot(wiW, m_ng) > 0;
 
-    v3f f = {};
+    Spectrum f;
     for (auto &bxdf : m_bxdfs) {
         BxDFType type = bxdf->type();
         if ((reflect && (type & BSDF_REFLECTION))
@@ -88,7 +92,7 @@ v3f _BSDF::f(const v3f &woW, const v3f &wiW) const
     return f;
 }
 
-v3f _BSDF::sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) const
+Spectrum _BSDF::sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) const
 {
     /* Convert woW from world to local coordinates */
     v3f wo = worldToLocal(woW);
@@ -101,7 +105,7 @@ v3f _BSDF::sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) cons
     v2f uRemap = { u.x * n - ix, u.y };
 
     v3f wi;
-    v3f f = m_bxdfs[ix]->sample_f(wo, wi, u);
+    Spectrum f = m_bxdfs[ix]->sample_f(wo, wi, u);
     type = m_bxdfs[ix]->type();
 
     /* Convert wi to world coordinates */
@@ -138,33 +142,33 @@ static inline bool CheckFlags(BxDFType type, BxDFType flags)
 #pragma mark - Lambertian Reflection
 
 struct _LambertianReflection : LambertianReflection {
-    _LambertianReflection(v3f R) :
+    _LambertianReflection(const Spectrum &R) :
         m_type(BxDFType(BSDF_REFLECTION | BSDF_DIFFUSE)),
         m_R(R)
     {}
 
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
-    v3f f(const v3f &wo, const v3f &wi) const override;
-    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
+    Spectrum f(const v3f &wo, const v3f &wi) const override;
+    Spectrum sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
-    v3f m_R;
+    Spectrum m_R;
 };
 
-v3f _LambertianReflection::f(const v3f &, const v3f &) const
+Spectrum _LambertianReflection::f(const v3f &, const v3f &) const
 {
     return m_R / (float)Pi;
 }
 
-v3f _LambertianReflection::sample_f(const v3f &, v3f &wi, const v2f &) const
+Spectrum _LambertianReflection::sample_f(const v3f &, v3f &wi, const v2f &) const
 {
     wi = Normalize(random_sphere_point());
 
     return m_R / (float)Pi;
 }
 
-sptr<LambertianReflection> LambertianReflection::create(v3f R)
+sptr<LambertianReflection> LambertianReflection::create(const Spectrum &R)
 {
     return std::make_shared<_LambertianReflection>(R);
 }
@@ -172,7 +176,7 @@ sptr<LambertianReflection> LambertianReflection::create(v3f R)
 #pragma mark - Specular Reflection
 
 struct _SpecularReflection : SpecularReflection {
-    _SpecularReflection(const v3f &R, uptr<Fresnel> fresnel) :
+    _SpecularReflection(const Spectrum &R, uptr<Fresnel> fresnel) :
         m_type(BxDFType(BSDF_REFLECTION | BSDF_SPECULAR)),
         m_R(R),
         m_fresnel(std::move(fresnel))
@@ -180,22 +184,23 @@ struct _SpecularReflection : SpecularReflection {
 
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
-    v3f f(const v3f &, const v3f &) const override { return {}; }
-    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
+    Spectrum f(const v3f &, const v3f &) const override { return {}; }
+    Spectrum sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
-    v3f m_R;
+    Spectrum m_R;
     uptr<Fresnel> m_fresnel;
 };
 
-v3f _SpecularReflection::sample_f(const v3f &wo, v3f &wi, const v2f &) const
+Spectrum _SpecularReflection::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 {
     wi = v3f{ -wo.x, -wo.y, wo.z };
 
     return m_fresnel->eval(CosTheta(wi)) * m_R / AbsCosTheta(wi);
 }
 
-sptr<SpecularReflection> SpecularReflection::create(const v3f &R, uptr<Fresnel> fresnel)
+sptr<SpecularReflection> SpecularReflection::create(const Spectrum &R,
+                                                    uptr<Fresnel> fresnel)
 {
     return std::make_shared<_SpecularReflection>(R, std::move(fresnel));
 }
@@ -203,7 +208,7 @@ sptr<SpecularReflection> SpecularReflection::create(const v3f &R, uptr<Fresnel> 
 #pragma mark - Specular Transmission
 
 struct _SpecularTransmission : SpecularTransmission {
-    _SpecularTransmission(const v3f &T, float etaA, float etaB) :
+    _SpecularTransmission(const Spectrum &T, float etaA, float etaB) :
         m_type(BxDFType(BSDF_TRANSMISSION | BSDF_SPECULAR)),
         m_T(T),
         m_etaA(etaA),
@@ -213,17 +218,17 @@ struct _SpecularTransmission : SpecularTransmission {
 
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
-    v3f f(const v3f &, const v3f &) const override { return {}; }
-    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
+    Spectrum f(const v3f &, const v3f &) const override { return {}; }
+    Spectrum sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
-    v3f m_T;
+    Spectrum m_T;
     float m_etaA;
     float m_etaB;
     uptr<Fresnel> m_fresnel;
 };
 
-v3f _SpecularTransmission::sample_f(const v3f &wo, v3f &wi, const v2f &) const
+Spectrum _SpecularTransmission::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 {
     bool entering = CosTheta(wo) > 0;
     float etaI = entering ? m_etaA : m_etaB;
@@ -231,14 +236,14 @@ v3f _SpecularTransmission::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 
     v3f n = FaceForward({ 0.0f, 0.0f, 1.0f }, wo);
     if (Refract(wo, n, etaI / etaT, wi)) {
-        v3f ft = m_T * (v3f{ 1.0, 1.0, 1.0 } - m_fresnel->eval(CosTheta(wi)));
+        Spectrum ft = m_T * (Spectrum(1.f) - m_fresnel->eval(CosTheta(wi)));
 
         return ft / AbsCosTheta(wi);
     }
     return {};
 }
 
-sptr<SpecularTransmission> SpecularTransmission::create(const v3f &T,
+sptr<SpecularTransmission> SpecularTransmission::create(const Spectrum &T,
                                                         float etaA,
                                                         float etaB)
 {
@@ -248,7 +253,7 @@ sptr<SpecularTransmission> SpecularTransmission::create(const v3f &T,
 #pragma mark - Fresnel Specular
 
 struct _FresnelSpecular : FresnelSpecular {
-    _FresnelSpecular(const v3f &R, const v3f &T, float etaA, float etaB) :
+    _FresnelSpecular(const Spectrum &R, const Spectrum &T, float etaA, float etaB) :
         m_type(BxDFType(BSDF_REFLECTION | BSDF_TRANSMISSION | BSDF_SPECULAR)),
         m_R(R),
         m_T(T),
@@ -259,12 +264,12 @@ struct _FresnelSpecular : FresnelSpecular {
 
     BxDFType type() const override { return m_type; }
     bool matchesFlags(BxDFType flags) const override { return CheckFlags(m_type, flags); }
-    v3f f(const v3f &, const v3f &) const override { return {}; }
-    v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
+    Spectrum f(const v3f &, const v3f &) const override { return {}; }
+    Spectrum sample_f(const v3f &wo, v3f &wi, const v2f &u) const override;
 
     BxDFType m_type;
-    v3f m_R;
-    v3f m_T;
+    Spectrum m_R;
+    Spectrum m_T;
     float m_etaA;
     float m_etaB;
     uptr<Fresnel> m_fresnel;
@@ -277,7 +282,7 @@ static float schlick(float cos, float ri)
     return r + (1.0f - r) * powf((1.0f - cos), 5.0f);
 }
 
-v3f _FresnelSpecular::sample_f(const v3f &wo, v3f &wi, const v2f &) const
+Spectrum _FresnelSpecular::sample_f(const v3f &wo, v3f &wi, const v2f &) const
 {
     bool entering = CosTheta(wo) > 0;
     float etaI = entering ? m_etaA : m_etaB;
@@ -286,11 +291,11 @@ v3f _FresnelSpecular::sample_f(const v3f &wo, v3f &wi, const v2f &) const
     v3f n = FaceForward({ 0.0f, 0.0f, 1.0f }, wo);
 
     bool refract = Refract(wo, n, etaI / etaT, wi);
-    v3f F = m_fresnel->eval(CosTheta(wi));
-    v3f ft = m_R * F;
+    Spectrum F = m_fresnel->eval(CosTheta(wi));
+    Spectrum ft = m_R * F;
     if (refract) {
         static std::uniform_real_distribution<float> dist(0.0f, 1.0f);
-        ft += m_T * (v3f{ 1.0, 1.0, 1.0 } - m_fresnel->eval(CosTheta(wi)));
+        ft += m_T * (Spectrum(1.f) - m_fresnel->eval(CosTheta(wi)));
         if (dist(__prng) < schlick(CosTheta(wi), etaI)) {
             wi = Reflect(wo, n);
         }
@@ -298,8 +303,8 @@ v3f _FresnelSpecular::sample_f(const v3f &wo, v3f &wi, const v2f &) const
     return ft / AbsCosTheta(wi);
 }
 
-sptr<FresnelSpecular> FresnelSpecular::create(const v3f &R,
-                                              const v3f &T,
+sptr<FresnelSpecular> FresnelSpecular::create(const Spectrum &R,
+                                              const Spectrum &T,
                                               float etaA,
                                               float etaB)
 {

@@ -9,8 +9,9 @@ struct Ray;
 struct Sampler;
 struct Scene;
 struct Shape;
+struct Spectrum;
 
-v3f LightEmitted(const Interaction &isect, const v3f &wi);
+Spectrum LightEmitted(const Interaction &isect, const v3f &wi);
 
 struct VisibilityTester {
     VisibilityTester() = default;
@@ -30,22 +31,22 @@ private:
 struct Light : Object {
     static sptr<Light> create(const sptr<Params> &p);
 
-    virtual v3f sample_Li(const Interaction &isect,
-                          v2f u,
-                          v3f &wi,
-                          VisibilityTester &vis) const = 0;
-    virtual v3f Le(const Ray &r) const = 0;
+    virtual Spectrum sample_Li(const Interaction &isect,
+                               v2f u,
+                               v3f &wi,
+                               VisibilityTester &vis) const = 0;
+    virtual Spectrum Le(const Ray &r) const = 0;
 };
 
 struct PointLight : Light {
-    static sptr<PointLight> create(const v3f &pos, const v3f &intensity);
+    static sptr<PointLight> create(const v3f &pos, const Spectrum &intensity);
     static sptr<PointLight> create(const sptr<Params> &p);
 };
 
 struct AreaLight : Light {
-    static sptr<AreaLight> create(const sptr<Shape> &s, const v3f &Lemit);
+    static sptr<AreaLight> create(const sptr<Shape> &s, const Spectrum &Lemit);
     static sptr<AreaLight> create(const sptr<Params> &p);
 
-    virtual v3f L(const Interaction &isect, const v3f &w) const = 0;
+    virtual Spectrum L(const Interaction &isect, const v3f &w) const = 0;
     virtual sptr<Shape> shape() const = 0;
 };

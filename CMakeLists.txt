@@ -57,18 +57,19 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Core
 add_library(rt1w
   src/arena.cpp
-  src/bxdf.cpp
   src/bvh.cpp
+  src/bxdf.cpp
   src/camera.cpp
   src/context.cpp
   src/denoise.cpp
-  src/event.cpp
   src/error.cpp
+  src/event.cpp
   src/fresnel.cpp
   src/geometry.cpp
   src/image.cpp
   src/imageio.c
   src/integrator.cpp
+  src/interaction.cpp
   src/light.cpp
   src/material.cpp
   src/mesh.cpp
@@ -76,18 +77,20 @@ add_library(rt1w
   src/primitive.cpp
   src/ray.cpp
   src/rng.cpp
-  src/sampling.cpp
   src/sampler.cpp
+  src/sampling.cpp
   src/scene.cpp
   src/shape.cpp
+  src/spectrum.cpp
   src/sphere.cpp
+  src/sptr.cpp
   src/sync.c
   src/task.cpp
-  src/transform.cpp
   src/texture.cpp
+  src/transform.cpp
   src/utils.cpp
-  src/workq.cpp
   src/value.cpp
+  src/workq.cpp
   src/tools/loader_obj.cpp
 )
 

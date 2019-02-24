@@ -5,6 +5,7 @@
 
 struct Interaction;
 struct Fresnel;
+struct Spectrum;
 
 #pragma mark - Utils
 
@@ -33,8 +34,8 @@ enum BxDFType {
 struct BxDF : Object {
     virtual BxDFType type() const = 0;
     virtual bool matchesFlags(BxDFType flags) const = 0;
-    virtual v3f f(const v3f &wo, const v3f &wi) const = 0;
-    virtual v3f sample_f(const v3f &wo, v3f &wi, const v2f &u) const = 0;
+    virtual Spectrum f(const v3f &wo, const v3f &wi) const = 0;
+    virtual Spectrum sample_f(const v3f &wo, v3f &wi, const v2f &u) const = 0;
 };
 
 #pragma mark - BSDF
@@ -42,22 +43,22 @@ struct BxDF : Object {
 struct BSDF : Object {
     static sptr<BSDF> create(const Interaction &i, const std::vector<sptr<BxDF>> &bxdfs);
 
-    virtual v3f f(const v3f &woW, const v3f &wiW) const = 0;
-    virtual v3f sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) const = 0;
+    virtual Spectrum f(const v3f &woW, const v3f &wiW) const = 0;
+    virtual Spectrum sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) const = 0;
 };
 
 struct LambertianReflection : BxDF {
-    static sptr<LambertianReflection> create(v3f R);
+    static sptr<LambertianReflection> create(const Spectrum &R);
 };
 
 struct SpecularReflection : BxDF {
-    static sptr<SpecularReflection> create(const v3f &R, uptr<Fresnel> fresnel);
+    static sptr<SpecularReflection> create(const Spectrum &R, uptr<Fresnel> fresnel);
 };
 
 struct SpecularTransmission : BxDF {
-    static sptr<SpecularTransmission> create(const v3f &T, float etaA, float etaB);
+    static sptr<SpecularTransmission> create(const Spectrum &T, float etaA, float etaB);
 };
 
 struct FresnelSpecular : BxDF {
-    static sptr<FresnelSpecular> create(const v3f &R, const v3f &T, float etaA, float etaB);
+    static sptr<FresnelSpecular> create(const Spectrum &R, const Spectrum &T, float etaA, float etaB);
 };

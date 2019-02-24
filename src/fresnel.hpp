@@ -3,8 +3,10 @@
 #include "geometry.hpp"
 #include "sptr.hpp"
 
+struct Spectrum;
+
 struct Fresnel : Object {
-    virtual v3f eval(float cosThetaI) const = 0;
+    virtual Spectrum eval(float cosThetaI) const = 0;
 };
 
 struct FresnelDielectric : Fresnel {
@@ -12,5 +14,7 @@ struct FresnelDielectric : Fresnel {
 };
 
 struct FresnelConductor : Fresnel {
-    static uptr<FresnelConductor> create(v3f etaI, v3f etaT, v3f k);
+    static uptr<FresnelConductor> create(const Spectrum &etaI,
+                                         const Spectrum &etaT,
+                                         const Spectrum &k);
 };

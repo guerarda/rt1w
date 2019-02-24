@@ -220,13 +220,13 @@ static void RenderTile(const sptr<Object> &obj, const sptr<Object> &arg)
                 c = AddResult(c, ctx->m_integrator->NALi(r, ctx->m_scene, sampler, 0));
             } while (sampler->startNextSample());
 
-            c.N *= ns_inv;
-            c.A = ApproxGammaCorrection(c.A * ns_inv);
-            c.Li = ApproxGammaCorrection(c.Li * ns_inv);
+            v3f N = c.N * ns_inv;
+            v3f A = ApproxGammaCorrection((c.A * ns_inv).rgb());
+            v3f Li = ApproxGammaCorrection((c.Li * ns_inv).rgb());
 
-            memcpy(idp, &c.Li.x, image.format.size);
-            memcpy(ndp, &c.N.x, normals.format.size);
-            memcpy(adp, &c.A.x, albedo.format.size);
+            memcpy(idp, &Li.x, image.format.size);
+            memcpy(ndp, &N.x, normals.format.size);
+            memcpy(adp, &A.x, albedo.format.size);
 
             idp += image.format.size;
             ndp += normals.format.size;

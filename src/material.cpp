@@ -6,6 +6,7 @@
 #include "interaction.hpp"
 #include "params.hpp"
 #include "ray.hpp"
+#include "spectrum.hpp"
 #include "texture.hpp"
 #include "value.hpp"
 
@@ -65,24 +66,24 @@ sptr<BSDF> ComputeBSDF(const Interaction &isect)
 struct _Lambertian : Lambertian {
     _Lambertian(const sptr<Texture> &Kd) : m_Kd(Kd) {}
 
-    v3f f(const Interaction &isect, const v3f &wo, const v3f &wi) const override;
+    Spectrum f(const Interaction &isect, const v3f &wo, const v3f &wi) const override;
     bool scatter(const Ray &r_in,
                  const Interaction &isect,
-                 v3f &attenuation,
+                 Spectrum &attenuation,
                  v3f &wi) const override;
     sptr<BSDF> computeBsdf(const Interaction &isect) const override;
 
     sptr<Texture> m_Kd;
 };
 
-v3f _Lambertian::f(const Interaction &isect, const v3f &, const v3f &) const
+Spectrum _Lambertian::f(const Interaction &isect, const v3f &, const v3f &) const
 {
     return m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
 }
 
 bool _Lambertian::scatter(__unused const Ray &r_in,
                           const Interaction &isect,
-                          v3f &attenuation,
+                          Spectrum &attenuation,
                           v3f &wi) const
 {
     v3f target = isect.p + isect.n + random_sphere_point();
@@ -93,7 +94,7 @@ bool _Lambertian::scatter(__unused const Ray &r_in,
 
 sptr<BSDF> _Lambertian::computeBsdf(const Interaction &isect) const
 {
-    v3f Kd = m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
+    Spectrum Kd = m_Kd->value(isect.uv.x, isect.uv.y, isect.p);
     std::vector<sptr<BxDF>> bxdfs = { LambertianReflection::create(Kd) };
 
     return BSDF::create(isect, bxdfs);
@@ -118,10 +119,13 @@ sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
 struct _Metal : Metal {
     _Metal(const sptr<Texture> &tex, float f);
 
-    v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
+    Spectrum f(const Interaction &, const v3f &, const v3f &) const override
+    {
+        return {};
+    }
     bool scatter(const Ray &r_in,
                  const Interaction &isect,
-                 v3f &attenuation,
+                 Spectrum &attenuation,
                  v3f &wi) const override;
     sptr<BSDF> computeBsdf(const Interaction &isect) const override;
 
@@ -137,12 +141,11 @@ _Metal::_Metal(const sptr<Texture> &tex, float f)
 
 sptr<BSDF> _Metal::computeBsdf(const Interaction &isect) const
 {
-    v3f R = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
-    v3f eta = { 1.2f, 1.2f, 1.2f };
-    v3f k = { 2.2f, 2.2f, 2.2f };
+    Spectrum R = m_albedo->value(isect.uv.x, isect.uv.y, isect.p);
+    Spectrum eta = Spectrum(1.2f);
+    Spectrum k = Spectrum(2.2f);
     std::vector<sptr<BxDF>> bxdfs = {
-        SpecularReflection::create(R,
-                                   FresnelConductor::create({ 1.0f, 1.0f, 1.0f }, eta, k))
+        SpecularReflection::create(R, FresnelConductor::create(Spectrum(1.f), eta, k))
     };
 
     return BSDF::create(isect, bxdfs);
@@ -150,7 +153,7 @@ sptr<BSDF> _Metal::computeBsdf(const Interaction &isect) const
 
 bool _Metal::scatter(const Ray &r_in,
                      const Interaction &isect,
-                     v3f &attenuation,
+                     Spectrum &attenuation,
                      v3f &wi) const
 {
     v3f reflected = Reflect(r_in.dir(), isect.n);
@@ -165,10 +168,13 @@ bool _Metal::scatter(const Ray &r_in,
 struct _Dielectric : Dielectric {
     _Dielectric(float ri) : m_eta(ri) {}
 
-    v3f f(const Interaction &, const v3f &, const v3f &) const override { return v3f(); }
+    Spectrum f(const Interaction &, const v3f &, const v3f &) const override
+    {
+        return {};
+    }
     bool scatter(const Ray &r_in,
                  const Interaction &isect,
-                 v3f &attenuation,
+                 Spectrum &attenuation,
                  v3f &wi) const override;
     sptr<BSDF> computeBsdf(const Interaction &isect) const override;
 
@@ -178,8 +184,7 @@ struct _Dielectric : Dielectric {
 sptr<BSDF> _Dielectric::computeBsdf(const Interaction &isect) const
 {
     std::vector<sptr<BxDF>> bxdfs = {
-        SpecularReflection::create(v3f{ 1.0f, 1.0f, 1.0f },
-                                   FresnelDielectric::create(1.0f, m_eta))
+        SpecularReflection::create(Spectrum(1.f), FresnelDielectric::create(1.0f, m_eta))
     };
 
     return BSDF::create(isect, bxdfs);
@@ -187,7 +192,7 @@ sptr<BSDF> _Dielectric::computeBsdf(const Interaction &isect) const
 
 bool _Dielectric::scatter(const Ray &r_in,
                           const Interaction &isect,
-                          v3f &attenuation,
+                          Spectrum &attenuation,
                           v3f &wi) const
 {
     float ni_over_nt;
@@ -197,7 +202,7 @@ bool _Dielectric::scatter(const Ray &r_in,
     v3f refracted;
     v3f rdir = r_in.dir();
 
-    attenuation = { 1.0f, 1.0f, 1.0f };
+    attenuation = Spectrum(1.f);
     if (Dot(r_in.dir(), isect.n) > 0.0f) {
         norm_out = -isect.n;
         ni_over_nt = m_eta;

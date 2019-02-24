@@ -8,34 +8,33 @@
 #include "ray.hpp"
 #include "sampler.hpp"
 #include "scene.hpp"
-#include "utils.hpp"
 
 #include <limits>
 
 #pragma mark - Light Sampling
 
-static v3f EstimateDirect(const Interaction &isect,
-                          const sptr<Light> &light,
-                          const sptr<Scene> &scene,
-                          const sptr<Sampler> &sampler)
+static Spectrum EstimateDirect(const Interaction &isect,
+                               const sptr<Light> &light,
+                               const sptr<Scene> &scene,
+                               const sptr<Sampler> &sampler)
 {
     ASSERT(light);
 
     v3f wi;
     VisibilityTester vis;
     v2f u = sampler->sample2D();
-    v3f Li = light->sample_Li(isect, u, wi, vis);
+    Spectrum Li = light->sample_Li(isect, u, wi, vis);
     if (!vis.visible(scene)) {
         return {};
     }
-    v3f f = isect.mat->f(isect, isect.wo, wi);
+    Spectrum f = isect.mat->f(isect, isect.wo, wi);
 
     return f * Li;
 }
 
-static v3f UniformSampleOneLight(const Interaction &isect,
-                                 const sptr<Scene> &scene,
-                                 const sptr<Sampler> &sampler)
+static Spectrum UniformSampleOneLight(const Interaction &isect,
+                                      const sptr<Scene> &scene,
+                                      const sptr<Sampler> &sampler)
 {
     ASSERT(scene);
     ASSERT(sampler);
@@ -59,10 +58,10 @@ struct _Integrator : Integrator {
     _Integrator(const sptr<Sampler> &s, size_t m) : m_sampler(s), m_maxDepth(m) {}
 
     sptr<const Sampler> sampler() const override { return m_sampler; }
-    v3f Li(const Ray &ray,
-           const sptr<Scene> &scene,
-           const sptr<Sampler> &sampler,
-           size_t depth) const override;
+    Spectrum Li(const Ray &ray,
+                const sptr<Scene> &scene,
+                const sptr<Sampler> &sampler,
+                size_t depth) const override;
 
     IntegratorResult NALi(const Ray &,
                           const sptr<Scene> &,
@@ -71,25 +70,25 @@ struct _Integrator : Integrator {
 
     sptr<Sampler> m_sampler;
     size_t m_maxDepth;
-    v3f m_background;
+    Spectrum m_background;
 };
 
-v3f _Integrator::Li(const Ray &ray,
-                    const sptr<Scene> &scene,
-                    const sptr<Sampler> &sampler,
-                    size_t depth) const
+Spectrum _Integrator::Li(const Ray &ray,
+                         const sptr<Scene> &scene,
+                         const sptr<Sampler> &sampler,
+                         size_t depth) const
 {
     Interaction isect;
     if (scene->world()->intersect(ray, isect)) {
-        v3f attenuation;
+        Spectrum attenuation;
         v3f wi;
         if (depth < m_maxDepth && isect.mat->scatter(ray, isect, attenuation, wi)) {
-            v3f L;
+            Spectrum L;
             for (const auto &light : scene->lights()) {
                 v3f lwi;
                 VisibilityTester vis;
                 v2f u = sampler->sample2D();
-                v3f Li = light->sample_Li(isect, u, lwi, vis);
+                Spectrum Li = light->sample_Li(isect, u, lwi, vis);
                 if (vis.visible(scene)) {
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
@@ -109,15 +108,15 @@ IntegratorResult _Integrator::NALi(const Ray &ray,
 {
     Interaction isect;
     if (scene->world()->intersect(ray, isect)) {
-        v3f attenuation;
+        Spectrum attenuation;
         v3f wi;
         if (isect.mat->scatter(ray, isect, attenuation, wi)) {
-            v3f L;
+            Spectrum L;
             for (const auto &light : scene->lights()) {
                 v3f lwi;
                 VisibilityTester vis;
                 v2f u = sampler->sample2D();
-                v3f Li = light->sample_Li(isect, u, lwi, vis);
+                Spectrum Li = light->sample_Li(isect, u, lwi, vis);
                 if (vis.visible(scene)) {
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
@@ -136,10 +135,10 @@ struct _PathIntegrator : PathIntegrator {
     _PathIntegrator(const sptr<Sampler> &s, size_t m) : m_sampler(s), m_maxDepth(m) {}
 
     sptr<const Sampler> sampler() const override { return m_sampler; }
-    v3f Li(const Ray &ray,
-           const sptr<Scene> &scene,
-           const sptr<Sampler> &sampler,
-           size_t depth) const override;
+    Spectrum Li(const Ray &ray,
+                const sptr<Scene> &scene,
+                const sptr<Sampler> &sampler,
+                size_t depth) const override;
     IntegratorResult NALi(const Ray &ray,
                           const sptr<Scene> &scene,
                           const sptr<Sampler> &sampler,
@@ -149,14 +148,14 @@ struct _PathIntegrator : PathIntegrator {
     size_t m_maxDepth;
 };
 
-v3f _PathIntegrator::Li(const Ray &r,
-                        const sptr<Scene> &scene,
-                        const sptr<Sampler> &sampler,
-                        size_t) const
+Spectrum _PathIntegrator::Li(const Ray &r,
+                             const sptr<Scene> &scene,
+                             const sptr<Sampler> &sampler,
+                             size_t) const
 {
     Ray ray = r;
-    v3f L;
-    v3f beta = { 1.0f, 1.0f, 1.0f };
+    Spectrum L;
+    Spectrum beta = { 1.f };
     bool specular = false;
 
     for (size_t bounces = 0;; bounces++) {
@@ -179,8 +178,8 @@ v3f _PathIntegrator::Li(const Ray &r,
             break;
         }
         BxDFType type;
-        v3f f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
-        if (FloatEqual(f.x, 0.0f) && FloatEqual(f.y, 0.0f) && FloatEqual(f.z, 0.0f)) {
+        Spectrum f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
+        if (f.isBlack()) {
             break;
         }
         specular = type & BSDF_SPECULAR;
@@ -188,7 +187,7 @@ v3f _PathIntegrator::Li(const Ray &r,
         ray = SpawnRay(isect, wi);
 
         if (bounces > 3) {
-            float q = std::max(0.5f, 1 - beta.length());
+            float q = std::max(.5f, 1.f - MaxComponent(beta));
             if (sampler->sample1D() < q) {
                 break;
             }
@@ -204,8 +203,9 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
                                        size_t) const
 {
     Ray ray = r;
-    v3f N, A, L;
-    v3f beta = { 1.0f, 1.0f, 1.0f };
+    Spectrum L, A;
+    v3f N;
+    Spectrum beta = { 1.f };
     bool specular = false;
 
     for (size_t bounces = 0;; bounces++) {
@@ -234,8 +234,8 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
             break;
         }
         BxDFType type;
-        v3f f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
-        if (FloatEqual(f.x, 0.0f) && FloatEqual(f.y, 0.0f) && FloatEqual(f.z, 0.0f)) {
+        Spectrum f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
+        if (f.isBlack()) {
             break;
         }
         if (bounces == 0) {
@@ -246,7 +246,7 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
         ray = SpawnRay(isect, wi);
 
         if (bounces > 3) {
-            float q = std::max(0.5f, 1 - beta.length());
+            float q = std::max(.5f, 1.f - MaxComponent(beta));
             if (sampler->sample1D() < q) {
                 break;
             }

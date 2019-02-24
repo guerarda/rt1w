@@ -7,6 +7,7 @@ struct BSDF;
 struct Ray;
 struct Interaction;
 struct Params;
+struct Spectrum;
 struct Texture;
 
 #pragma mark - Interaction
@@ -18,10 +19,10 @@ sptr<BSDF> ComputeBSDF(const Interaction &isect);
 struct Material : Object {
     static sptr<Material> create(const sptr<Params> &p);
 
-    virtual v3f f(const Interaction &isect, const v3f &wo, const v3f &wi) const = 0;
+    virtual Spectrum f(const Interaction &isect, const v3f &wo, const v3f &wi) const = 0;
     virtual bool scatter(const Ray &r_in,
                          const Interaction &rec,
-                         v3f &attenuation,
+                         Spectrum &attenuation,
                          v3f &wi) const = 0;
     virtual sptr<BSDF> computeBsdf(const Interaction &isect) const = 0;
 };

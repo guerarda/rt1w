@@ -3,29 +3,30 @@
 #include "error.h"
 #include "image.hpp"
 #include "params.hpp"
+#include "spectrum.hpp"
 #include "value.hpp"
 
 #include <cmath>
 
 struct _Texture_const : Texture {
-    _Texture_const(const v3f &c) : m_color(c){};
+    _Texture_const(const Spectrum &s) : m_color(s){};
 
-    v3f value(float, float, const v3f &) const override { return m_color; }
+    Spectrum value(float, float, const v3f &) const override { return m_color; }
 
-    v3f m_color;
+    Spectrum m_color;
 };
 
 struct _Texture_checker : Texture {
     _Texture_checker(const sptr<Texture> &a, const sptr<Texture> &b) : m_odd(a), m_even(b)
     {}
 
-    v3f value(float, float, const v3f &) const override;
+    Spectrum value(float, float, const v3f &) const override;
 
     sptr<Texture> m_odd;
     sptr<Texture> m_even;
 };
 
-v3f _Texture_checker::value(float u, float v, const v3f &p) const
+Spectrum _Texture_checker::value(float u, float v, const v3f &p) const
 {
     float sines = sinf(10.0f * u) * sinf(10.0f * v);
     return sines > 0.0f ? m_even->value(u, v, p) : m_odd->value(u, v, p);
@@ -34,7 +35,7 @@ v3f _Texture_checker::value(float u, float v, const v3f &p) const
 struct _Texture_img : Texture {
     _Texture_img(const sptr<Image> &img, rect_t r);
 
-    v3f value(float, float, const v3f &) const override;
+    Spectrum value(float, float, const v3f &) const override;
 
     sptr<Image> m_img;
     rect_t m_rect;
@@ -47,7 +48,7 @@ _Texture_img::_Texture_img(const sptr<Image> &img, rect_t r)
     m_rect = r;
 }
 
-v3f _Texture_img::value(float u, float v, const v3f &) const
+Spectrum _Texture_img::value(float u, float v, const v3f &) const
 {
     buffer_t buf = m_img->buffer();
 
@@ -72,14 +73,14 @@ v3f _Texture_img::value(float u, float v, const v3f &) const
     uint8_t *sp = (uint8_t *)buf.data + (size_t)y * buf.bpr + (size_t)x * pix_size;
     v3f color = { sp[0] / 255.0f, sp[1] / 255.0f, sp[2] / 255.0f };
 
-    return color;
+    return Spectrum::fromRGB(color);
 }
 
 #pragma mark - Static constructors
 
-sptr<Texture> Texture::create_color(const v3f &c)
+sptr<Texture> Texture::create_color(const Spectrum &s)
 {
-    return std::make_shared<_Texture_const>(c);
+    return std::make_shared<_Texture_const>(s);
 }
 
 sptr<Texture> Texture::create_checker(const sptr<Texture> &a, const sptr<Texture> &b)
@@ -98,12 +99,10 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
     WARNING_IF(type.empty(), "Texture parameter \"type\" not specified");
 
     if (type == "color") {
-        if (sptr<Value> v = p->value("color")) {
-            return Texture::create_color(v->vector3f());
-        }
-        warning("Texture parameter \"color\" not specified");
+        Spectrum s = Spectrum::fromRGB(Params::vector3f(p, "color", { 1.f, 1.f, 1.f }));
+        return Texture::create_color(s);
     }
-    else if (type == "checker") {
+    if (type == "checker") {
         sptr<Texture> even = p->texture("even");
         sptr<Texture> odd = p->texture("odd");
 

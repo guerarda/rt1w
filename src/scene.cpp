@@ -7,6 +7,7 @@
 #include "params.hpp"
 #include "primitive.hpp"
 #include "shape.hpp"
+#include "spectrum.hpp"
 #include "texture.hpp"
 #include "transform.hpp"
 #include "value.hpp"
@@ -374,8 +375,7 @@ void _RenderDescFromJSON::load_shapes()
     }
 }
 
-sptr<Material> NullMaterial = Lambertian::create(
-    Texture::create_color({ 0.0, 0.0, 0.0 }));
+sptr<Material> NullMaterial = Lambertian::create(Texture::create_color({}));
 
 void _RenderDescFromJSON::load_lights()
 {

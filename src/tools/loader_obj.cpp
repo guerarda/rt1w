@@ -3,6 +3,7 @@
 #include "bvh.hpp"
 #include "material.hpp"
 #include "mesh.hpp"
+#include "spectrum.hpp"
 #include "texture.hpp"
 #include "transform.hpp"
 #include "value.hpp"
@@ -110,15 +111,13 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::vector<sptr<Primitive>> primitives;
     std::vector<sptr<Mesh>> meshes;
 
+    sptr<Texture> tex = Texture::create_color(Spectrum::fromRGB({ .5f, .5f, .5f }));
     for (auto &indices_value : mesh_indices) {
         size_t nt = indices_value->size() / 3;
         auto faces = Mesh::create(nt, vd, indices_value, Transform())->faces();
 
         for (auto &f : faces) {
-            primitives.push_back(
-                Primitive::create(f,
-                                  Lambertian::create(
-                                      Texture::create_color({ .5f, .5f, .5f }))));
+            primitives.push_back(Primitive::create(f, Lambertian::create(tex)));
         }
     }
     return Aggregate::create(primitives);
