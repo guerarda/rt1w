@@ -169,6 +169,12 @@ inline Vector2<T> Abs(const Vector2<T> &v)
 }
 
 template <typename T>
+inline T AbsDot(const Vector2<T> &va, const Vector2<T> &vb)
+{
+    return std::abs(Dot(va, vb));
+}
+
+template <typename T>
 inline T Dot(const Vector2<T> &va, const Vector2<T> &vb)
 {
     return va.x * vb.x + va.y * vb.y;
@@ -389,6 +395,12 @@ template <typename T>
 inline Vector3<T> Abs(const Vector3<T> &v)
 {
     return { std::abs(v.x), std::abs(v.y), std::abs(v.z) };
+}
+
+template <typename T>
+inline float AbsDot(const Vector3<T> &va, const Vector3<T> &vb)
+{
+    return std::abs(Dot(va, vb));
 }
 
 template <typename T>
