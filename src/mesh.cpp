@@ -71,9 +71,15 @@ struct Triangle : Shape {
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bool qIntersect(const Ray &r, float max) const override;
 
+    float area() const override;
     bounds3f bounds() const override;
     Transform worldToObj() const override { return m_md->m_worldToObj; }
+
     Interaction sample(const v2f &u) const override;
+    float pdf() const override { return 1.f / area(); }
+
+    Interaction sample(const Interaction &ref, const v2f &u) const override;
+    float pdf(const Interaction &ref, const v3f &wi) const override;
 
     sptr<const MeshData> m_md;
     const uint32_t *const m_v;
@@ -326,6 +332,26 @@ bool Triangle::qIntersect(const Ray &ray, float max) const
     return t > deltaT;
 }
 
+float Triangle::area() const
+{
+    const v3f p0 = Mulp(m_md->m_objToWorld, m_md->m_vd->m_v[m_v[0]]);
+    const v3f p1 = Mulp(m_md->m_objToWorld, m_md->m_vd->m_v[m_v[1]]);
+    const v3f p2 = Mulp(m_md->m_objToWorld, m_md->m_vd->m_v[m_v[2]]);
+
+    return .5f * Cross(p1 - p0, p2 - p0).length();
+}
+
+bounds3f Triangle::bounds() const
+{
+    sptr<VertexData> vd = m_md->m_vd;
+
+    const v3f &p0 = vd->m_v[m_v[0]];
+    const v3f &p1 = vd->m_v[m_v[1]];
+    const v3f &p2 = vd->m_v[m_v[2]];
+
+    return m_md->m_objToWorld(Union(bounds3f(p0, p1), p2));
+}
+
 Interaction Triangle::sample(const v2f &u) const
 {
     sptr<VertexData> vd = m_md->m_vd;
@@ -351,15 +377,19 @@ Interaction Triangle::sample(const v2f &u) const
     return it;
 }
 
-bounds3f Triangle::bounds() const
+Interaction Triangle::sample(const Interaction &, const v2f &u) const
 {
-    sptr<VertexData> vd = m_md->m_vd;
+    return sample(u);
+}
 
-    const v3f &p0 = vd->m_v[m_v[0]];
-    const v3f &p1 = vd->m_v[m_v[1]];
-    const v3f &p2 = vd->m_v[m_v[2]];
-
-    return m_md->m_objToWorld(Union(bounds3f(p0, p1), p2));
+float Triangle::pdf(const Interaction &ref, const v3f &wi) const
+{
+    Ray r = SpawnRay(ref, wi);
+    Interaction isect;
+    if (!intersect(r, isect, Infinity)) {
+        return .0f;
+    }
+    return DistanceSquared(ref.p, isect.p) / (AbsDot(isect.n, -wi) * area());
 }
 
 #pragma mark - Mesh
@@ -370,9 +400,15 @@ struct _Mesh : Mesh {
     bool intersect(const Ray &r, Interaction &isect, float max) const override;
     bool qIntersect(const Ray &r, float max) const override;
 
+    float area() const override;
     bounds3f bounds() const override { return m_box; };
     Transform worldToObj() const override { return m_worldToObj; }
+
     Interaction sample(const v2f &u) const override;
+    float pdf() const override;
+
+    Interaction sample(const Interaction &ref, const v2f &u) const override;
+    float pdf(const Interaction &ref, const v3f &wi) const override;
 
     std::vector<sptr<Shape>> faces() const override;
 
@@ -385,7 +421,7 @@ struct _Mesh : Mesh {
 _Mesh::_Mesh(const sptr<MeshData> &md)
 {
     m_faces.reserve(md->m_nt);
-    ;
+
     for (size_t j = 0; j < md->m_nt; j++) {
         m_faces.emplace_back(std::make_shared<Triangle>(md, j));
         m_box = Union(m_box, m_faces[j]->bounds());
@@ -397,7 +433,7 @@ bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
     bool hit = false;
     isect.t = max;
 
-    for (auto &tri : m_faces) {
+    for (const auto &tri : m_faces) {
         if (tri->intersect(r, isect, isect.t)) {
             hit = true;
         }
@@ -407,7 +443,7 @@ bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
 
 bool _Mesh::qIntersect(const Ray &r, float max) const
 {
-    for (auto &t : m_faces) {
+    for (const auto &t : m_faces) {
         if (t->qIntersect(r, max)) {
             return true;
         }
@@ -415,12 +451,39 @@ bool _Mesh::qIntersect(const Ray &r, float max) const
     return false;
 }
 
+float _Mesh::area() const
+{
+    /* This function should not be called, Triangle::area should be called instead */
+    ASSERT(0);
+    return .0f;
+}
+
 Interaction _Mesh::sample(const v2f &) const
 {
-    /* This function should not be called, Triangle::sample should be called instead.
-     */
+    /* This function should not be called, Triangle::sample should be called instead */
     ASSERT(0);
     return {};
+}
+
+float _Mesh::pdf() const
+{
+    /* This function should not be called, Triangle::pdf should be called instead */
+    ASSERT(0);
+    return .0f;
+}
+
+Interaction _Mesh::sample(const Interaction &, const v2f &) const
+{
+    /* This function should not be called, Triangle::sample should be called instead */
+    ASSERT(0);
+    return {};
+}
+
+float _Mesh::pdf(const Interaction &, const v3f &) const
+{
+    /* This function should not be called, Triangle::pdf should be called instead */
+    ASSERT(0);
+    return .0f;
 }
 
 std::vector<sptr<Shape>> _Mesh::faces() const

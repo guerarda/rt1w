@@ -9,27 +9,6 @@
 #include "utils.hpp"
 #include "value.hpp"
 
-struct _Sphere : Sphere {
-    _Sphere(const Transform &t, float r) :
-        m_worldToObj(t),
-        m_box(Inverse(t)(bounds3f{ -v3f{ r, r, r }, v3f{ r, r, r } })),
-        m_radius(r)
-    {}
-
-    bool intersect(const Ray &r, Interaction &isect, float max) const override;
-    bool qIntersect(const Ray &r, float max) const override;
-
-    bounds3f bounds() const override { return m_box; }
-    Transform worldToObj() const override { return m_worldToObj; }
-    Interaction sample(const v2f &u) const override;
-
-    float radius() const override { return m_radius; }
-
-    Transform m_worldToObj;
-    bounds3f m_box;
-    float m_radius;
-};
-
 static inline bool SphereQuadratic(const Ray &r,
                                    const v3f &oError,
                                    const v3f &dError,
@@ -51,6 +30,33 @@ static inline bool SphereQuadratic(const Ray &r,
 
     return Quadratic(a, b, c, t0, t1);
 }
+
+struct _Sphere : Sphere {
+    _Sphere(const Transform &t, float r) :
+        m_worldToObj(t),
+        m_box(Inverse(t)(bounds3f{ -v3f{ r, r, r }, v3f{ r, r, r } })),
+        m_radius(r)
+    {}
+
+    bool intersect(const Ray &r, Interaction &isect, float max) const override;
+    bool qIntersect(const Ray &r, float max) const override;
+
+    float area() const override { return (float)(4. * Pi * m_radius * m_radius); }
+    bounds3f bounds() const override { return m_box; }
+    Transform worldToObj() const override { return m_worldToObj; }
+
+    Interaction sample(const v2f &u) const override;
+    float pdf() const override { return 1.f / area(); }
+
+    Interaction sample(const Interaction &ref, const v2f &u) const override;
+    float pdf(const Interaction &ref, const v3f &wi) const override;
+
+    float radius() const override { return m_radius; }
+
+    Transform m_worldToObj;
+    bounds3f m_box;
+    float m_radius;
+};
 
 bool _Sphere::intersect(const Ray &ray, Interaction &isect, float max) const
 {
@@ -126,6 +132,21 @@ Interaction _Sphere::sample(const v2f &u) const
     it.n = Muln(Inverse(m_worldToObj), it.n);
 
     return it;
+}
+
+Interaction _Sphere::sample(const Interaction &, const v2f &u) const
+{
+    return sample(u);
+}
+
+float _Sphere::pdf(const Interaction &ref, const v3f &wi) const
+{
+    Ray r = SpawnRay(ref, wi);
+    Interaction isect;
+    if (!intersect(r, isect, Infinity)) {
+        return .0f;
+    }
+    return DistanceSquared(ref.p, isect.p) / (AbsDot(isect.n, -wi) * area());
 }
 
 #pragma mark - Static constructors

@@ -17,7 +17,13 @@ struct Shape : Object {
                            float max = Infinity) const = 0;
     virtual bool qIntersect(const Ray &r, float max = Infinity) const = 0;
 
+    virtual float area() const = 0;
     virtual bounds3f bounds() const = 0;
     virtual Transform worldToObj() const = 0;
+
     virtual Interaction sample(const v2f &u) const = 0;
+    virtual float pdf() const = 0;
+
+    virtual Interaction sample(const Interaction &ref, const v2f &u) const = 0;
+    virtual float pdf(const Interaction &ref, const v3f &wi) const = 0;
 };
