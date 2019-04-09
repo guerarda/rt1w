@@ -25,8 +25,11 @@ __attribute__((noreturn)) static void usage(const char *msg = nullptr)
     }
     fprintf(stderr, R"(usage: rt1w [<options>] <scene file>
 --help               Print this help text.
---quality=<num>      log2 of the number of ray traced for each pixel.
+--quality=<num>      num^2 samples per pixels will be used.
                      Set to zero by default, so only one ray per pixel.
+--denoise            Apply a denoising step at the end of the rendering.
+--albedo             Outputs the color on the first ray-shape hit.
+--normals            Outputs the normals, remapped to [0, 1].
 --quiet              Only prints error messages.
 --verbose            Print more stuff.
 

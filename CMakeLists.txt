@@ -96,7 +96,8 @@ add_library(rt1w
 
 target_compile_options(rt1w
   PRIVATE
-    ${WARNING_FLAGS} ${NOWARNING_FLAGS}
+    ${WARNING_FLAGS}
+    ${NOWARNING_FLAGS}
 )
 
 target_include_directories(rt1w
@@ -132,12 +133,13 @@ set_target_properties(rt1w_exe PROPERTIES OUTPUT_NAME rt1w)
 
 target_compile_options(rt1w_exe
   PRIVATE
-    ${WARNING_FLAGS} ${NOWARNING_FLAGS}
+    ${WARNING_FLAGS}
+    ${NOWARNING_FLAGS}
 )
 
 target_link_libraries(rt1w_exe
   PRIVATE
-  rt1w
+    rt1w
 )
 
 ## Tests
