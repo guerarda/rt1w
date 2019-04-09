@@ -11,11 +11,11 @@ struct Spectrum;
 
 // clang-format off
 inline float CosTheta(const v3f &w) { return w.z; }
-inline float Cos2Theta(const v3f &w) { return w.x * w.z; }
+inline float Cos2Theta(const v3f &w) { return w.z * w.z; }
 inline float AbsCosTheta(const v3f &w) { return std::abs(w.z); }
-inline float Sin2Theta(const v3f &w) { return std::min(0.0f, 1.0f - CosTheta(w)); }
+inline float Sin2Theta(const v3f &w) { return std::min(.0f, 1.f - Cos2Theta(w)); }
 inline float SinTheta(const v3f &w) { return std::sqrt(Sin2Theta(w)); }
-//clang-format on
+// clang-format on
 
 bool Refract(const v3f &wi, const v3f &n, float eta, v3f &wt);
 
@@ -60,5 +60,8 @@ struct SpecularTransmission : BxDF {
 };
 
 struct FresnelSpecular : BxDF {
-    static sptr<FresnelSpecular> create(const Spectrum &R, const Spectrum &T, float etaA, float etaB);
+    static sptr<FresnelSpecular> create(const Spectrum &R,
+                                        const Spectrum &T,
+                                        float etaA,
+                                        float etaB);
 };
