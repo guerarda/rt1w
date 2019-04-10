@@ -33,8 +33,10 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
 #pragma mark - Point Light
 
 struct _PointLight : PointLight {
-    _PointLight(const v3f &p, const Spectrum &I) : m_p(p), m_I(I) {}
+    _PointLight(const v3f &p, const Spectrum &I) : m_p(p), m_I(I), m_type(LIGHT_DELTA_POS)
+    {}
 
+    LightType type() const override { return m_type; }
     Spectrum sample_Li(const Interaction &isect,
                        v2f u,
                        v3f &wi,
@@ -43,6 +45,7 @@ struct _PointLight : PointLight {
 
     v3f m_p;
     Spectrum m_I;
+    LightType m_type;
 };
 
 Spectrum _PointLight::sample_Li(const Interaction &isect,
@@ -77,9 +80,13 @@ sptr<PointLight> PointLight::create(const sptr<Params> &p)
 #pragma mark - Area Light
 
 struct _AreaLight : AreaLight {
-    _AreaLight(const sptr<Shape> &s, const Spectrum &Lemit) : m_shape(s), m_Lemit(Lemit)
+    _AreaLight(const sptr<Shape> &s, const Spectrum &Lemit) :
+        m_shape(s),
+        m_Lemit(Lemit),
+        m_type(LIGHT_AREA)
     {}
 
+    LightType type() const override { return m_type; }
     Spectrum sample_Li(const Interaction &isect,
                        v2f u,
                        v3f &wi,
@@ -91,6 +98,7 @@ struct _AreaLight : AreaLight {
 
     sptr<Shape> m_shape;
     Spectrum m_Lemit;
+    LightType m_type;
 };
 
 Spectrum _AreaLight::sample_Li(const Interaction &isect,
@@ -123,6 +131,12 @@ sptr<AreaLight> AreaLight::create(const sptr<Params> &p)
         return AreaLight::create(shape, s);
     }
     return nullptr;
+}
+
+bool IsDeltaLight(const sptr<Light> &light)
+{
+    LightType type = light->type();
+    return type & LIGHT_DELTA_POS || type & LIGHT_DELTA_DIR;
 }
 
 #pragma mark - Static Constructors

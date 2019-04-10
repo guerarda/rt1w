@@ -28,9 +28,17 @@ private:
     Interaction m_p1;
 };
 
+enum LightType {
+    LIGHT_DELTA_POS = 1 << 0,
+    LIGHT_DELTA_DIR = 1 << 1,
+    LIGHT_AREA = 1 << 2,
+    LIGHT_INIFINITE = 1 << 3,
+};
+
 struct Light : Object {
     static sptr<Light> create(const sptr<Params> &p);
 
+    virtual LightType type() const = 0;
     virtual Spectrum sample_Li(const Interaction &isect,
                                v2f u,
                                v3f &wi,
@@ -50,3 +58,5 @@ struct AreaLight : Light {
     virtual Spectrum L(const Interaction &isect, const v3f &w) const = 0;
     virtual sptr<Shape> shape() const = 0;
 };
+
+bool IsDeltaLight(const sptr<Light> &light);
