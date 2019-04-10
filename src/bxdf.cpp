@@ -221,21 +221,24 @@ struct _LambertianReflection : LambertianReflection {
 
 Spectrum _LambertianReflection::f(const v3f &, const v3f &) const
 {
-    return m_R / (float)Pi;
+    return m_R * (float)InvPi;
 }
 
-Spectrum _LambertianReflection::sample_f(const v3f &,
+Spectrum _LambertianReflection::sample_f(const v3f &wo,
                                          const v2f &u,
                                          v3f &wi,
                                          float &pdf,
                                          BxDFType *sampled) const
 {
-    wi = Normalize(UniformSampleSphere(u));
-    pdf = (float)(1. / (2. * Pi));
+    wi = CosineSampleHemisphere(u);
+    if (wo.z < .0f) {
+        wi *= -1.f;
+    }
+    pdf = this->pdf(wo, wi);
     if (sampled) {
         *sampled = m_type;
     }
-    return m_R / (float)Pi;
+    return m_R * (float)InvPi;
 }
 
 float _LambertianReflection::pdf(const v3f &wo, const v3f &wi) const

@@ -25,6 +25,19 @@ v2f UniformSampleTriangle(const v2f &u)
     return { 1.0f - su0, u.y * su0 };
 }
 
+v3f CosineSampleHemisphere(const v2f &u)
+{
+    v2f d = UniformSampleDisk(u);
+    float z = std::sqrt(std::max(.0f, 1.f - d.x * d.x - d.y * d.y));
+
+    return { d.x, d.y, z };
+}
+
+float CosineHemispherePdf(float cosTheta)
+{
+    return (float)(cosTheta * InvPi);
+}
+
 float PowerHeuristic(int32_t nf, float fpdf, int32_t ng, float gpdf)
 {
     float f = nf * fpdf;
