@@ -92,18 +92,6 @@
                          20, 21, 22,
                          22, 23, 20 ],
             "transform": [ { "scale": [2, 0.5, 2] }, { "translate": [0, 1, 0] } ]
-        },
-        {
-            "name": "light1",
-            "type": "sphere",
-            "transform": { "translate": [ 3.0, 5.0, 2.0 ] },
-            "radius": 0.1
-        },
-        {
-            "name": "light2",
-            "type": "sphere",
-            "transform": { "translate": [ -3.0, 5.0, 2.0 ] },
-            "radius": 0.1
         }
     ],
     "primitives" : [
@@ -118,14 +106,14 @@
     ],
     "lights" : [
         {
-            "type" : "area",
-            "shape" : "light1",
-            "emit" : [ 1.0 , 1.0, 1.0 ]
+            "type" : "point",
+            "position" : [ 3.0, 5.0, 2.0 ],
+            "intensity" : [ 10.0 , 10.0, 10.0 ]
         },
         {
-            "type" : "area",
-            "shape" : "light2",
-            "emit" : [ 1.0 , 1.0, 1.0 ]
+            "type" : "point",
+            "position" : [ -3.0, 5.0, 2.0 ],
+            "intensity" : [ 10.0 , 10.0, 10.0 ]
         }
     ],
     "camera": {
