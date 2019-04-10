@@ -42,8 +42,10 @@ struct Light : Object {
     virtual Spectrum sample_Li(const Interaction &isect,
                                v2f u,
                                v3f &wi,
+                               float &pdf,
                                VisibilityTester &vis) const = 0;
     virtual Spectrum Le(const Ray &r) const = 0;
+    virtual float pdf_Li(const Interaction &isect, const v3f &wi) const = 0;
 };
 
 struct PointLight : Light {

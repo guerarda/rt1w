@@ -35,7 +35,12 @@ struct BxDF : Object {
     virtual BxDFType type() const = 0;
     virtual bool matchesFlags(BxDFType flags) const = 0;
     virtual Spectrum f(const v3f &wo, const v3f &wi) const = 0;
-    virtual Spectrum sample_f(const v3f &wo, v3f &wi, const v2f &u) const = 0;
+    virtual Spectrum sample_f(const v3f &wo,
+                              const v2f &u,
+                              v3f &wi,
+                              float &pdf,
+                              BxDFType *sampled) const = 0;
+    virtual float pdf(const v3f &wo, const v3f &wi) const = 0;
 };
 
 #pragma mark - BSDF
@@ -43,8 +48,18 @@ struct BxDF : Object {
 struct BSDF : Object {
     static sptr<BSDF> create(const Interaction &i, const std::vector<sptr<BxDF>> &bxdfs);
 
-    virtual Spectrum f(const v3f &woW, const v3f &wiW) const = 0;
-    virtual Spectrum sample_f(const v3f &woW, v3f &wiW, const v2f &u, BxDFType &type) const = 0;
+    virtual Spectrum f(const v3f &woW,
+                       const v3f &wiW,
+                       BxDFType flags = BSDF_ALL) const = 0;
+    virtual Spectrum sample_f(const v3f &woW,
+                              const v2f &u,
+                              v3f &wiW,
+                              float &pdf,
+                              BxDFType flags = BSDF_ALL,
+                              BxDFType *sampled = nullptr) const = 0;
+    virtual float pdf(const v3f &woW,
+                      const v3f &wiW,
+                      BxDFType flags = BSDF_ALL) const = 0;
 };
 
 struct LambertianReflection : BxDF {

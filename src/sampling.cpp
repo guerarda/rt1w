@@ -24,3 +24,11 @@ v2f UniformSampleTriangle(const v2f &u)
     float su0 = std::sqrt(u.x);
     return { 1.0f - su0, u.y * su0 };
 }
+
+float PowerHeuristic(int32_t nf, float fpdf, int32_t ng, float gpdf)
+{
+    float f = nf * fpdf;
+    float g = ng * gpdf;
+
+    return (f * f) / (f * f + g * g);
+}

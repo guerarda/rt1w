@@ -27,7 +27,7 @@ bool VisibilityTester::visible(const sptr<Scene> &scene) const
     ASSERT(scene);
 
     Ray ray = SpawnRayTo(m_p0, m_p1);
-    return !scene->world()->qIntersect(ray, 0.99f);
+    return !scene->world()->qIntersect(ray, .99f);
 }
 
 #pragma mark - Point Light
@@ -40,8 +40,10 @@ struct _PointLight : PointLight {
     Spectrum sample_Li(const Interaction &isect,
                        v2f u,
                        v3f &wi,
+                       float &pdf,
                        VisibilityTester &vis) const override;
     Spectrum Le(const Ray &) const override { return {}; }
+    float pdf_Li(const Interaction &, const v3f &) const override { return .0f; }
 
     v3f m_p;
     Spectrum m_I;
@@ -51,9 +53,11 @@ struct _PointLight : PointLight {
 Spectrum _PointLight::sample_Li(const Interaction &isect,
                                 v2f,
                                 v3f &wi,
+                                float &pdf,
                                 VisibilityTester &vis) const
 {
     wi = Normalize(m_p - isect.p);
+    pdf = 1.f;
     vis = { Interaction(m_p), isect };
 
     return m_I / DistanceSquared(isect.p, m_p);
@@ -90,8 +94,10 @@ struct _AreaLight : AreaLight {
     Spectrum sample_Li(const Interaction &isect,
                        v2f u,
                        v3f &wi,
+                       float &pdf,
                        VisibilityTester &vis) const override;
     Spectrum Le(const Ray &) const override { return {}; }
+    float pdf_Li(const Interaction &isect, const v3f &wi) const override;
 
     Spectrum L(const Interaction &isect, const v3f &w) const override;
     sptr<Shape> shape() const override { return m_shape; }
@@ -104,12 +110,19 @@ struct _AreaLight : AreaLight {
 Spectrum _AreaLight::sample_Li(const Interaction &isect,
                                v2f u,
                                v3f &wi,
+                               float &pdf,
                                VisibilityTester &vis) const
 {
     Interaction it = m_shape->sample(u);
     wi = Normalize(it.p - isect.p);
+    pdf = m_shape->pdf();
     vis = { it, isect };
     return L(it, -wi);
+}
+
+float _AreaLight::pdf_Li(const Interaction &isect, const v3f &wi) const
+{
+    return m_shape->pdf(isect, wi);
 }
 
 Spectrum _AreaLight::L(const Interaction &isect, const v3f &w) const

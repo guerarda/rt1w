@@ -7,6 +7,7 @@
 #include "primitive.hpp"
 #include "ray.hpp"
 #include "sampler.hpp"
+#include "sampling.hpp"
 #include "scene.hpp"
 
 #include <limits>
@@ -14,22 +15,73 @@
 #pragma mark - Light Sampling
 
 static Spectrum EstimateDirect(const Interaction &isect,
+                               const v2f &uScaterring,
                                const sptr<Light> &light,
-                               const sptr<Scene> &scene,
-                               const sptr<Sampler> &sampler)
+                               const v2f &uLight,
+                               const sptr<Scene> &scene)
 {
     ASSERT(light);
 
+    BxDFType bsdfFlags = BSDF_ALL;
+    Spectrum L = {};
+
     v3f wi;
     VisibilityTester vis;
-    v2f u = sampler->sample2D();
-    Spectrum Li = light->sample_Li(isect, u, wi, vis);
-    if (!vis.visible(scene)) {
-        return {};
-    }
-    Spectrum f = isect.mat->f(isect, isect.wo, wi);
+    float lPdf;
+    sptr<BSDF> bsdf = ComputeBSDF(isect);
+    Spectrum Li = light->sample_Li(isect, uLight, wi, lPdf, vis);
 
-    return f * Li;
+    if (!Li.isBlack() && lPdf > .0f) {
+        Spectrum f = bsdf->f(isect.wo, wi, bsdfFlags) * AbsDot(wi, isect.shading.n);
+        float sPdf = bsdf->pdf(isect.wo, wi, bsdfFlags);
+
+        if (!f.isBlack()) {
+            if (!vis.visible(scene)) {
+                Li = {};
+            }
+            if (!Li.isBlack()) {
+                if (IsDeltaLight(light)) {
+                    L += f * Li / lPdf;
+                }
+                else {
+                    float weight = PowerHeuristic(1, lPdf, 1, sPdf);
+                    L += f * Li * weight / lPdf;
+                }
+            }
+        }
+    }
+    if (!IsDeltaLight(light)) {
+        float sPdf;
+        BxDFType sampledType;
+        Spectrum f =
+            bsdf->sample_f(isect.wo, uScaterring, wi, sPdf, bsdfFlags, &sampledType)
+            * AbsDot(wi, isect.shading.n);
+        if (!f.isBlack() && sPdf > .0f) {
+            float weight = 1.f;
+            if (!(sampledType & BSDF_SPECULAR)) {
+                lPdf = light->pdf_Li(isect, wi);
+                if (FloatEqual(lPdf, .0f)) {
+                    return L;
+                }
+                weight = PowerHeuristic(1, sPdf, 1, lPdf);
+            }
+            Interaction lIsect;
+            Ray r = SpawnRay(isect, wi);
+            Li = {};
+            if (scene->world()->intersect(r, lIsect)) {
+                if (lIsect.prim->light() == light) {
+                    Li = LightEmitted(lIsect, -wi);
+                }
+            }
+            else {
+                Li = light->Le(r);
+            }
+            if (!Li.isBlack()) {
+                L += f * Li * weight / sPdf;
+            }
+        }
+    }
+    return L;
 }
 
 static Spectrum UniformSampleOneLight(const Interaction &isect,
@@ -49,7 +101,12 @@ static Spectrum UniformSampleOneLight(const Interaction &isect,
 
     sptr<Light> light = lights[ix];
 
-    return n * EstimateDirect(isect, light, scene, sampler);
+    return n
+           * EstimateDirect(isect,
+                            sampler->sample2D(),
+                            light,
+                            sampler->sample2D(),
+                            scene);
 }
 
 #pragma mark - Integrator Implementation
@@ -88,7 +145,8 @@ Spectrum _Integrator::Li(const Ray &ray,
                 v3f lwi;
                 VisibilityTester vis;
                 v2f u = sampler->sample2D();
-                Spectrum Li = light->sample_Li(isect, u, lwi, vis);
+                float pdf;
+                Spectrum Li = light->sample_Li(isect, u, lwi, pdf, vis);
                 if (vis.visible(scene)) {
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
@@ -116,7 +174,8 @@ IntegratorResult _Integrator::NALi(const Ray &ray,
                 v3f lwi;
                 VisibilityTester vis;
                 v2f u = sampler->sample2D();
-                Spectrum Li = light->sample_Li(isect, u, lwi, vis);
+                float pdf;
+                Spectrum Li = light->sample_Li(isect, u, lwi, pdf, vis);
                 if (vis.visible(scene)) {
                     L += Li * isect.mat->f(isect, isect.wo, lwi);
                 }
@@ -177,13 +236,15 @@ Spectrum _PathIntegrator::Li(const Ray &r,
         if (!bsdf) {
             break;
         }
-        BxDFType type;
-        Spectrum f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
-        if (f.isBlack()) {
+        BxDFType sampled;
+        float pdf;
+        Spectrum f =
+            bsdf->sample_f(isect.wo, sampler->sample2D(), wi, pdf, BSDF_ALL, &sampled);
+        if (f.isBlack() || FloatEqual(pdf, .0f)) {
             break;
         }
-        specular = type & BSDF_SPECULAR;
-        beta *= f;
+        beta *= f * AbsDot(wi, isect.shading.n) / pdf;
+        specular = sampled & BSDF_SPECULAR;
         ray = SpawnRay(isect, wi);
 
         if (bounces > 3) {
@@ -233,16 +294,18 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
         if (!bsdf) {
             break;
         }
-        BxDFType type;
-        Spectrum f = bsdf->sample_f(isect.wo, wi, sampler->sample2D(), type);
-        if (f.isBlack()) {
+        BxDFType sampled;
+        float pdf;
+        Spectrum f =
+            bsdf->sample_f(isect.wo, sampler->sample2D(), wi, pdf, BSDF_ALL, &sampled);
+        if (f.isBlack() || FloatEqual(pdf, .0f)) {
             break;
         }
         if (bounces == 0) {
             A = f;
         }
-        specular = type & BSDF_SPECULAR;
-        beta *= f;
+        beta *= f * AbsDot(wi, isect.shading.n) / pdf;
+        specular = sampled & BSDF_SPECULAR;
         ray = SpawnRay(isect, wi);
 
         if (bounces > 3) {
