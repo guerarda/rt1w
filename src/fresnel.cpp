@@ -75,11 +75,11 @@ Spectrum _FresnelConductor::eval(float cosThetaI) const
     Spectrum eta2 = eta * eta;
     Spectrum etak2 = etak * etak;
 
-    Spectrum t0 = eta2 - etak2 - sinThetaI2 * Spectrum(1.0f);
-    Spectrum a2plusb2 = t0 * t0 + 4 * eta2 * etak2;
-    Spectrum t1 = sqrt(a2plusb2) + cosThetaI2 * Spectrum(1.f);
-    Spectrum a = .5f * (a2plusb2 + t0);
-    Spectrum t2 = 2.f * cosThetaI * sqrt(a);
+    Spectrum t0 = eta2 - etak2 - sinThetaI2;
+    Spectrum a2plusb2 = sqrt(t0 * t0 + 4 * eta2 * etak2);
+    Spectrum t1 = a2plusb2 + cosThetaI2;
+    Spectrum a = sqrt(.5f * (a2plusb2 + t0));
+    Spectrum t2 = 2.f * cosThetaI * a;
     Spectrum Rs = (t1 - t2) / (t1 + t2);
 
     Spectrum t3 = cosThetaI2 * a2plusb2 + sinThetaI2 * sinThetaI2 * Spectrum(1.f);
