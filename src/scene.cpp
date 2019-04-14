@@ -244,6 +244,7 @@ struct _RenderDescFromJSON : RenderDescription {
     std::string m_dir;
     rapidjson::Document m_doc;
 
+    bounds3f m_box;
     std::vector<sptr<Primitive>> m_primitives;
     std::vector<sptr<Light>> m_lights;
     sptr<Camera> m_camera;
@@ -404,6 +405,7 @@ void _RenderDescFromJSON::load_camera()
     auto section = m_doc.FindMember("camera");
     if (section != m_doc.MemberEnd()) {
         m_camera = Camera::create(read_params(section->value, m_dir));
+        m_box = Union(m_box, m_camera->position());
     }
     else {
         error("Missing \"camera\"");
@@ -435,9 +437,11 @@ void _RenderDescFromJSON::load_primitives()
                             m_primitives.insert(std::end(m_primitives),
                                                 std::begin(prims),
                                                 std::end(prims));
+                            m_box = Union(m_box, agg->bounds());
                         }
                         else {
                             m_primitives.emplace_back(obj);
+                            m_box = Union(m_box, obj->bounds());
                         }
                     }
                     else {
@@ -485,6 +489,7 @@ void _RenderDescFromJSON::load_primitives()
 
                         if (shape && mat) {
                             m_primitives.emplace_back(Primitive::create(shape, mat));
+                            m_box = Union(m_box, shape->bounds());
                         }
                         else {
                             warning("Couldnt create Primitive at index %lu", ix);
