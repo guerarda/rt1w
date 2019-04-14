@@ -294,6 +294,10 @@ sptr<Light> _RenderDescFromJSON::read_light(const rapidjson::Value &v) const
     sptr<Params> p = read_params(v, m_dir);
     p->merge(m_textures);
     p->merge(m_shapes);
+    if (p->string("type") == "environment") {
+        p->insert("center", Value::vector3f(m_box.center()));
+        p->insert("radius", Value::f32(m_box.diagonal().length() / 2.f));
+    }
     return Light::create(p);
 }
 

@@ -224,6 +224,11 @@ Spectrum _PathIntegrator::Li(const Ray &r,
             if (intersect) {
                 L += beta * LightEmitted(isect, -ray.dir());
             }
+            else {
+                for (const auto &light : scene->lights()) {
+                    L += beta * light->Le(ray);
+                }
+            }
         }
         if (!intersect || bounces > m_maxDepth) {
             break;
@@ -277,10 +282,20 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
                 N = isect.n;
                 L = LightEmitted(isect, -ray.dir());
             }
+            else {
+                for (const auto &light : scene->lights()) {
+                    L += light->Le(ray);
+                }
+            }
         }
         if (specular) {
             if (intersect) {
                 L += beta * LightEmitted(isect, -ray.dir());
+            }
+            else {
+                for (const auto &light : scene->lights()) {
+                    L += beta * light->Le(ray);
+                }
             }
         }
         if (!intersect || bounces > m_maxDepth) {

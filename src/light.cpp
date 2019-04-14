@@ -8,6 +8,8 @@
 #include "scene.hpp"
 #include "shape.hpp"
 #include "spectrum.hpp"
+#include "texture.hpp"
+#include "transform.hpp"
 #include "value.hpp"
 
 #pragma mark - Interaction
@@ -146,6 +148,126 @@ sptr<AreaLight> AreaLight::create(const sptr<Params> &p)
     return nullptr;
 }
 
+#pragma mark - Environment Light
+
+static inline float SphericalPhi(const v3f &v)
+{
+    float phi = std::atan2(v.y, v.x);
+    return phi < .0f ? (float)(phi + 2 * Pi) : phi;
+}
+
+static inline float SphericalTheta(const v3f &v)
+{
+    return std::acos(Clamp(v.z, -1.f, 1.f));
+}
+
+static inline v3f SphericalDirection(float theta, float phi)
+{
+    float sinTheta = std::sin(theta);
+    return { sinTheta * std::cos(phi), sinTheta * std::sin(phi), std::cos(theta) };
+}
+
+struct _EnvironmentLight : EnvironmentLight {
+    _EnvironmentLight(const v3f &center,
+                      float radius,
+                      const Spectrum &L,
+                      const sptr<Texture> &map) :
+        m_center(center),
+        m_radius(radius),
+        m_Lemit(L),
+        m_map(map),
+        m_lightToWorld(Transform::Translate(center) * Transform::Scale(radius)),
+        m_type(LightType(LIGHT_AREA | LIGHT_INIFINITE))
+    {}
+
+    LightType type() const override { return m_type; }
+    Spectrum sample_Li(const Interaction &isect,
+                       v2f u,
+                       v3f &wi,
+                       float &pdf,
+                       VisibilityTester &vis) const override;
+    Spectrum Le(const Ray &r) const override;
+    float pdf_Li(const Interaction &isect, const v3f &wi) const override;
+
+    v3f m_center;
+    float m_radius;
+    Spectrum m_Lemit;
+    sptr<Texture> m_map;
+    Transform m_lightToWorld;
+    LightType m_type;
+};
+
+Spectrum _EnvironmentLight::sample_Li(const Interaction &isect,
+                                      v2f u,
+                                      v3f &wi,
+                                      float &pdf,
+                                      VisibilityTester &vis) const
+{
+    /* Compute wi */
+    float phi = (float)(u.x * 2. * Pi);
+    float theta = (float)(u.y * Pi);
+    wi = Mulv(m_lightToWorld, SphericalDirection(theta, phi));
+
+    /* Compute radiance & pdf */
+    Spectrum L = m_Lemit;
+    if (m_map) {
+        L *= m_map->value(u.x, u.y, {});
+    }
+    pdf = (float)(1. / (2. * Pi * Pi));
+
+    /* Visibility Tester */
+    vis = { { m_center + wi * m_radius }, isect };
+
+    return L;
+}
+
+Spectrum _EnvironmentLight::Le(const Ray &r) const
+{
+    Spectrum L = m_Lemit;
+    if (m_map) {
+        v3f wi = Normalize(Mulv(Inverse(m_lightToWorld), r.dir()));
+        float u = (float)(SphericalPhi(wi) * Inv2Pi);
+        float v = (float)(SphericalTheta(wi) * InvPi);
+
+        ASSERT(u >= .0 && u <= 1.);
+        ASSERT(v >= .0 && v <= 1.);
+
+        L *= m_map->value(u, v, {});
+    }
+    return L;
+}
+
+float _EnvironmentLight::pdf_Li(const Interaction &, const v3f &) const
+{
+    return (float)(1. / (2. * Pi * Pi));
+}
+
+sptr<EnvironmentLight> EnvironmentLight::create(const v3f &center,
+                                                float radius,
+                                                const Spectrum &L,
+                                                const sptr<Texture> &map)
+{
+    return std::make_shared<_EnvironmentLight>(center, radius, L, map);
+}
+
+sptr<EnvironmentLight> EnvironmentLight::create(const sptr<Params> &p)
+{
+    auto c = p->value("center");
+    auto r = p->value("radius");
+    if (c && r) {
+        auto L = Spectrum::fromRGB(Params::vector3f(p, "scale", { 1.f, 1.f, 1.f }));
+        auto map = p->texture("radiance");
+
+        return EnvironmentLight::create(c->vector3f(), r->f32(), L, map);
+    }
+    WARNING_IF(!c, "Environment Light parameter \"center\" not specified");
+    WARNING_IF(!r, "Environment Light parameter \"radius\" not specified");
+
+    return nullptr;
+}
+
+#pragma mark -
+
 bool IsDeltaLight(const sptr<Light> &light)
 {
     LightType type = light->type();
@@ -164,6 +286,9 @@ sptr<Light> Light::create(const sptr<Params> &p)
     }
     if (type == "area") {
         return AreaLight::create(p);
+    }
+    if (type == "environment") {
+        return EnvironmentLight::create(p);
     }
     warning("Light parameter \"type\" not recognized");
 

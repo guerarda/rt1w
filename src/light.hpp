@@ -10,6 +10,7 @@ struct Sampler;
 struct Scene;
 struct Shape;
 struct Spectrum;
+struct Texture;
 
 Spectrum LightEmitted(const Interaction &isect, const v3f &wi);
 
@@ -59,6 +60,14 @@ struct AreaLight : Light {
 
     virtual Spectrum L(const Interaction &isect, const v3f &w) const = 0;
     virtual sptr<Shape> shape() const = 0;
+};
+
+struct EnvironmentLight : Light {
+    static sptr<EnvironmentLight> create(const v3f &center,
+                                         float radius,
+                                         const Spectrum &L,
+                                         const sptr<Texture> &map);
+    static sptr<EnvironmentLight> create(const sptr<Params> &p);
 };
 
 bool IsDeltaLight(const sptr<Light> &light);
