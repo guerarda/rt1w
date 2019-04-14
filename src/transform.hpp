@@ -24,6 +24,7 @@ struct Transform {
     bounds3f operator()(const bounds3f &b) const;
     Interaction operator()(const Interaction &i) const;
 
+    static Transform Scale(float s);
     static Transform Scale(float x, float y, float z);
     static Transform Translate(const v3f &v);
     static Transform Rotate(float theta, const v3f &axis);

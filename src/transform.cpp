@@ -261,6 +261,11 @@ template Vector3<double> Muln(const Transform &t, const Vector3<double> &n);
 
 #pragma mark - Static Functions
 
+Transform Transform::Scale(float s)
+{
+    return Transform::Scale(s, s, s);
+}
+
 Transform Transform::Scale(float x, float y, float z)
 {
     float m[4][4] = { { x, 0.0f, 0.0f, 0.0f },
