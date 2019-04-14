@@ -9,7 +9,8 @@
 enum struct ProjectionType { Perspective, Orthographic };
 
 struct _ProjectiveCamera : Camera {
-    _ProjectiveCamera(const Transform &cameraToWorld,
+    _ProjectiveCamera(const v3f &position,
+                      const Transform &cameraToWorld,
                       const Transform &projection,
                       const rectf &window,
                       v2u resolution,
@@ -17,9 +18,11 @@ struct _ProjectiveCamera : Camera {
                       float focusDist,
                       ProjectionType type);
 
+    v3f position() const override { return m_pos; }
     Ray generateRay(const CameraSample &cs) const override;
     v2u resolution() const override { return m_resolution; }
 
+    v3f m_pos;
     Transform m_cameraToWorld;
     Transform m_cameraToScreen;    // Projection
     Transform m_rasterToCamera;
@@ -33,13 +36,15 @@ struct _ProjectiveCamera : Camera {
     ProjectionType m_type;
 };
 
-_ProjectiveCamera::_ProjectiveCamera(const Transform &cameraToWorld,
+_ProjectiveCamera::_ProjectiveCamera(const v3f &position,
+                                     const Transform &cameraToWorld,
                                      const Transform &projection,
                                      const rectf &window,
                                      v2u resolution,
                                      float lensRadius,
                                      float focusDist,
                                      ProjectionType type) :
+    m_pos(position),
     m_cameraToWorld(cameraToWorld),
     m_cameraToScreen(projection),
     m_window(window),
@@ -150,7 +155,8 @@ sptr<Camera> PerspectiveCamera::create(const v3f &pos,
     Transform proj = Transform::Perspective(fov, zNear, zFar);
     rectf bounds = { { 0.5f * -screen.x, 0.5f * -screen.y }, screen };
 
-    return std::make_shared<_ProjectiveCamera>(lookat,
+    return std::make_shared<_ProjectiveCamera>(pos,
+                                               lookat,
                                                proj,
                                                bounds,
                                                resolution,
@@ -173,7 +179,8 @@ sptr<Camera> OrthographicCamera::create(const v3f &pos,
     Transform proj = Transform::Orthographic(zNear, zFar);
     rectf bounds = { { 0.5f * -screen.x, 0.5f * -screen.y }, screen };
 
-    return std::make_shared<_ProjectiveCamera>(lookat,
+    return std::make_shared<_ProjectiveCamera>(pos,
+                                               lookat,
                                                proj,
                                                bounds,
                                                resolution,

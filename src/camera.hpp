@@ -15,6 +15,7 @@ struct CameraSample {
 struct Camera : Object {
     static sptr<Camera> create(const sptr<Params> &p);
 
+    virtual v3f position() const = 0;
     virtual v2u resolution() const = 0;
     virtual Ray generateRay(const CameraSample &cs) const = 0;
 };
