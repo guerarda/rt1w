@@ -82,10 +82,11 @@ bool _Sphere::intersect(const Ray &ray, Interaction &isect, float max) const
 
     /* Compute sphere uv */
     v3f p = isect.n;
-    double phi = std::atan2(p.x, p.z);
     double theta = std::acos(Clamp(p.y, -1.0, 1.0));
+    double phi = std::atan2(p.x, p.z);
+    phi = phi < .0 ? phi + 2 * Pi : phi;
 
-    isect.uv.x = (float)(0.5 + phi / (2.0 * Pi));
+    isect.uv.x = (float)(phi / (2.0 * Pi));
     isect.uv.y = (float)(theta / Pi);
 
     /* Compute dp/du & dp/dv */
