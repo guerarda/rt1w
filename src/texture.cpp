@@ -57,7 +57,7 @@ Spectrum _Texture_img::value(float u, float v, const v3f &) const
 
     /* Convert (u, v) to (x, y) in m_rect */
     int64_t x = lrint((double)u * (double)(m_rect.size.x - 1));
-    int64_t y = lrint((1.0 - (double)v) * (double)(m_rect.size.y - 1));
+    int64_t y = lrint(((double)v) * (double)(m_rect.size.y - 1));
 
     /* Convert coordinated from m_rect to buf.rect */
     x += m_rect.org.x;

@@ -124,7 +124,6 @@ Spectrum _BSDF::sample_f(const v3f &woW,
 
     /* Convert wi to world coordinates */
     wiW = localToWorld(wi);
-
     if (!(bxdf->type() & BSDF_SPECULAR) && n > 1) {
         /* Compute pdf */
         for (const auto &other : v) {

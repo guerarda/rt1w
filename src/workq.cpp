@@ -21,7 +21,7 @@ struct workq {
     workq(uint32_t concurrency) : m_concurrency(concurrency) {}
 
     void init();
-    void work() NORETURN;
+    [[noreturn]] void work();
 
     void enqueue(_job *);
     _job *dequeue();

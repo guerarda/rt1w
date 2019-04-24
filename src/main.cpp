@@ -18,7 +18,7 @@
 
 #include <string>
 
-__attribute__((noreturn)) static void usage(const char *msg = nullptr)
+[[noreturn]] static void usage(const char *msg = nullptr)
 {
     if (msg) {
         fprintf(stderr, "rt1w: %s\n\n", msg);
