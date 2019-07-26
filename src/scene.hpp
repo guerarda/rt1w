@@ -1,13 +1,17 @@
 #pragma once
 
+#include "geometry.hpp"
+#include "sptr.hpp"
+#include "utils.hpp"
+
 #include <vector>
 
-#include "sptr.hpp"
-
 struct Camera;
+struct Interaction;
 struct Light;
 struct Params;
 struct Primitive;
+struct Ray;
 
 struct RenderDescription : Object {
     static sptr<RenderDescription> create(const std::vector<sptr<Primitive>> &primitives,
@@ -26,6 +30,11 @@ struct Scene : Object {
     static sptr<Scene> create(const sptr<Primitive> &world,
                               const std::vector<sptr<Light>> &lights);
 
-    virtual sptr<Primitive> world() const = 0;
+    virtual bounds3f bounds() const = 0;
     virtual const std::vector<sptr<Light>> &lights() const = 0;
+
+    virtual bool intersect(const Ray &r,
+                           Interaction &isect,
+                           float max = Infinity) const = 0;
+    virtual bool qIntersect(const Ray &r, float max = Infinity) const = 0;
 };

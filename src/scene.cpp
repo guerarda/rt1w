@@ -512,22 +512,7 @@ void _RenderDescFromJSON::load_primitives()
     }
 }
 
-#pragma mark - Scene
-
-struct _Scene : Scene {
-    _Scene(const sptr<Primitive> &w, const std::vector<sptr<Light>> &l) :
-        m_world(w),
-        m_lights(l)
-    {}
-
-    sptr<Primitive> world() const override { return m_world; }
-    const std::vector<sptr<Light>> &lights() const override { return m_lights; }
-
-    sptr<Primitive> m_world;
-    std::vector<sptr<Light>> m_lights;
-};
-
-#pragma mark - Static constructors
+#pragma mark Static constructors
 
 sptr<RenderDescription> RenderDescription::create(
     const std::vector<sptr<Primitive>> &primitives,
@@ -549,6 +534,32 @@ sptr<RenderDescription> RenderDescription::load(const std::string &path)
     error("Couldn't extract a valid render description from %s", path.c_str());
     return nullptr;
 }
+
+#pragma mark - Scene
+
+struct _Scene : Scene {
+    _Scene(const sptr<Primitive> &w, const std::vector<sptr<Light>> &l) :
+        m_world(w),
+        m_lights(l)
+    {}
+
+    bounds3f bounds() const override { return m_world->bounds(); }
+    const std::vector<sptr<Light>> &lights() const override { return m_lights; }
+
+    bool intersect(const Ray &r, Interaction &isect, float max) const override
+    {
+        return m_world->intersect(r, isect, max);
+    }
+    bool qIntersect(const Ray &r, float max) const override
+    {
+        return m_world->qIntersect(r, max);
+    }
+
+    sptr<Primitive> m_world;
+    std::vector<sptr<Light>> m_lights;
+};
+
+#pragma mark Static Constructors
 
 sptr<Scene> Scene::create(const sptr<Primitive> &world,
                           const std::vector<sptr<Light>> &lights)

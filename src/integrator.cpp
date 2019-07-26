@@ -68,7 +68,7 @@ static Spectrum EstimateDirect(const Interaction &isect,
             Interaction lIsect;
             Ray r = SpawnRay(isect, wi);
             Li = {};
-            if (scene->world()->intersect(r, lIsect)) {
+            if (scene->intersect(r, lIsect)) {
                 if (lIsect.prim->light() == light) {
                     Li = LightEmitted(lIsect, -wi);
                 }
@@ -136,7 +136,7 @@ Spectrum _Integrator::Li(const Ray &ray,
                          size_t depth) const
 {
     Interaction isect;
-    if (scene->world()->intersect(ray, isect)) {
+    if (scene->intersect(ray, isect)) {
         Spectrum attenuation;
         v3f wi;
         if (depth < m_maxDepth && isect.mat->scatter(ray, isect, attenuation, wi)) {
@@ -165,7 +165,7 @@ IntegratorResult _Integrator::NALi(const Ray &ray,
                                    size_t) const
 {
     Interaction isect;
-    if (scene->world()->intersect(ray, isect)) {
+    if (scene->intersect(ray, isect)) {
         Spectrum attenuation;
         v3f wi;
         if (isect.mat->scatter(ray, isect, attenuation, wi)) {
@@ -219,7 +219,7 @@ Spectrum _PathIntegrator::Li(const Ray &r,
 
     for (size_t bounces = 0;; bounces++) {
         Interaction isect;
-        bool intersect = scene->world()->intersect(ray, isect);
+        bool intersect = scene->intersect(ray, isect);
         if (bounces == 0 || specular) {
             if (intersect) {
                 L += beta * LightEmitted(isect, -ray.dir());
@@ -276,7 +276,7 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
 
     for (size_t bounces = 0;; bounces++) {
         Interaction isect;
-        bool intersect = scene->world()->intersect(ray, isect);
+        bool intersect = scene->intersect(ray, isect);
         if (bounces == 0) {
             if (intersect) {
                 N = isect.n;
