@@ -118,12 +118,9 @@ struct _Integrator : Integrator {
     Spectrum Li(const Ray &ray,
                 const sptr<Scene> &scene,
                 const sptr<Sampler> &sampler,
-                size_t depth) const override;
-
-    IntegratorResult NALi(const Ray &,
-                          const sptr<Scene> &,
-                          const sptr<Sampler> &,
-                          size_t) const override;
+                size_t depth,
+                v3f *N = nullptr,
+                Spectrum *A = nullptr) const override;
 
     sptr<Sampler> m_sampler;
     size_t m_maxDepth;
@@ -133,7 +130,9 @@ struct _Integrator : Integrator {
 Spectrum _Integrator::Li(const Ray &ray,
                          const sptr<Scene> &scene,
                          const sptr<Sampler> &sampler,
-                         size_t depth) const
+                         size_t depth,
+                         v3f *N,
+                         Spectrum *A) const
 {
     Interaction isect;
     if (scene->intersect(ray, isect)) {
@@ -153,39 +152,16 @@ Spectrum _Integrator::Li(const Ray &ray,
             }
             Ray scattered = SpawnRay(isect, wi);
             L += attenuation * Li(scattered, scene, sampler, depth + 1);
+            if (N) {
+                *N = isect.n;
+            }
+            if (A) {
+                *A = attenuation;
+            }
             return L;
         }
     }
     return m_background;
-}
-
-IntegratorResult _Integrator::NALi(const Ray &ray,
-                                   const sptr<Scene> &scene,
-                                   const sptr<Sampler> &sampler,
-                                   size_t) const
-{
-    Interaction isect;
-    if (scene->intersect(ray, isect)) {
-        Spectrum attenuation;
-        v3f wi;
-        if (isect.mat->scatter(ray, isect, attenuation, wi)) {
-            Spectrum L;
-            for (const auto &light : scene->lights()) {
-                v3f lwi;
-                VisibilityTester vis;
-                v2f u = sampler->sample2D();
-                float pdf;
-                Spectrum Li = light->sample_Li(isect, u, lwi, pdf, vis);
-                if (vis.visible(scene)) {
-                    L += Li * isect.mat->f(isect, isect.wo, lwi);
-                }
-            }
-            Ray scattered = SpawnRay(isect, wi);
-            L += attenuation * Li(scattered, scene, sampler, 1);
-            return { isect.n, attenuation, L };
-        }
-    }
-    return { {}, m_background, m_background };
 }
 
 #pragma mark - Path Integrator
@@ -197,11 +173,9 @@ struct _PathIntegrator : PathIntegrator {
     Spectrum Li(const Ray &ray,
                 const sptr<Scene> &scene,
                 const sptr<Sampler> &sampler,
-                size_t depth) const override;
-    IntegratorResult NALi(const Ray &ray,
-                          const sptr<Scene> &scene,
-                          const sptr<Sampler> &sampler,
-                          size_t depth) const override;
+                size_t depth,
+                v3f *N,
+                Spectrum *A) const override;
 
     sptr<Sampler> m_sampler;
     size_t m_maxDepth;
@@ -210,7 +184,9 @@ struct _PathIntegrator : PathIntegrator {
 Spectrum _PathIntegrator::Li(const Ray &r,
                              const sptr<Scene> &scene,
                              const sptr<Sampler> &sampler,
-                             size_t) const
+                             size_t,
+                             v3f *N,
+                             Spectrum *A) const
 {
     Ray ray = r;
     Spectrum L;
@@ -220,66 +196,11 @@ Spectrum _PathIntegrator::Li(const Ray &r,
     for (size_t bounces = 0;; bounces++) {
         Interaction isect;
         bool intersect = scene->intersect(ray, isect);
-        if (bounces == 0 || specular) {
-            if (intersect) {
-                L += beta * LightEmitted(isect, -ray.dir());
-            }
-            else {
-                for (const auto &light : scene->lights()) {
-                    L += beta * light->Le(ray);
-                }
-            }
-        }
-        if (!intersect || bounces > m_maxDepth) {
-            break;
-        }
-        L += beta * UniformSampleOneLight(isect, scene, sampler);
-
-        v3f wi;
-
-        sptr<BSDF> bsdf = ComputeBSDF(isect);
-        if (!bsdf) {
-            break;
-        }
-        BxDFType sampled;
-        float pdf;
-        Spectrum f =
-            bsdf->sample_f(isect.wo, sampler->sample2D(), wi, pdf, BSDF_ALL, &sampled);
-        if (f.isBlack() || FloatEqual(pdf, .0f)) {
-            break;
-        }
-        beta *= f * AbsDot(wi, isect.shading.n) / pdf;
-        specular = sampled & BSDF_SPECULAR;
-        ray = SpawnRay(isect, wi);
-
-        if (bounces > 3) {
-            float q = std::max(.5f, 1.f - MaxComponent(beta));
-            if (sampler->sample1D() < q) {
-                break;
-            }
-            beta /= 1 - q;
-        }
-    }
-    return L;
-}
-
-IntegratorResult _PathIntegrator::NALi(const Ray &r,
-                                       const sptr<Scene> &scene,
-                                       const sptr<Sampler> &sampler,
-                                       size_t) const
-{
-    Ray ray = r;
-    Spectrum L, A;
-    v3f N;
-    Spectrum beta = { 1.f };
-    bool specular = false;
-
-    for (size_t bounces = 0;; bounces++) {
-        Interaction isect;
-        bool intersect = scene->intersect(ray, isect);
         if (bounces == 0) {
             if (intersect) {
-                N = isect.n;
+                if (N) {
+                    *N = isect.n;
+                }
                 L = LightEmitted(isect, -ray.dir());
             }
             else {
@@ -316,8 +237,8 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
         if (f.isBlack() || FloatEqual(pdf, .0f)) {
             break;
         }
-        if (bounces == 0) {
-            A = f;
+        if (A && bounces == 0) {
+            *A = f;
         }
         beta *= f * AbsDot(wi, isect.shading.n) / pdf;
         specular = sampled & BSDF_SPECULAR;
@@ -331,7 +252,7 @@ IntegratorResult _PathIntegrator::NALi(const Ray &r,
             beta /= 1 - q;
         }
     }
-    return { N, A, L };
+    return L;
 }
 
 #pragma mark - Static constructor

@@ -171,12 +171,6 @@ sptr<Render> Render::create(const sptr<Scene> &scene,
 
 #pragma mark - Static functions
 
-static inline IntegratorResult AddResult(const IntegratorResult &a,
-                                         const IntegratorResult &b)
-{
-    return { a.N + b.N, a.A + b.A, a.Li + b.Li };
-}
-
 static inline uint8_t *PixelPtr(const buffer_t &b, int32_t x, int32_t y)
 {
     return (uint8_t *)b.data + y * (ptrdiff_t)b.bpr + x * (ptrdiff_t)b.format.size;
@@ -212,21 +206,23 @@ static void RenderTile(const sptr<Object> &obj, const sptr<Object> &arg)
         uint8_t *adp = PixelPtr(albedo, orgx, y);
 
         for (int32_t x = orgx; x < maxx; ++x) {
-            IntegratorResult c = {};
+            Spectrum c;
+            Spectrum A;
+            v3f N;
             sampler->startPixel({ x, y });
             do {
                 CameraSample cs = sampler->cameraSample();
                 Ray r = ctx->m_camera->generateRay(cs);
-                c = AddResult(c, ctx->m_integrator->NALi(r, ctx->m_scene, sampler, 0));
+                c += ctx->m_integrator->Li(r, ctx->m_scene, sampler, 0, &N, &A);
             } while (sampler->startNextSample());
 
-            v3f N = c.N * ns_inv;
-            v3f A = ApproxGammaCorrection((c.A * ns_inv).rgb());
-            v3f Li = ApproxGammaCorrection((c.Li * ns_inv).rgb());
+            N *= ns_inv;
+            v3f a = ApproxGammaCorrection((A * ns_inv).rgb());
+            v3f Li = ApproxGammaCorrection((c * ns_inv).rgb());
 
             memcpy(idp, &Li.x, image.format.size);
             memcpy(ndp, &N.x, normals.format.size);
-            memcpy(adp, &A.x, albedo.format.size);
+            memcpy(adp, &a.x, albedo.format.size);
 
             idp += image.format.size;
             ndp += normals.format.size;

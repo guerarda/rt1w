@@ -8,12 +8,6 @@ struct Ray;
 struct Sampler;
 struct Scene;
 
-struct IntegratorResult {
-    v3f N;
-    Spectrum A;
-    Spectrum Li;
-};
-
 struct Integrator : Object {
     static sptr<Integrator> create(const sptr<Sampler> &sampler, size_t maxDepth);
 
@@ -21,11 +15,9 @@ struct Integrator : Object {
     virtual Spectrum Li(const Ray &ray,
                         const sptr<Scene> &scene,
                         const sptr<Sampler> &sampler,
-                        size_t depth) const = 0;
-    virtual IntegratorResult NALi(const Ray &ray,
-                                  const sptr<Scene> &scene,
-                                  const sptr<Sampler> &sampler,
-                                  size_t depth) const = 0;
+                        size_t depth,
+                        v3f *N = nullptr,
+                        Spectrum *A = nullptr) const = 0;
 };
 
 struct PathIntegrator : Integrator {
