@@ -38,7 +38,7 @@ Ray SpawnRayTo(const Interaction &i, v3f p)
 
     v3f org = OffsetRayOrigin(i.p, i.error, i.n, p - i.p);
     v3f dir = p - org;
-    return { org, dir };
+    return { org, dir, (float)(1.0 - ShadowEpsilon) };
 }
 
 Ray SpawnRayTo(const Interaction &i, const Interaction &t)
@@ -49,5 +49,5 @@ Ray SpawnRayTo(const Interaction &i, const Interaction &t)
     v3f org = OffsetRayOrigin(i.p, i.error, i.n, t.p - i.p);
     v3f dst = OffsetRayOrigin(t.p, t.error, t.n, org - t.p);
     v3f dir = dst - org;
-    return { org, dir };
+    return { org, dir, (float)(1.0 - ShadowEpsilon) };
 }

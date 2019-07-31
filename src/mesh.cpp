@@ -68,8 +68,8 @@ struct Triangle : Shape {
         m_v(&((*md->m_i)[3 * ix]))
     {}
 
-    bool intersect(const Ray &r, Interaction &isect, float max) const override;
-    bool qIntersect(const Ray &r, float max) const override;
+    bool intersect(const Ray &r, Interaction &isect) const override;
+    bool qIntersect(const Ray &r) const override;
 
     float area() const override;
     bounds3f bounds() const override;
@@ -90,7 +90,7 @@ static size_t MaxDimension(const v3f &v)
     return v.x > v.y ? (v.x > v.z ? 0 : 2) : (v.y > v.z ? 1 : 2);
 }
 
-bool Triangle::intersect(const Ray &ray, Interaction &isect, float max) const
+bool Triangle::intersect(const Ray &ray, Interaction &isect) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -151,10 +151,10 @@ bool Triangle::intersect(const Ray &ray, Interaction &isect, float max) const
 
     /* Value of parameter t & early rejections */
     float t = e0 * p0t.z + e1 * p1t.z + e2 * p2t.z;
-    if (det > 0 && (t <= .0f || t >= max * det)) {
+    if (det > 0 && (t <= .0f || t >= r.max() * det)) {
         return false;
     }
-    if (det < 0 && (t >= .0f || t <= max * det)) {
+    if (det < 0 && (t >= .0f || t <= r.max() * det)) {
         return false;
     }
 
@@ -246,7 +246,7 @@ bool Triangle::intersect(const Ray &ray, Interaction &isect, float max) const
     return true;
 }
 
-bool Triangle::qIntersect(const Ray &ray, float max) const
+bool Triangle::qIntersect(const Ray &ray) const
 {
     sptr<VertexData> vd = m_md->m_vd;
 
@@ -304,10 +304,10 @@ bool Triangle::qIntersect(const Ray &ray, float max) const
         return false;
     }
     float t = e0 * p0t.z + e1 * p1t.z + e2 * p2t.z;
-    if (det > 0 && (t <= .0f || t >= max * det)) {
+    if (det > 0 && (t <= .0f || t >= r.max() * det)) {
         return false;
     }
-    if (det < 0 && (t >= .0f || t <= max * det)) {
+    if (det < 0 && (t >= .0f || t <= r.max() * det)) {
         return false;
     }
     /* Barycentric coordinates */
@@ -386,7 +386,7 @@ float Triangle::pdf(const Interaction &ref, const v3f &wi) const
 {
     Ray r = SpawnRay(ref, wi);
     Interaction isect;
-    if (!intersect(r, isect, Infinity)) {
+    if (!intersect(r, isect)) {
         return .0f;
     }
     return DistanceSquared(ref.p, isect.p) / (AbsDot(isect.n, -wi) * area());
@@ -397,8 +397,8 @@ float Triangle::pdf(const Interaction &ref, const v3f &wi) const
 struct _Mesh : Mesh {
     _Mesh(const sptr<MeshData> &md);
 
-    bool intersect(const Ray &r, Interaction &isect, float max) const override;
-    bool qIntersect(const Ray &r, float max) const override;
+    bool intersect(const Ray &r, Interaction &isect) const override;
+    bool qIntersect(const Ray &r) const override;
 
     float area() const override;
     bounds3f bounds() const override { return m_box; };
@@ -428,23 +428,24 @@ _Mesh::_Mesh(const sptr<MeshData> &md)
     }
 }
 
-bool _Mesh::intersect(const Ray &r, Interaction &isect, float max) const
+bool _Mesh::intersect(const Ray &r, Interaction &isect) const
 {
     bool hit = false;
-    isect.t = max;
+    float t = r.max();
 
     for (const auto &tri : m_faces) {
-        if (tri->intersect(r, isect, isect.t)) {
+        if (tri->intersect({ r, t }, isect)) {
+            t = isect.t;
             hit = true;
         }
     }
     return hit;
 }
 
-bool _Mesh::qIntersect(const Ray &r, float max) const
+bool _Mesh::qIntersect(const Ray &r) const
 {
     for (const auto &t : m_faces) {
-        if (t->qIntersect(r, max)) {
+        if (t->qIntersect(r)) {
             return true;
         }
     }

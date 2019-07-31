@@ -2,6 +2,7 @@
 
 #include "geometry.hpp"
 #include "sptr.hpp"
+#include "utils.hpp"
 
 struct Material;
 struct Primitive;
@@ -17,7 +18,7 @@ struct Interaction {
     v3f dpdu;
     v3f dpdv;
     v3f error;
-    float t = .0f;
+    float t = -Infinity;
     struct {
         v3f n;
         v3f dpdu;

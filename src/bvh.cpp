@@ -6,17 +6,17 @@
 
 #include <vector>
 
-static bool box_hit(const bounds3f &b, const Ray &r, float tmax)
+static bool box_hit(const bounds3f &b, const Ray &r)
 {
     v3f dir = r.dir();
     v3f org = r.org();
-    float i_dir, t0, t1;
+    float tmax = r.max();
     float tmin = .0f;
 
     for (size_t i = 0; i < 3; i++) {
-        i_dir = 1.0f / (&dir.x)[i];
-        t0 = ((&b.lo.x)[i] - (&org.x)[i]) * i_dir;
-        t1 = ((&b.hi.x)[i] - (&org.x)[i]) * i_dir;
+        float i_dir = 1.0f / (&dir.x)[i];
+        float t0 = ((&b.lo.x)[i] - (&org.x)[i]) * i_dir;
+        float t1 = ((&b.hi.x)[i] - (&org.x)[i]) * i_dir;
         if (i_dir < 0.0f) {
             std::swap(t0, t1);
         }
@@ -82,8 +82,8 @@ struct _BVHAccelerator : BVHAccelerator {
     _BVHAccelerator(const std::vector<sptr<Primitive>> &v) : m_prims(v) { buildBVH(); }
     ~_BVHAccelerator() override { free(m_nodes); }
 
-    bool intersect(const Ray &r, Interaction &isect, float max) const override;
-    bool qIntersect(const Ray &r, float max) const override;
+    bool intersect(const Ray &r, Interaction &isect) const override;
+    bool qIntersect(const Ray &r) const override;
     bounds3f bounds() const override { return m_bounds; }
     sptr<AreaLight> light() const override;
 
@@ -101,7 +101,6 @@ struct _BVHAccelerator : BVHAccelerator {
     std::vector<sptr<Primitive>> m_prims;
     bounds3f m_bounds;
     BVHLinearNode *m_nodes = nullptr;
-    size_t m_count = 0;
 };
 
 sptr<AreaLight> _BVHAccelerator::light() const
@@ -270,22 +269,23 @@ int32_t _BVHAccelerator::flattenBVH(const BVHBuildNode *root, int32_t &offset)
     return savedOffset;
 }
 
-bool _BVHAccelerator::intersect(const Ray &r, Interaction &isect, float max) const
+bool _BVHAccelerator::intersect(const Ray &r, Interaction &isect) const
 {
     size_t index = 0;
     size_t next[64] = { 0 };
     size_t sp = 0;
     bool hit = false;
+    float max = r.max();
 
     while (true) {
-        if (box_hit(m_nodes[index].bounds, r, max)) {
+        if (box_hit(m_nodes[index].bounds, { r, max })) {
             size_t n = m_nodes[index].size;
 
             if (n > 0) {
                 auto first = (size_t)m_nodes[index].primitivesOffset;
 
                 for (size_t i = first; i < first + n; i++) {
-                    if (m_prims[i]->intersect(r, isect, max)) {
+                    if (m_prims[i]->intersect({ r, max }, isect)) {
                         hit = true;
                         max = isect.t;
                     }
@@ -310,21 +310,21 @@ bool _BVHAccelerator::intersect(const Ray &r, Interaction &isect, float max) con
     return hit;
 }
 
-bool _BVHAccelerator::qIntersect(const Ray &r, float max) const
+bool _BVHAccelerator::qIntersect(const Ray &r) const
 {
     size_t index = 0;
     size_t next[64] = { 0 };
     size_t sp = 0;
 
     while (true) {
-        if (box_hit(m_nodes[index].bounds, r, max)) {
+        if (box_hit(m_nodes[index].bounds, r)) {
             size_t n = m_nodes[index].size;
 
             if (n > 0) {
                 auto first = (size_t)m_nodes[index].primitivesOffset;
 
                 for (size_t i = first; i < first + n; ++i) {
-                    if (m_prims[i]->qIntersect(r, max)) {
+                    if (m_prims[i]->qIntersect(r)) {
                         return true;
                     }
                 }

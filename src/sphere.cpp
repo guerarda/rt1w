@@ -38,8 +38,8 @@ struct _Sphere : Sphere {
         m_radius(r)
     {}
 
-    bool intersect(const Ray &r, Interaction &isect, float max) const override;
-    bool qIntersect(const Ray &r, float max) const override;
+    bool intersect(const Ray &r, Interaction &isect) const override;
+    bool qIntersect(const Ray &r) const override;
 
     float area() const override { return (float)(4. * Pi * m_radius * m_radius); }
     bounds3f bounds() const override { return m_box; }
@@ -58,7 +58,7 @@ struct _Sphere : Sphere {
     float m_radius;
 };
 
-bool _Sphere::intersect(const Ray &ray, Interaction &isect, float max) const
+bool _Sphere::intersect(const Ray &ray, Interaction &isect) const
 {
     v3f oError, dError;
     Ray r = m_worldToObj(ray, oError, dError);
@@ -67,8 +67,8 @@ bool _Sphere::intersect(const Ray &ray, Interaction &isect, float max) const
     if (!SphereQuadratic(r, oError, dError, m_radius, t0, t1)) {
         return false;
     }
-    EFloat t = t0.lo() > .0f && t0.hi() < max ? t0 : t1;
-    if (t.lo() <= .0f || t.hi() >= max) {
+    EFloat t = t0.lo() > .0f && t0.hi() < r.max() ? t0 : t1;
+    if (t.lo() <= .0f || t.hi() >= r.max()) {
         return false;
     }
     isect.t = (float)t;
@@ -108,15 +108,15 @@ bool _Sphere::intersect(const Ray &ray, Interaction &isect, float max) const
     return true;
 }
 
-bool _Sphere::qIntersect(const Ray &ray, float max) const
+bool _Sphere::qIntersect(const Ray &ray) const
 {
     v3f oError, dError;
     Ray r = m_worldToObj(ray, oError, dError);
 
     EFloat t0, t1;
     if (SphereQuadratic(r, oError, dError, m_radius, t0, t1)) {
-        EFloat t = t0.lo() > .0f && t0.hi() < max ? t0 : t1;
-        if (t.lo() > .0f && t.hi() < max) {
+        EFloat t = t0.lo() > .0f && t0.hi() < r.max() ? t0 : t1;
+        if (t.lo() > .0f && t.hi() < r.max()) {
             return true;
         }
     }
@@ -144,7 +144,7 @@ float _Sphere::pdf(const Interaction &ref, const v3f &wi) const
 {
     Ray r = SpawnRay(ref, wi);
     Interaction isect;
-    if (!intersect(r, isect, Infinity)) {
+    if (!intersect(r, isect)) {
         return .0f;
     }
     return DistanceSquared(ref.p, isect.p) / (AbsDot(isect.n, -wi) * area());

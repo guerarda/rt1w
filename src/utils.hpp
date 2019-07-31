@@ -16,6 +16,7 @@ constexpr double Inv2Pi = 0.159154943091895335768883763372514362;
 constexpr double Sqrt2 = 1.41421356237309504880168872420969808;
 
 constexpr double Infinity = std::numeric_limits<double>::infinity();
+constexpr double ShadowEpsilon = .0001;
 
 template <typename T>
 constexpr T Epsilon = std::numeric_limits<T>::epsilon();

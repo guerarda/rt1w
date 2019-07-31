@@ -12,10 +12,8 @@ struct Transform;
 struct Shape : Object {
     static sptr<Shape> create(const sptr<Params> &p);
 
-    virtual bool intersect(const Ray &r,
-                           Interaction &isect,
-                           float max = Infinity) const = 0;
-    virtual bool qIntersect(const Ray &r, float max = Infinity) const = 0;
+    virtual bool intersect(const Ray &r, Interaction &isect) const = 0;
+    virtual bool qIntersect(const Ray &r) const = 0;
 
     virtual float area() const = 0;
     virtual bounds3f bounds() const = 0;

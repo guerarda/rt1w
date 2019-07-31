@@ -546,14 +546,11 @@ struct _Scene : Scene {
     bounds3f bounds() const override { return m_world->bounds(); }
     const std::vector<sptr<Light>> &lights() const override { return m_lights; }
 
-    bool intersect(const Ray &r, Interaction &isect, float max) const override
+    bool intersect(const Ray &r, Interaction &isect) const override
     {
-        return m_world->intersect(r, isect, max);
+        return m_world->intersect(r, isect);
     }
-    bool qIntersect(const Ray &r, float max) const override
-    {
-        return m_world->qIntersect(r, max);
-    }
+    bool qIntersect(const Ray &r) const override { return m_world->qIntersect(r); }
 
     sptr<Primitive> m_world;
     std::vector<sptr<Light>> m_lights;

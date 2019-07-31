@@ -16,7 +16,7 @@ Ray Transform::operator()(const Ray &r) const
     v3f o = Mulp(*this, r.org());
     v3f d = Mulv(*this, r.dir());
 
-    return { o, d };
+    return { o, d, r.max() };
 }
 
 Ray Transform::operator()(const Ray &r, v3f &oError, v3f &dError) const
@@ -24,7 +24,7 @@ Ray Transform::operator()(const Ray &r, v3f &oError, v3f &dError) const
     v3f o = Mulp(*this, r.org(), oError);
     v3f d = Mulv(*this, r.dir(), dError);
 
-    return { o, d };
+    return { o, d, r.max() };
 }
 
 Ray Transform::operator()(const Ray &r,
@@ -36,7 +36,7 @@ Ray Transform::operator()(const Ray &r,
     v3f o = Mulp(*this, r.org(), oErrorIn, oErrorOut);
     v3f d = Mulv(*this, r.dir(), dErrorIn, dErrorOut);
 
-    return { o, d };
+    return { o, d, r.max() };
 }
 
 bounds3f Transform::operator()(const bounds3f &b) const

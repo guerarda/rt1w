@@ -33,8 +33,6 @@ struct Scene : Object {
     virtual bounds3f bounds() const = 0;
     virtual const std::vector<sptr<Light>> &lights() const = 0;
 
-    virtual bool intersect(const Ray &r,
-                           Interaction &isect,
-                           float max = Infinity) const = 0;
-    virtual bool qIntersect(const Ray &r, float max = Infinity) const = 0;
+    virtual bool intersect(const Ray &r, Interaction &isect) const = 0;
+    virtual bool qIntersect(const Ray &r) const = 0;
 };
