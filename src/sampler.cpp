@@ -83,7 +83,7 @@ struct _Sampler : Sampler {
 
 void _Sampler::init()
 {
-    for (size_t i = 0; i < m_spp; i++) {
+    for (size_t i = 0; i < m_dim; i++) {
         m_samples1D.push_back(std::vector<float>(m_spp));
         m_samples2D.push_back(std::vector<v2f>(m_spp));
     }

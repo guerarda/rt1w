@@ -133,7 +133,7 @@ sptr<Image> Denoise(const sptr<Image> &color)
 
 sptr<Image> Denoise(const sptr<Image> &color, const sptr<Image> &, const sptr<Image> &)
 {
-    warning("RT1W was built without OpenImageDenoise.");
+    warning("RT1W was built without OpenImageDenoise support");
     return color;
 }
 #endif

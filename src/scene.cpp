@@ -108,7 +108,7 @@ static Transform read_transform(const rapidjson::Value &v)
             }
         }
         Transform t;
-        for (auto &m : v.GetArray()) {
+        for (const auto &m : v.GetArray()) {
             t = t * read_transform(m);
         }
         return t;
@@ -122,7 +122,7 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
 {
     sptr<Params> p = Params::create();
 
-    for (auto &m : v.GetObject()) {
+    for (const auto &m : v.GetObject()) {
         std::string name = m.name.GetString();
         if (name == "transform") {
             Transform t = read_transform(m.value);
@@ -138,12 +138,12 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
         }
         else if (m.value.IsArray()) {
             std::vector<double> a;
-            for (auto &num : m.value.GetArray()) {
+            for (const auto &num : m.value.GetArray()) {
                 if (num.IsNumber()) {
                     a.push_back(num.GetDouble());
                 }
                 else if (num.IsArray()) {
-                    for (auto &nnum : num.GetArray()) {
+                    for (const auto &nnum : num.GetArray()) {
                         ASSERT(nnum.IsNumber());
                         a.push_back(nnum.GetDouble());
                     }
@@ -324,7 +324,7 @@ void _RenderDescFromJSON::load_textures()
 {
     auto section = m_doc.FindMember("textures");
     if (section != m_doc.MemberEnd()) {
-        for (auto &v : section->value.GetArray()) {
+        for (const auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
@@ -347,7 +347,7 @@ void _RenderDescFromJSON::load_materials()
     // FIXME: CHECKS
     auto section = m_doc.FindMember("materials");
     if (section != m_doc.MemberEnd()) {
-        for (auto &v : section->value.GetArray()) {
+        for (const auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
@@ -367,7 +367,7 @@ void _RenderDescFromJSON::load_shapes()
 {
     auto section = m_doc.FindMember("shapes");
     if (section != m_doc.MemberEnd()) {
-        for (auto &v : section->value.GetArray()) {
+        for (const auto &v : section->value.GetArray()) {
             auto itn = v.FindMember("name");
             if (itn != v.MemberEnd()) {
                 std::string k = itn->value.GetString();
@@ -387,7 +387,7 @@ void _RenderDescFromJSON::load_lights()
     auto section = m_doc.FindMember("lights");
     if (section != m_doc.MemberEnd()) {
         size_t ix = 0;
-        for (auto &v : section->value.GetArray()) {
+        for (const auto &v : section->value.GetArray()) {
             if (sptr<Light> light = read_light(v)) {
                 m_lights.push_back(light);
                 /* Area lights need to be added to the scene's primitives so it can be
@@ -429,7 +429,7 @@ void _RenderDescFromJSON::load_primitives()
     auto section = m_doc.FindMember("primitives");
     if (section != m_doc.MemberEnd()) {
         size_t ix = 0;
-        for (auto &v : section->value.GetArray()) {
+        for (const auto &v : section->value.GetArray()) {
             if (v.IsObject()) {
                 auto itf = v.FindMember("file");
                 if (itf != v.MemberEnd()) {

@@ -66,10 +66,10 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     /* For each mesh, store a vector that contains the mesh indices */
     std::vector<sptr<std::vector<uint32_t>>> mesh_indices;
 
-    for (auto &s : obj_shapes) {
+    for (const auto &s : obj_shapes) {
         std::vector<uint32_t> indices;
 
-        for (auto &idx : s.mesh.indices) {
+        for (const auto &idx : s.mesh.indices) {
             uint32_t i;
             auto it = remap.find(idx);
 
@@ -112,11 +112,11 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::vector<sptr<Mesh>> meshes;
 
     sptr<Texture> tex = Texture::create_color(Spectrum::fromRGB({ .5f, .5f, .5f }));
-    for (auto &indices_value : mesh_indices) {
+    for (const auto &indices_value : mesh_indices) {
         size_t nt = indices_value->size() / 3;
         auto faces = Mesh::create(nt, vd, indices_value, Transform())->faces();
 
-        for (auto &f : faces) {
+        for (const auto &f : faces) {
             primitives.push_back(Primitive::create(f, Lambertian::create(tex)));
         }
     }

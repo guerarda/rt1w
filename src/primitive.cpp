@@ -83,7 +83,7 @@ struct _Aggregate : Aggregate {
 _Aggregate::_Aggregate(const std::vector<sptr<Primitive>> &prims)
 {
     m_primitives = prims;
-    for (auto &p : m_primitives) {
+    for (const auto &p : m_primitives) {
         m_bounds = Union(m_bounds, p->bounds());
     }
 }
@@ -98,7 +98,7 @@ bool _Aggregate::intersect(const Ray &r, Interaction &isect) const
     bool hit = false;
     float t = r.max();
 
-    for (auto &p : m_primitives) {
+    for (const auto &p : m_primitives) {
         if (p->intersect({ r, t }, isect)) {
             t = isect.t;
             hit = true;
@@ -109,7 +109,7 @@ bool _Aggregate::intersect(const Ray &r, Interaction &isect) const
 
 bool _Aggregate::qIntersect(const Ray &r) const
 {
-    for (auto &p : m_primitives) {
+    for (const auto &p : m_primitives) {
         if (p->qIntersect(r)) {
             return true;
         }

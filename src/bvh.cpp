@@ -106,7 +106,6 @@ struct _BVHAccelerator : BVHAccelerator {
 sptr<AreaLight> _BVHAccelerator::light() const
 {
     trap("BVHAccelerator::light() should never be called");
-    return nullptr;
 }
 
 void _BVHAccelerator::buildBVH()
