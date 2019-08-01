@@ -31,7 +31,7 @@ protected:
     const v2f *m_uv;
 };
 
-struct Mesh : Shape {
+struct Mesh : Group {
     static sptr<Mesh> create(const sptr<Params> &p);
     static sptr<Mesh> create(size_t nt,
                              const sptr<VertexData> &vd,

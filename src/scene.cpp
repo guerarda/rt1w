@@ -492,8 +492,17 @@ void _RenderDescFromJSON::load_primitives()
                         WARNING_IF(!mat, "Primitive at index %lu, invalid material", ix);
 
                         if (shape && mat) {
-                            m_primitives.emplace_back(Primitive::create(shape, mat));
-                            m_box = Union(m_box, shape->bounds());
+                            if (auto g = std::dynamic_pointer_cast<Group>(shape)) {
+                                auto shapes = g->faces();
+                                for (const auto &s : shapes) {
+                                    m_primitives.emplace_back(Primitive::create(s, mat));
+                                    m_box = Union(m_box, s->bounds());
+                                }
+                            }
+                            else {
+                                m_primitives.emplace_back(Primitive::create(shape, mat));
+                                m_box = Union(m_box, shape->bounds());
+                            }
                         }
                         else {
                             warning("Couldnt create Primitive at index %lu", ix);

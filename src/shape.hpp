@@ -4,6 +4,8 @@
 #include "sptr.hpp"
 #include "utils.hpp"
 
+#include <vector>
+
 struct Interaction;
 struct Params;
 struct Ray;
@@ -24,4 +26,8 @@ struct Shape : Object {
 
     virtual Interaction sample(const Interaction &ref, const v2f &u) const = 0;
     virtual float pdf(const Interaction &ref, const v3f &wi) const = 0;
+};
+
+struct Group : Shape {
+    virtual std::vector<sptr<Shape>> faces() const = 0;
 };
