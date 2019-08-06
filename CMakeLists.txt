@@ -56,41 +56,41 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 ## Core
 add_library(rt1w
-  src/arena.cpp
-  src/bvh.cpp
-  src/bxdf.cpp
-  src/camera.cpp
-  src/context.cpp
-  src/denoise.cpp
-  src/error.cpp
-  src/event.cpp
-  src/fresnel.cpp
-  src/geometry.cpp
-  src/image.cpp
-  src/imageio.c
-  src/integrator.cpp
-  src/interaction.cpp
-  src/light.cpp
-  src/material.cpp
-  src/mesh.cpp
-  src/params.cpp
-  src/primitive.cpp
-  src/ray.cpp
-  src/rng.cpp
-  src/sampler.cpp
-  src/sampling.cpp
-  src/scene.cpp
-  src/shape.cpp
-  src/spectrum.cpp
-  src/sphere.cpp
-  src/sptr.cpp
-  src/sync.c
-  src/task.cpp
-  src/texture.cpp
-  src/transform.cpp
-  src/utils.cpp
-  src/value.cpp
-  src/workq.cpp
+  src/core/arena.cpp
+  src/core/bvh.cpp
+  src/core/bxdf.cpp
+  src/core/camera.cpp
+  src/core/context.cpp
+  src/core/denoise.cpp
+  src/core/error.cpp
+  src/core/event.cpp
+  src/core/fresnel.cpp
+  src/core/geometry.cpp
+  src/core/image.cpp
+  src/core/imageio.c
+  src/core/integrator.cpp
+  src/core/interaction.cpp
+  src/core/light.cpp
+  src/core/material.cpp
+  src/core/mesh.cpp
+  src/core/params.cpp
+  src/core/primitive.cpp
+  src/core/ray.cpp
+  src/core/rng.cpp
+  src/core/sampler.cpp
+  src/core/sampling.cpp
+  src/core/scene.cpp
+  src/core/shape.cpp
+  src/core/spectrum.cpp
+  src/core/sphere.cpp
+  src/core/sptr.cpp
+  src/core/sync.c
+  src/core/task.cpp
+  src/core/texture.cpp
+  src/core/transform.cpp
+  src/core/utils.cpp
+  src/core/value.cpp
+  src/core/workq.cpp
   src/tools/loader_obj.cpp
 )
 
@@ -102,8 +102,9 @@ target_compile_options(rt1w
 
 target_include_directories(rt1w
   PUBLIC
-    src
+    include/rt1w
   PRIVATE
+    src
     src/thirdparty
     ${PNG_INCLUDE_DIRS}
 )
@@ -128,7 +129,7 @@ if (RT1W_WITH_OIDN)
 endif()
 
 ## Executable
-add_executable(rt1w_exe src/main.cpp)
+add_executable(rt1w_exe src/main/rt1w.cpp)
 set_target_properties(rt1w_exe PROPERTIES OUTPUT_NAME rt1w)
 
 target_compile_options(rt1w_exe
