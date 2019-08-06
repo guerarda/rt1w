@@ -1,13 +1,13 @@
-#include "denoise.hpp"
+#include "rt1w/denoise.hpp"
 
-#include "error.h"
+#include "rt1w/error.h"
 
 #ifdef RT1W_WITH_OIDN
 
-#include "event.hpp"
-#include "image.hpp"
-#include "types.h"
-#include "workq.hpp"
+#include "rt1w/event.hpp"
+#include "rt1w/image.hpp"
+#include "rt1w/types.h"
+#include "rt1w/workq.hpp"
 
 #include <OpenImageDenoise/oidn.hpp>
 

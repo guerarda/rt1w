@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "spectrum.hpp"
-#include "sptr.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/spectrum.hpp"
+#include "rt1w/sptr.hpp"
 
 struct Ray;
 struct Sampler;

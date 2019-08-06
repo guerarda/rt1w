@@ -1,7 +1,7 @@
 #pragma once
 
-#include "shape.hpp"
-#include "sptr.hpp"
+#include "rt1w/shape.hpp"
+#include "rt1w/sptr.hpp"
 
 struct Params;
 struct Transform;

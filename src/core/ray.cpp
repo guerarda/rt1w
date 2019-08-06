@@ -1,8 +1,8 @@
-#include "ray.hpp"
+#include "rt1w/ray.hpp"
 
-#include "geometry.hpp"
-#include "interaction.hpp"
-#include "utils.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/interaction.hpp"
+#include "rt1w/utils.hpp"
 
 static inline v3f OffsetRayOrigin(const v3f &p,
                                   const v3f &error,

@@ -1,14 +1,14 @@
-#include "material.hpp"
+#include "rt1w/material.hpp"
 
-#include "bxdf.hpp"
-#include "error.h"
-#include "fresnel.hpp"
-#include "interaction.hpp"
-#include "params.hpp"
-#include "ray.hpp"
-#include "spectrum.hpp"
-#include "texture.hpp"
-#include "value.hpp"
+#include "rt1w/bxdf.hpp"
+#include "rt1w/error.h"
+#include "rt1w/fresnel.hpp"
+#include "rt1w/interaction.hpp"
+#include "rt1w/params.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/spectrum.hpp"
+#include "rt1w/texture.hpp"
+#include "rt1w/value.hpp"
 
 #include <random>
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sptr.hpp"
+#include "rt1w/sptr.hpp"
 
 struct Image;
 

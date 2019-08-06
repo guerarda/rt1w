@@ -102,7 +102,7 @@ target_compile_options(rt1w
 
 target_include_directories(rt1w
   PUBLIC
-    include/rt1w
+    include
   PRIVATE
     src
     src/thirdparty

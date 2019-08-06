@@ -1,9 +1,9 @@
-#include "rng.hpp"
+#include "rt1w/rng.hpp"
+
+#include "rt1w/error.h"
 
 #include <limits>
 #include <random>
-
-#include "error.h"
 
 /* See http://xoshiro.di.unimi.it */
 static inline uint64_t splitmix64(uint64_t x)

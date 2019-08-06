@@ -1,14 +1,14 @@
-#include "integrator.hpp"
+#include "rt1w/integrator.hpp"
 
-#include "bxdf.hpp"
-#include "interaction.hpp"
-#include "light.hpp"
-#include "material.hpp"
-#include "primitive.hpp"
-#include "ray.hpp"
-#include "sampler.hpp"
-#include "sampling.hpp"
-#include "scene.hpp"
+#include "rt1w/bxdf.hpp"
+#include "rt1w/interaction.hpp"
+#include "rt1w/light.hpp"
+#include "rt1w/material.hpp"
+#include "rt1w/primitive.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/sampler.hpp"
+#include "rt1w/sampling.hpp"
+#include "rt1w/scene.hpp"
 
 #include <limits>
 

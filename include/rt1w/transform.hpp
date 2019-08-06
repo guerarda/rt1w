@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "interaction.hpp"
+#include "rt1w/geometry.hpp"
 
+struct Interaction;
 struct Ray;
 
 struct Transform {

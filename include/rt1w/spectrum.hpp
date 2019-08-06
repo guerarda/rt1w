@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "utils.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/utils.hpp"
 
 template <size_t N>
 struct SampledSpectrum {

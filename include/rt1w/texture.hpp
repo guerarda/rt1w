@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "sptr.hpp"
-#include "types.h"
+#include "rt1w/geometry.hpp"
+#include "rt1w/sptr.hpp"
+#include "rt1w/types.h"
 
 struct Image;
 struct Params;

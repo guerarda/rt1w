@@ -1,11 +1,11 @@
-#include "bxdf.hpp"
+#include "rt1w/bxdf.hpp"
 
-#include "fresnel.hpp"
-#include "interaction.hpp"
-#include "rng.hpp"
-#include "sampling.hpp"
-#include "spectrum.hpp"
-#include "utils.hpp"
+#include "rt1w/fresnel.hpp"
+#include "rt1w/interaction.hpp"
+#include "rt1w/rng.hpp"
+#include "rt1w/sampling.hpp"
+#include "rt1w/spectrum.hpp"
+#include "rt1w/utils.hpp"
 
 #include <vector>
 

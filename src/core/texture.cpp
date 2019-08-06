@@ -1,10 +1,10 @@
-#include "texture.hpp"
+#include "rt1w/texture.hpp"
 
-#include "error.h"
-#include "image.hpp"
-#include "params.hpp"
-#include "spectrum.hpp"
-#include "value.hpp"
+#include "rt1w/error.h"
+#include "rt1w/image.hpp"
+#include "rt1w/params.hpp"
+#include "rt1w/spectrum.hpp"
+#include "rt1w/value.hpp"
 
 #include <cmath>
 

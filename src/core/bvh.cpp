@@ -1,8 +1,8 @@
-#include "bvh.hpp"
+#include "rt1w/bvh.hpp"
 
-#include "arena.hpp"
-#include "interaction.hpp"
-#include "ray.hpp"
+#include "rt1w/arena.hpp"
+#include "rt1w/interaction.hpp"
+#include "rt1w/ray.hpp"
 
 #include <vector>
 

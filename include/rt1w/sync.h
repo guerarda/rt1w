@@ -1,7 +1,7 @@
-#ifndef SYNC_H
-#define SYNC_H
+#pragma once
 
-#include "types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 __BEGIN_DECLS
 
@@ -53,5 +53,3 @@ void *sync_lock_ptr(void *volatile *);
 void sync_unlock_ptr(void *volatile *, void *);
 
 __END_DECLS
-
-#endif

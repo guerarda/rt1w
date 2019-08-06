@@ -1,16 +1,16 @@
-#include "scene.hpp"
+#include "rt1w/scene.hpp"
 
-#include "camera.hpp"
-#include "error.h"
-#include "light.hpp"
-#include "material.hpp"
-#include "params.hpp"
-#include "primitive.hpp"
-#include "shape.hpp"
-#include "spectrum.hpp"
-#include "texture.hpp"
-#include "transform.hpp"
-#include "value.hpp"
+#include "rt1w/camera.hpp"
+#include "rt1w/error.h"
+#include "rt1w/light.hpp"
+#include "rt1w/material.hpp"
+#include "rt1w/params.hpp"
+#include "rt1w/primitive.hpp"
+#include "rt1w/shape.hpp"
+#include "rt1w/spectrum.hpp"
+#include "rt1w/texture.hpp"
+#include "rt1w/transform.hpp"
+#include "rt1w/value.hpp"
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>

@@ -1,18 +1,18 @@
-#include "primitive.hpp"
+#include "rt1w/primitive.hpp"
 
-#include "bvh.hpp"
-#include "material.hpp"
-#include "mesh.hpp"
-#include "spectrum.hpp"
-#include "texture.hpp"
-#include "transform.hpp"
-#include "value.hpp"
+#include "rt1w/bvh.hpp"
+#include "rt1w/material.hpp"
+#include "rt1w/mesh.hpp"
+#include "rt1w/spectrum.hpp"
+#include "rt1w/texture.hpp"
+#include "rt1w/transform.hpp"
+#include "rt1w/value.hpp"
+
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tinyobjloader/tiny_obj_loader.h>
 
 #include <functional>
 #include <unordered_map>
-
-#define TINYOBJLOADER_IMPLEMENTATION
-#include "tinyobjloader/tiny_obj_loader.h"
 
 /* Hash & Equal fucntion for index_t so they can be put in an unordered_map */
 namespace std {

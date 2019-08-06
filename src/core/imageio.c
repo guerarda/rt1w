@@ -1,6 +1,6 @@
-#include "imageio.h"
+#include "rt1w/imageio.h"
 
-#include "types.h"
+#include "rt1w/types.h"
 
 #include <assert.h>
 #include <png.h>

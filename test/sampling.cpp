@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
-#include "sampling.hpp"
-#include "utils.hpp"
+#include "rt1w/sampling.hpp"
+#include "rt1w/utils.hpp"
 
 #include <random>
 

@@ -1,6 +1,6 @@
 #include "catch.hpp"
 
-#include "geometry.hpp"
+#include "rt1w/geometry.hpp"
 
 TEMPLATE_TEST_CASE("Bounds", "", int32_t, float, double)
 {

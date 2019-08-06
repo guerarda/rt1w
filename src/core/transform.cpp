@@ -1,8 +1,9 @@
-#include "transform.hpp"
+#include "rt1w/transform.hpp"
 
-#include "error.h"
-#include "ray.hpp"
-#include "utils.hpp"
+#include "rt1w/error.h"
+#include "rt1w/interaction.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/utils.hpp"
 
 #include <cmath>
 

@@ -1,9 +1,9 @@
-#include "primitive.hpp"
+#include "rt1w/primitive.hpp"
 
-#include "error.h"
-#include "interaction.hpp"
-#include "ray.hpp"
-#include "shape.hpp"
+#include "rt1w/error.h"
+#include "rt1w/interaction.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/shape.hpp"
 
 #pragma mark - Primitive
 

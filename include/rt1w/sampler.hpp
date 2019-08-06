@@ -1,8 +1,8 @@
 #pragma once
 
-#include "camera.hpp"
-#include "geometry.hpp"
-#include "sptr.hpp"
+#include "rt1w/camera.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/sptr.hpp"
 
 struct Sampler : Object {
     static sptr<Sampler> create(uint32_t x, uint32_t y, uint32_t dim, bool jitter);

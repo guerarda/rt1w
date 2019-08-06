@@ -1,6 +1,6 @@
 #pragma once
 
-#include "sptr.hpp"
+#include "rt1w/sptr.hpp"
 
 struct Arena : Object {
     static uptr<Arena> create();

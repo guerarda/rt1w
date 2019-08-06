@@ -1,6 +1,6 @@
-#include "fresnel.hpp"
+#include "rt1w/fresnel.hpp"
 
-#include "spectrum.hpp"
+#include "rt1w/spectrum.hpp"
 
 #pragma mark - Fresnel Dielectric
 

@@ -10,8 +10,6 @@
 #include <stdlib.h>
 #endif
 
-#include <x86intrin.h>
-
 __BEGIN_DECLS
 
 typedef struct rect {

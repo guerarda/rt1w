@@ -1,7 +1,7 @@
-#include "params.hpp"
+#include "rt1w/params.hpp"
 
-#include "texture.hpp"
-#include "value.hpp"
+#include "rt1w/texture.hpp"
+#include "rt1w/value.hpp"
 
 // clang-format off
 template <typename T> struct ptype { typedef T type; };

@@ -1,13 +1,14 @@
-#include "sphere.hpp"
+#include "rt1w/sphere.hpp"
 
-#include "efloat.hpp"
-#include "error.h"
-#include "params.hpp"
-#include "ray.hpp"
-#include "sampling.hpp"
-#include "transform.hpp"
-#include "utils.hpp"
-#include "value.hpp"
+#include "rt1w/efloat.hpp"
+#include "rt1w/error.h"
+#include "rt1w/interaction.hpp"
+#include "rt1w/params.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/sampling.hpp"
+#include "rt1w/transform.hpp"
+#include "rt1w/utils.hpp"
+#include "rt1w/value.hpp"
 
 static inline bool SphereQuadratic(const Ray &r,
                                    const v3f &oError,

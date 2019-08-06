@@ -1,6 +1,6 @@
-#include "sampling.hpp"
+#include "rt1w/sampling.hpp"
 
-#include "utils.hpp"
+#include "rt1w/utils.hpp"
 
 v2f UniformSampleDisk(const v2f &u)
 {

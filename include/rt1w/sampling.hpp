@@ -1,6 +1,6 @@
 #pragma once
 
-#include "geometry.hpp"
+#include "rt1w/geometry.hpp"
 
 v2f UniformSampleDisk(const v2f &u);
 v3f UniformSampleSphere(const v2f &u);

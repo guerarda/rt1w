@@ -1,8 +1,8 @@
 #include "catch.hpp"
 
-#include "efloat.hpp"
-#include "rng.hpp"
-#include "utils.hpp"
+#include "rt1w/efloat.hpp"
+#include "rt1w/rng.hpp"
+#include "rt1w/utils.hpp"
 
 #include <string>
 

@@ -1,7 +1,7 @@
 #include "catch.hpp"
 
-#include "camera.hpp"
-#include "ray.hpp"
+#include "rt1w/camera.hpp"
+#include "rt1w/ray.hpp"
 
 #include <random>
 

@@ -1,4 +1,6 @@
-#include "sync.h"
+#include "rt1w/sync.h"
+
+#include <x86intrin.h>
 
 #define SYNC_MARKER ((void *)-1)
 

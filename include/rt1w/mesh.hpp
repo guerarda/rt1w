@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "shape.hpp"
-#include "sptr.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/shape.hpp"
+#include "rt1w/sptr.hpp"
 
 #include <vector>
 

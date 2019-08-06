@@ -1,7 +1,7 @@
 #pragma once
 
-#include "primitive.hpp"
-#include "sptr.hpp"
+#include "rt1w/primitive.hpp"
+#include "rt1w/sptr.hpp"
 
 #include <vector>
 

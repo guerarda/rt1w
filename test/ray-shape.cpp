@@ -1,14 +1,14 @@
 #include "catch.hpp"
 
-#include "geometry.hpp"
-#include "interaction.hpp"
-#include "mesh.hpp"
-#include "ray.hpp"
-#include "rng.hpp"
-#include "sampling.hpp"
-#include "sphere.hpp"
-#include "transform.hpp"
-#include "utils.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/interaction.hpp"
+#include "rt1w/mesh.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/rng.hpp"
+#include "rt1w/sampling.hpp"
+#include "rt1w/sphere.hpp"
+#include "rt1w/transform.hpp"
+#include "rt1w/utils.hpp"
 
 static float pExp(RNG &rng, float minExp = -8.f, float maxExp = 8.f)
 {

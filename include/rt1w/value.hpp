@@ -1,8 +1,8 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "sptr.hpp"
-#include "types.h"
+#include "rt1w/geometry.hpp"
+#include "rt1w/sptr.hpp"
+#include "rt1w/types.h"
 
 typedef buffer_type_t vtype_t;
 
@@ -24,7 +24,8 @@ struct Value : Object {
     static sptr<Value> create(vtype_t t, void *v, size_t n);
 
     template <typename T>
-    static sptr<Value> create(const T *v, size_t n) {
+    static sptr<Value> create(const T *v, size_t n)
+    {
         return create(vtype_from_type<T>::value(), (void *)v, n);
     }
 
@@ -41,6 +42,7 @@ struct Value : Object {
 
     static sptr<Value> vector2u(uint32_t x, uint32_t y) { return vector2u({ x, y }); }
     static sptr<Value> vector3f(float x, float y, float z) { return vector3f({ x, y, z }); }
+    // clang-format on
 
     int32_t i32() const { return scalar<int32_t>(this); }
     int64_t i64() const { return scalar<int64_t>(this); }
@@ -60,10 +62,10 @@ struct Value : Object {
     virtual void value(vtype_t type, void *v, size_t off, size_t len) const = 0;
 
     template <typename T>
-    void value(T *v, size_t off, size_t len) {
+    void value(T *v, size_t off, size_t len)
+    {
         value(vtype_from_type<T>::value(), v, off, len);
     }
-    // clang-format on
 
 protected:
     template <typename T>

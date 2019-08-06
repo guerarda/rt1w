@@ -1,7 +1,7 @@
 #pragma once
 
-#include "geometry.hpp"
-#include "sptr.hpp"
+#include "rt1w/geometry.hpp"
+#include "rt1w/sptr.hpp"
 
 struct Spectrum;
 

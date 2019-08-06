@@ -1,10 +1,10 @@
-#include "camera.hpp"
+#include "rt1w/camera.hpp"
 
-#include "params.hpp"
-#include "ray.hpp"
-#include "sampling.hpp"
-#include "transform.hpp"
-#include "value.hpp"
+#include "rt1w/params.hpp"
+#include "rt1w/ray.hpp"
+#include "rt1w/sampling.hpp"
+#include "rt1w/transform.hpp"
+#include "rt1w/value.hpp"
 
 enum struct ProjectionType { Perspective, Orthographic };
 
