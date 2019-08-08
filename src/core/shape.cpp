@@ -1,9 +1,10 @@
 #include "rt1w/shape.hpp"
 
+#include "shapes/mesh.hpp"
+#include "shapes/sphere.hpp"
+
 #include "rt1w/error.h"
-#include "rt1w/mesh.hpp"
 #include "rt1w/params.hpp"
-#include "rt1w/sphere.hpp"
 
 sptr<Shape> Shape::create(const sptr<Params> &p)
 {

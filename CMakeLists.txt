@@ -72,7 +72,6 @@ add_library(rt1w
   src/core/interaction.cpp
   src/core/light.cpp
   src/core/material.cpp
-  src/core/mesh.cpp
   src/core/params.cpp
   src/core/primitive.cpp
   src/core/ray.cpp
@@ -82,7 +81,6 @@ add_library(rt1w
   src/core/scene.cpp
   src/core/shape.cpp
   src/core/spectrum.cpp
-  src/core/sphere.cpp
   src/core/sptr.cpp
   src/core/sync.c
   src/core/task.cpp
@@ -92,8 +90,23 @@ add_library(rt1w
   src/core/value.cpp
   src/core/workq.cpp
   src/tools/loader_obj.cpp
+  $<TARGET_OBJECTS:shapes>
 )
 
+## Shapes
+add_library(shapes
+  OBJECT
+    src/shapes/sphere.cpp
+    src/shapes/mesh.cpp
+)
+
+target_include_directories(shapes
+  PRIVATE
+    include
+    src
+)
+
+## Requirements
 target_compile_options(rt1w
   PRIVATE
     ${WARNING_FLAGS}
@@ -118,7 +131,7 @@ if (RT1W_WITH_OIDN)
     PRIVATE
       RT1W_WITH_OIDN
   )
-  target_compile_options(rt1w
+  target_include_directories(rt1w
     PRIVATE
       ${OPENIMAGEDENOISE_INCLUDE_DIRS}
   )
@@ -143,6 +156,29 @@ target_link_libraries(rt1w_exe
     rt1w
 )
 
-## Tests
+# Tests
 enable_testing()
-add_subdirectory(test)
+
+include(CTest)
+include(Catch)
+
+add_executable(rt1w_test
+  test/test.cpp
+  test/efloat.cpp
+  test/camera.cpp
+  test/geometry.cpp
+  test/ray-shape.cpp
+  test/sampling.cpp
+)
+
+target_include_directories(rt1w_test
+  PRIVATE
+    src
+)
+
+target_link_libraries(rt1w_test
+  PRIVATE
+    rt1w
+)
+
+catch_discover_tests(rt1w_test)

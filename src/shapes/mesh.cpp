@@ -1,4 +1,4 @@
-#include "rt1w/mesh.hpp"
+#include "shapes/mesh.hpp"
 
 #include "rt1w/error.h"
 #include "rt1w/params.hpp"

@@ -1,12 +1,13 @@
 #include "catch.hpp"
 
+#include "shapes/mesh.hpp"
+#include "shapes/sphere.hpp"
+
 #include "rt1w/geometry.hpp"
 #include "rt1w/interaction.hpp"
-#include "rt1w/mesh.hpp"
 #include "rt1w/ray.hpp"
 #include "rt1w/rng.hpp"
 #include "rt1w/sampling.hpp"
-#include "rt1w/sphere.hpp"
 #include "rt1w/transform.hpp"
 #include "rt1w/utils.hpp"
 

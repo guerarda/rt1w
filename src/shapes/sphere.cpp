@@ -1,4 +1,4 @@
-#include "rt1w/sphere.hpp"
+#include "shapes/sphere.hpp"
 
 #include "rt1w/efloat.hpp"
 #include "rt1w/error.h"
