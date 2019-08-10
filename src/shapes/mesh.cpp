@@ -1,6 +1,7 @@
-#include "shapes/mesh.hpp"
+#include "shapes/mesh-priv.hpp"
 
 #include "rt1w/error.h"
+#include "rt1w/interaction.hpp"
 #include "rt1w/params.hpp"
 #include "rt1w/primitive.hpp"
 #include "rt1w/ray.hpp"
@@ -10,63 +11,10 @@
 #include "rt1w/utils.hpp"
 #include "rt1w/value.hpp"
 
-#pragma mark - Vertex Data
-
-struct _VertexData : VertexData {
-    _VertexData(size_t nv,
-                uptr<std::vector<v3f>> &v,
-                uptr<std::vector<v3f>> &n,
-                uptr<std::vector<v2f>> &uv) :
-        VertexData(nv,
-                   v ? v->data() : nullptr,
-                   n ? n->data() : nullptr,
-                   uv ? uv->data() : nullptr),
-        m_v(std::move(v)),
-        m_n(std::move(n)),
-        m_uv(std::move(uv))
-    {}
-
-    uptr<const std::vector<v3f>> m_v;
-    uptr<const std::vector<v3f>> m_n;
-    uptr<const std::vector<v2f>> m_uv;
-};
-
-sptr<VertexData> VertexData::create(size_t nv,
-                                    uptr<std::vector<v3f>> &v,
-                                    uptr<std::vector<v3f>> &n,
-                                    uptr<std::vector<v2f>> &uv)
-{
-    return std::make_shared<_VertexData>(nv, v, n, uv);
-}
-
-#pragma mark - Mesh Data
-
-struct MeshData {
-    MeshData(size_t nt,
-             const sptr<VertexData> &vd,
-             const sptr<const std::vector<uint32_t>> &i,
-             const Transform &worldToObj) :
-        m_nt(nt),
-        m_vd(vd),
-        m_i(i),
-        m_worldToObj(worldToObj),
-        m_objToWorld(Inverse(worldToObj))
-    {}
-
-    size_t m_nt;
-    sptr<VertexData> m_vd;
-    sptr<const std::vector<uint32_t>> m_i;
-    Transform m_worldToObj;
-    Transform m_objToWorld;
-};
-
 #pragma mark - Triangle
 
 struct Triangle : Shape {
-    Triangle(const sptr<const MeshData> &md, size_t ix) :
-        m_md(md),
-        m_v(&((*md->m_i)[3 * ix]))
-    {}
+    Triangle(const sptr<MeshData> &md, size_t ix) : m_md(md), m_v(&(md->m_i[3 * ix])) {}
 
     bool intersect(const Ray &r, Interaction &isect) const override;
     bool qIntersect(const Ray &r) const override;
@@ -420,9 +368,8 @@ struct _Mesh : Mesh {
 
 _Mesh::_Mesh(const sptr<MeshData> &md)
 {
-    m_faces.reserve(md->m_nt);
-
-    for (size_t j = 0; j < md->m_nt; j++) {
+    m_faces.reserve(md->m_np);
+    for (size_t j = 0; j < md->m_np; j++) {
         m_faces.emplace_back(std::make_shared<Triangle>(md, j));
         m_box = Union(m_box, m_faces[j]->bounds());
     }
@@ -496,17 +443,17 @@ std::vector<sptr<Shape>> _Mesh::faces() const
 
 sptr<Mesh> Mesh::create(size_t nt,
                         const sptr<VertexData> &vd,
-                        const sptr<const std::vector<uint32_t>> &i,
+                        uptr<std::vector<uint32_t>> &i,
                         const Transform &worldToObj)
 {
-    sptr<MeshData> md = std::make_shared<MeshData>(nt, vd, i, worldToObj);
+    sptr<MeshData> md = CreateMeshData(nt, vd, i, worldToObj);
     return std::make_shared<_Mesh>(md);
 }
 sptr<Mesh> Mesh::create(size_t nt,
                         uptr<std::vector<v3f>> &v,
                         uptr<std::vector<v3f>> &n,
                         uptr<std::vector<v2f>> &uv,
-                        const sptr<const std::vector<uint32_t>> &i,
+                        uptr<std::vector<uint32_t>> &i,
                         const Transform &worldToObj)
 {
     sptr<VertexData> vd = VertexData::create(v->size(), v, n, uv);
@@ -526,7 +473,7 @@ sptr<Mesh> Mesh::create(const sptr<Params> &p)
 
         size_t nt = count->u64();
         auto v = std::make_unique<std::vector<v3f>>(vertices->count());
-        auto i = std::make_shared<std::vector<uint32_t>>(indices->count());
+        auto i = std::make_unique<std::vector<uint32_t>>(indices->count());
 
         vertices->value(TYPE_FLOAT32, v->data(), 0, 3 * vertices->count());
         indices->value(i->data(), 0, indices->count());

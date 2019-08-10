@@ -42,9 +42,9 @@ static sptr<Shape> RandomTriangle(RNG &rng)
     auto normals = uptr<std::vector<v3f>>();
     auto texcoords = uptr<std::vector<v2f>>();
 
-    sptr<VertexData> vd = VertexData::create(3, vertices, normals, texcoords);
+    sptr<VertexData> vd = CreateVertexData(3, vertices, normals, texcoords);
 
-    auto indices = std::make_shared<std::vector<uint32_t>>(3);
+    auto indices = std::make_unique<std::vector<uint32_t>>(3);
     indices->push_back(0);
     indices->push_back(1);
     indices->push_back(2);

@@ -1,9 +1,8 @@
-#include "rt1w/primitive.hpp"
-
 #include "shapes/mesh.hpp"
 
 #include "rt1w/bvh.hpp"
 #include "rt1w/material.hpp"
+#include "rt1w/primitive.hpp"
 #include "rt1w/spectrum.hpp"
 #include "rt1w/texture.hpp"
 #include "rt1w/transform.hpp"
@@ -49,13 +48,19 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::vector<tinyobj::material_t> obj_materials;
 
     std::string err;
-    bool ok = tinyobj::LoadObj(&attrib, &obj_shapes, &obj_materials, &err, path.c_str());
+    bool ok = tinyobj::LoadObj(&attrib,
+                               &obj_shapes,
+                               &obj_materials,
+                               &err,
+                               path.c_str(),
+                               nullptr,
+                               true);
     ERROR_IF(!err.empty(), "load_obj: %s", err.c_str());
     if (!ok) {
         return nullptr;
     }
 
-    /* Vector for storing vertex data*/
+    /* Vector for storing vertex data */
     std::vector<v3f> vertices;
     std::vector<v3f> normals;
     std::vector<v2f> texcoords;
@@ -65,7 +70,7 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::unordered_map<tinyobj::index_t, uint32_t> remap;
 
     /* For each mesh, store a vector that contains the mesh indices */
-    std::vector<sptr<std::vector<uint32_t>>> mesh_indices;
+    std::vector<uptr<std::vector<uint32_t>>> mesh_indices;
 
     for (const auto &s : obj_shapes) {
         std::vector<uint32_t> indices;
@@ -96,7 +101,7 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
             }
             indices.push_back(i);
         }
-        mesh_indices.push_back(std::make_shared<std::vector<uint32_t>>(indices));
+        mesh_indices.emplace_back(std::make_unique<std::vector<uint32_t>>(indices));
     }
 
     /* Now that we went through all the indices, create the VertexData struct */
@@ -105,7 +110,7 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     auto n = std::make_unique<std::vector<v3f>>(normals);
     auto uv = std::make_unique<std::vector<v2f>>(texcoords);
 
-    sptr<VertexData> vd = VertexData::create(nv, v, n, uv);
+    sptr<VertexData> vd = CreateVertexData(nv, v, n, uv);
 
     /* Loop over the Values containing the indices for each mesh and create a Mesh
      * with each and the VertexData */
@@ -113,7 +118,7 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     std::vector<sptr<Mesh>> meshes;
 
     sptr<Texture> tex = Texture::create_color(Spectrum::fromRGB({ .5f, .5f, .5f }));
-    for (const auto &indices_value : mesh_indices) {
+    for (auto &indices_value : mesh_indices) {
         size_t nt = indices_value->size() / 3;
         auto faces = Mesh::create(nt, vd, indices_value, Transform())->faces();
 
