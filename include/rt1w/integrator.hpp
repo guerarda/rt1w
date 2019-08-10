@@ -3,6 +3,7 @@
 #include "rt1w/geometry.hpp"
 #include "rt1w/spectrum.hpp"
 #include "rt1w/sptr.hpp"
+#include "rt1w/task.hpp"
 
 #include <string>
 
@@ -27,4 +28,11 @@ struct Integrator : Object {
                         size_t depth,
                         v3f *N = nullptr,
                         Spectrum *A = nullptr) const = 0;
+};
+
+struct IntegratorAsync : Integrator {
+    using Integrator::Li;
+    virtual sptr<Batch<Spectrum>> Li(const std::vector<Ray> &rays,
+                                     const sptr<Scene> &scene,
+                                     const sptr<Sampler> &sampler) const = 0;
 };

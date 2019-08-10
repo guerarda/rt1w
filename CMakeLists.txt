@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 # Options
 option(RT1W_WITH_OIDN "Build with Intel's OpenImageDenoise Library" OFF)
 option(RT1W_WITH_TESTS "Creates a target for running the suite of unit tests" OFF)
+option(RT1W_WITH_METAL "Build with Metal Acceleration" OFF)
 
 # External dependencies
 ## Lib PNG
@@ -16,6 +17,11 @@ find_package(PNG REQUIRED)
 if (RT1W_WITH_OIDN)
   message("Building with OpenImageDenoise")
   find_package(OpenImageDenoise REQUIRED)
+endif()
+
+## Metal
+if(RT1W_WITH_METAL)
+  message("Building with Metal Acceleration")
 endif()
 
 # RT1W

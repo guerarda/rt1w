@@ -579,7 +579,44 @@ struct _Scene : Scene {
     }
     bool qIntersect(const Ray &r) const override { return m_world->qIntersect(r); }
 
+    sptr<Batch<Interaction>> intersect(const std::vector<Ray> &) const override
+    {
+        trap("Invalid Batch Intersect on non-Accelerator Primitive");
+    }
+    sptr<Batch<Interaction>> qIntersect(const std::vector<Ray> &) const override
+    {
+        trap("Invalid Batch Intersect on non-Accelerator Primitive");
+    }
+
     sptr<Primitive> m_world;
+    std::vector<sptr<Light>> m_lights;
+};
+
+struct _SceneAccel : Scene {
+    _SceneAccel(const sptr<Accelerator> &w, const std::vector<sptr<Light>> &l) :
+        m_world(w),
+        m_lights(l)
+    {}
+
+    bounds3f bounds() const override { return m_world->bounds(); }
+    const std::vector<sptr<Light>> &lights() const override { return m_lights; }
+
+    bool intersect(const Ray &r, Interaction &isect) const override
+    {
+        return m_world->intersect(r, isect);
+    }
+    bool qIntersect(const Ray &r) const override { return m_world->qIntersect(r); }
+
+    sptr<Batch<Interaction>> intersect(const std::vector<Ray> &rays) const override
+    {
+        return m_world->intersect(rays);
+    }
+    sptr<Batch<Interaction>> qIntersect(const std::vector<Ray> &rays) const override
+    {
+        return m_world->qIntersect(rays);
+    }
+
+    sptr<Accelerator> m_world;
     std::vector<sptr<Light>> m_lights;
 };
 
@@ -588,5 +625,8 @@ struct _Scene : Scene {
 sptr<Scene> Scene::create(const sptr<Primitive> &world,
                           const std::vector<sptr<Light>> &lights)
 {
+    if (auto accel = std::dynamic_pointer_cast<Accelerator>(world)) {
+        return std::make_shared<_SceneAccel>(accel, lights);
+    }
     return std::make_shared<_Scene>(world, lights);
 }

@@ -5,9 +5,12 @@
 
 #include <vector>
 
+template <typename T>
+struct Batch;
 struct Camera;
 struct Interaction;
 struct Light;
+struct MeshData;
 struct Params;
 struct Primitive;
 struct Ray;
@@ -34,4 +37,13 @@ struct Scene : Object {
 
     virtual bool intersect(const Ray &r, Interaction &isect) const = 0;
     virtual bool qIntersect(const Ray &r) const = 0;
+
+    virtual sptr<Batch<Interaction>> intersect(const std::vector<Ray> &rays) const = 0;
+    virtual sptr<Batch<Interaction>> qIntersect(const std::vector<Ray> &rays) const = 0;
+};
+
+struct PolygonScene : Scene {
+    static sptr<PolygonScene> create(const sptr<MeshData> &md,
+                                     const std::vector<sptr<Primitive>> &primitives,
+                                     const std::vector<sptr<Light>> &lights);
 };
