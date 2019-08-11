@@ -54,6 +54,32 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+## Shapes
+add_library(shapes
+  OBJECT
+    src/shapes/sphere.cpp
+    src/shapes/mesh.cpp
+)
+
+target_include_directories(shapes
+  PRIVATE
+    include
+    src
+)
+
+## Integrators
+add_library(integrators
+  OBJECT
+    src/integrators/whitted.cpp
+    src/integrators/path.cpp
+)
+
+target_include_directories(integrators
+  PRIVATE
+    include
+    src
+)
+
 ## Core
 add_library(rt1w
   src/core/arena.cpp
@@ -91,19 +117,7 @@ add_library(rt1w
   src/core/workq.cpp
   src/tools/loader_obj.cpp
   $<TARGET_OBJECTS:shapes>
-)
-
-## Shapes
-add_library(shapes
-  OBJECT
-    src/shapes/sphere.cpp
-    src/shapes/mesh.cpp
-)
-
-target_include_directories(shapes
-  PRIVATE
-    include
-    src
+  $<TARGET_OBJECTS:integrators>
 )
 
 ## Requirements

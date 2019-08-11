@@ -111,14 +111,8 @@ int main(int argc, char *argv[])
     uint32_t ns = options.quality;
     sptr<Sampler> sampler = Sampler::create(ns, ns, 4, true);
 
-    sptr<Integrator> integrator;
     std::string str = render->options()->string("integrator");
-    if (str == "path") {
-        integrator = PathIntegrator::create(sampler, 4);
-    }
-    else {
-        integrator = Integrator::create(sampler, 4);
-    }
+    sptr<Integrator> integrator = Integrator::create(str, sampler, 4);
 
     /* Get output filename */
     std::string output = Params::string(render->options(),
