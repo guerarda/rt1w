@@ -5,7 +5,8 @@ project(RT1W)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 # Options
-option(RT1W_WITH_OIDN "Build with OpenImageDenoise Library" OFF)
+option(RT1W_WITH_OIDN "Build with Intel's OpenImageDenoise Library" OFF)
+option(RT1W_WITH_TESTS "Creates a target for running the suite of unit tests" OFF)
 
 # External dependencies
 ## Lib PNG
@@ -171,28 +172,31 @@ target_link_libraries(rt1w_exe
 )
 
 # Tests
-enable_testing()
 
-include(CTest)
-include(Catch)
+if (RT1W_WITH_TESTS)
+  enable_testing()
 
-add_executable(rt1w_test
-  test/test.cpp
-  test/efloat.cpp
-  test/camera.cpp
-  test/geometry.cpp
-  test/ray-shape.cpp
-  test/sampling.cpp
-)
+  include(CTest)
+  include(Catch)
 
-target_include_directories(rt1w_test
-  PRIVATE
-    src
-)
+  add_executable(rt1w_test
+    test/test.cpp
+    test/efloat.cpp
+    test/camera.cpp
+    test/geometry.cpp
+    test/ray-shape.cpp
+    test/sampling.cpp
+  )
 
-target_link_libraries(rt1w_test
-  PRIVATE
-    rt1w
-)
+  target_include_directories(rt1w_test
+    PRIVATE
+      src
+  )
 
-catch_discover_tests(rt1w_test)
+  target_link_libraries(rt1w_test
+    PRIVATE
+      rt1w
+  )
+
+  catch_discover_tests(rt1w_test)
+endif()
