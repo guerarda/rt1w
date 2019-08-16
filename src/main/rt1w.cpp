@@ -25,7 +25,7 @@
     }
     fprintf(stderr, R"(usage: rt1w [<options>] <scene file>
 --help               Print this help text.
---quality=<num>      num^2 samples per pixels will be used.
+--quality=<num>      Size of the grid in which pixel are subdivided.
                      Set to zero by default, so only one ray per pixel.
 --denoise            Apply a denoising step at the end of the rendering.
 --albedo             Outputs the color on the first ray-shape hit.
@@ -130,32 +130,32 @@ int main(int argc, char *argv[])
     img = Image::create(img, buffer_format_init(TYPE_UINT8, ORDER_RGB));
 
     buffer_t buf = img->buffer();
-    image_write_png(output.append(".png").c_str(),
+    image_write_png(std::string(output).append(".png").c_str(),
                     buf.rect.size.x,
                     buf.rect.size.y,
                     buf.data,
                     buf.bpr);
 
     if (options.flags & OPTION_ALBEDO) {
+        auto albedo = Image::create(rdr->albedo(),
+                                    buffer_format_init(TYPE_UINT8, ORDER_RGB));
+        auto abuf = albedo->buffer();
+        image_write_png(std::string(output).append("-albedo.png").c_str(),
+                        abuf.rect.size.x,
+                        abuf.rect.size.y,
+                        abuf.data,
+                        abuf.bpr);
+    }
+    if (options.flags & OPTION_NORMALS) {
         auto normals = Image::create(rdr->normals(),
                                      buffer_format_init(TYPE_UINT8, ORDER_RGB));
         auto nbuf = normals->buffer();
-        image_write_png(output.append("-normals.png").c_str(),
+        image_write_png(std::string(output).append("-normals.png").c_str(),
                         nbuf.rect.size.x,
                         nbuf.rect.size.y,
                         nbuf.data,
                         nbuf.bpr);
     }
 
-    if (options.flags & OPTION_NORMALS) {
-        auto albedo = Image::create(rdr->albedo(),
-                                    buffer_format_init(TYPE_UINT8, ORDER_RGB));
-        auto abuf = albedo->buffer();
-        image_write_png(output.append("-albedo.png").c_str(),
-                        abuf.rect.size.x,
-                        abuf.rect.size.y,
-                        abuf.data,
-                        abuf.bpr);
-    }
     return 0;
 }

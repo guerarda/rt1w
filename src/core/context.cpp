@@ -211,17 +211,28 @@ static void RenderTile(const sptr<Object> &obj, const sptr<Object> &arg)
             v3f N;
             sampler->startPixel({ x, y });
             do {
+                v3f Nsmp;
+                Spectrum Asmp;
+
                 CameraSample cs = sampler->cameraSample();
                 Ray r = ctx->m_camera->generateRay(cs);
-                c += ctx->m_integrator->Li(r, ctx->m_scene, sampler, 0, &N, &A);
+                c += ctx->m_integrator->Li(r, ctx->m_scene, sampler, 0, &Nsmp, &Asmp);
+                N += Nsmp;
+                A += Asmp;
             } while (sampler->startNextSample());
 
-            N *= ns_inv;
-            v3f a = ApproxGammaCorrection((A * ns_inv).rgb());
+            if (!(N.x == .0f && N.y == .0f && N.z == .0f)) {
+                N *= ns_inv;
+                N += { 1.f, 1.f, 1.f };
+                N /= 2.f;
+            }
+
             v3f Li = ApproxGammaCorrection((c * ns_inv).rgb());
+            v3f a = ApproxGammaCorrection((A * ns_inv).rgb());
+            v3f n = ApproxGammaCorrection(N);
 
             memcpy(idp, &Li.x, image.format.size);
-            memcpy(ndp, &N.x, normals.format.size);
+            memcpy(ndp, &n.x, normals.format.size);
             memcpy(adp, &a.x, albedo.format.size);
 
             idp += image.format.size;
