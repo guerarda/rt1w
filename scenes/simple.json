@@ -2,7 +2,7 @@
     "textures": [
         {
             "name": "foo",
-            "type": "color",
+            "type": "constant",
             "color": [
                 1.0,
                 0.0,
@@ -11,7 +11,7 @@
         },
         {
             "name": "checka",
-            "type": "color",
+            "type": "constant",
             "color": [
                 0.2,
                 0.3,
@@ -20,7 +20,7 @@
         },
         {
             "name": "checkb",
-            "type": "color",
+            "type": "constant",
             "color": [
                 0.9,
                 0.8,
@@ -37,9 +37,9 @@
     "materials": [
         {
             "name": "bar",
-            "type": "lambertian",
+            "type": "matte",
             "texture": {
-                "type": "color",
+                "type": "constant",
                 "color": [
                     1.0,
                     0.0,
@@ -49,7 +49,7 @@
         },
         {
             "name": "ground",
-            "type": "lambertian",
+            "type": "matte",
             "texture": "groundtex"
         }
     ],

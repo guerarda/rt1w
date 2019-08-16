@@ -131,7 +131,7 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
         }
         else if (m.value.IsString()) {
             std::string s = m.value.GetString();
-            if (name == "filename") {
+            if (name == "file") {
                 s = resolve_path(dir, s);
             }
             p->insert(name, s);

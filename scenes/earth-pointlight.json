@@ -28,7 +28,7 @@
         },
         {
             "name": "checka",
-            "type": "color",
+            "type": "constant",
             "color": [
                 0.2,
                 0.3,
@@ -37,7 +37,7 @@
         },
         {
             "name": "checkb",
-            "type": "color",
+            "type": "constant",
             "color": [
                 0.9,
                 0.8,
@@ -54,12 +54,12 @@
     "materials": [
         {
             "name": "map",
-            "type": "lambertian",
+            "type": "matte",
             "Kd": "map"
         },
         {
             "name": "ground",
-            "type": "lambertian",
+            "type": "matte",
             "Kd": "groundtex"
         },
         {

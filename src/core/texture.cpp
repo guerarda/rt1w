@@ -98,7 +98,7 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
     std::string type = p->string("type");
     WARNING_IF(type.empty(), "Texture parameter \"type\" not specified");
 
-    if (type == "color") {
+    if (type == "constant") {
         Spectrum s = Spectrum::fromRGB(Params::vector3f(p, "color", { 1.f, 1.f, 1.f }));
         return Texture::create_color(s);
     }

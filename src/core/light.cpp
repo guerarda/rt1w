@@ -73,7 +73,7 @@ sptr<PointLight> PointLight::create(const v3f &pos, const Spectrum &intensity)
 sptr<PointLight> PointLight::create(const sptr<Params> &p)
 {
     sptr<Value> pos = p->value("position");
-    Spectrum I = Spectrum::fromRGB(Params::vector3f(p, "intensity", { 1.f, 1.f, 1.f }));
+    Spectrum I = Spectrum::fromRGB(Params::vector3f(p, "emit", { 1.f, 1.f, 1.f }));
 
     if (pos) {
         return PointLight::create(pos->vector3f(), I);

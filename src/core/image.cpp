@@ -177,7 +177,7 @@ sptr<Image> Image::create(const sptr<Image> &img, buffer_format_t fmt)
 
 sptr<Image> Image::create(const sptr<Params> &p)
 {
-    std::string filename = p->string("filename");
+    std::string filename = p->string("file");
     if (!filename.empty()) {
         return Image::create(filename);
     }
