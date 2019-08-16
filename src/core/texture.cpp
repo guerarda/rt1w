@@ -115,7 +115,7 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
     else if (type == "image") {
         if (sptr<Image> img = Image::create(p)) {
             v2i org = Params::vector2i(p, "origin", { 0, 0 });
-            v2u size = Params::vector2u(p, "size", { 0, 0 });
+            v2u size = Params::vector2u(p, "size", img->size());
             rect_t rect = { { org.x, org.y }, { size.x, size.y } };
             return Texture::create_image(img, rect);
         }

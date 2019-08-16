@@ -3,15 +3,7 @@
         {
             "name": "map",
             "type": "image",
-            "filename": "map.png",
-            "origin": [
-                0.0,
-                0.0
-            ],
-            "size": [
-                1400,
-                787
-            ]
+            "file": "map.png"
         },
         {
             "name": "checka",
