@@ -20,10 +20,6 @@ struct Material : Object {
     static sptr<Material> create(const sptr<Params> &p);
 
     virtual Spectrum f(const Interaction &isect, const v3f &wo, const v3f &wi) const = 0;
-    virtual bool scatter(const Ray &r_in,
-                         const Interaction &rec,
-                         Spectrum &attenuation,
-                         v3f &wi) const = 0;
     virtual sptr<BSDF> computeBsdf(const Interaction &isect) const = 0;
 };
 
