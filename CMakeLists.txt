@@ -41,12 +41,25 @@ set(WARNING_FLAGS
   -Wunused
 )
 set(NOWARNING_FLAGS
-  -Wno-c++98-compat
   -Wno-old-style-cast
-  -Wno-pragma-once-outside-header
-  -Wno-weak-vtables
+  $<$<CXX_COMPILER_ID:AppleClang>:
+    -Wno-c++98-compat
+    -Wno-pragma-once-outside-header
+    -Wno-weak-vtables>
+
+  $<$<CXX_COMPILER_ID:Clang>:
+    -Wno-c++98-compat
+    -Wno-pragma-once-outside-header
+    -Wno-weak-vtables>
+
+  $<$<CXX_COMPILER_ID:GNU>:
+    -Wno-unknown-pragmas
+    -Wno-shadow
+    -Wno-conversion
+    -Wno-class-memaccess>
 )
 
+## Standard
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED YES)
 set(CMAKE_C_EXTENSIONS OFF)
@@ -55,13 +68,16 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED YES)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+## Threads support
+find_package(Threads REQUIRED)
+set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+
 ## Shapes
 add_library(shapes
   OBJECT
     src/shapes/sphere.cpp
     src/shapes/mesh.cpp
 )
-
 target_include_directories(shapes
   PRIVATE
     include
@@ -74,7 +90,6 @@ add_library(integrators
     src/integrators/whitted.cpp
     src/integrators/path.cpp
 )
-
 target_include_directories(integrators
   PRIVATE
     include
@@ -127,7 +142,6 @@ target_compile_options(rt1w
     ${WARNING_FLAGS}
     ${NOWARNING_FLAGS}
 )
-
 target_include_directories(rt1w
   PUBLIC
     include
@@ -139,6 +153,7 @@ target_include_directories(rt1w
 target_link_libraries(rt1w
   PRIVATE
     PNG::PNG
+    Threads::Threads
 )
 
 if (RT1W_WITH_OIDN)
@@ -165,7 +180,6 @@ target_compile_options(rt1w_exe
     ${WARNING_FLAGS}
     ${NOWARNING_FLAGS}
 )
-
 target_link_libraries(rt1w_exe
   PRIVATE
     rt1w
@@ -187,16 +201,13 @@ if (RT1W_WITH_TESTS)
     test/ray-shape.cpp
     test/sampling.cpp
   )
-
   target_include_directories(rt1w_test
     PRIVATE
       src
   )
-
   target_link_libraries(rt1w_test
     PRIVATE
       rt1w
   )
-
   catch_discover_tests(rt1w_test)
 endif()
