@@ -30,9 +30,10 @@ static bool is_absolute_path(const std::string &path)
 
 static std::string absolute_path(const std::string &path)
 {
-    char full[PATH_MAX];
-    if (realpath(path.c_str(), full)) {
-        return std::string(full);
+    if (char *full = realpath(path.c_str(), nullptr)) {
+        std::string str(full);
+        free(full);
+        return str;
     }
     return path;
 }
@@ -270,10 +271,8 @@ int32_t _RenderDescFromJSON::init()
     }
     /* Get directory containing the json file that will be used to resolve
      * relative paths */
-    char buf[PATH_MAX];
-    m_path.copy(buf, m_path.size());
-
-    m_dir = std::string(dirname(buf));
+    std::string cpy = m_path;
+    m_dir = std::string(dirname(&*std::begin(cpy)));
 
     load_textures();
     load_materials();
