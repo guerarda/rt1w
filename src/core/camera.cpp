@@ -94,8 +94,8 @@ sptr<Camera> Camera::create(const sptr<Params> &p)
         v3f up = Params::vector3f(p, "up", { 0.0f, 1.0f, 0.0f });
         v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
         float fov = Params::f32(p, "fov", 60.0f);
-        float aperture = Params::f32(p, "aperture", 0.1f);
-        float fdist = Params::f32(p, "focusdistance", 1.0f);
+        float aperture = Params::f32(p, "aperture", .0f);
+        float fdist = Params::f32(p, "focusdistance", .0f);
         float znear = Params::f32(p, "znear", -0.1f);
         float zfar = Params::f32(p, "zfar", -1000.0f);
 
@@ -118,8 +118,8 @@ sptr<Camera> Camera::create(const sptr<Params> &p)
         v3f look = Params::vector3f(p, "lookat", { 0.0f, 0.0f, 0.0f });
         v3f up = Params::vector3f(p, "up", { 0.0f, 1.0f, 0.0f });
         v2u res = Params::vector2u(p, "resolution", { 1920, 1080 });
-        float aperture = Params::f32(p, "aperture", 0.1f);
-        float fdist = Params::f32(p, "focusdistance", 1.0f);
+        float aperture = Params::f32(p, "aperture", .0f);
+        float fdist = Params::f32(p, "focusdistance", .0f);
         float znear = Params::f32(p, "znear", -0.1f);
         float zfar = Params::f32(p, "zfar", -1000.0f);
 

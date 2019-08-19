@@ -78,15 +78,16 @@ possible values for *type* is either *sphere* or *mesh*. An optional
 
 #### Mesh
 
-| Key       | Value               |
-|-----------|---------------------|
-| type      | "mesh"              |
-| name      | String              |
-| vertices  | Array of 3d vectors |
-| normals   | Array of 3d vectors |
-| uv        | Array of 2d vectors |
-| indices   | Array of Numbers    |
-| transform | Object              |
+| Key       | Value                   |
+|-----------|-------------------------|
+| type      | "mesh"                  |
+| name      | String                  |
+| count     | Number (Triangle count) |
+| vertices  | Array of 3d vectors     |
+| normals   | Array of 3d vectors     |
+| uv        | Array of 2d vectors     |
+| indices   | Array of Numbers        |
+| transform | Object                  |
 
 #### Transforms
 
@@ -255,8 +256,8 @@ used instead.
 | lookat        | 3d vector                       | [0 0 0]     |
 | up            | 3d vector                       | [0 1 0]     |
 | resolution    | 2d vector                       | [1920 1080] |
-| aperture      | Number                          | 0.1         |
-| focusdistance | Number                          | 1           |
+| aperture      | Number                          | 0           |
+| focusdistance | Number                          | 0           |
 | znear         | Number                          | -0.1        |
 | zfar          | Number                          | -1000       |
 | fov           | Number                          | 60          |
