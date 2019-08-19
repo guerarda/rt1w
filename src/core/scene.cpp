@@ -228,7 +228,7 @@ struct _RenderDescFromJSON : RenderDescription {
 
     int32_t init();
 
-    sptr<Light> read_light(const rapidjson::Value &v) const;
+    std::vector<sptr<Light>> read_light(const rapidjson::Value &v) const;
     sptr<Material> read_material(const rapidjson::Value &v) const;
     sptr<Shape> read_shape(const rapidjson::Value &v) const;
     sptr<Texture> read_texture(const rapidjson::Value &v) const;
@@ -288,7 +288,7 @@ int32_t _RenderDescFromJSON::init()
     return -1;
 }
 
-sptr<Light> _RenderDescFromJSON::read_light(const rapidjson::Value &v) const
+std::vector<sptr<Light>> _RenderDescFromJSON::read_light(const rapidjson::Value &v) const
 {
     sptr<Params> p = read_params(v, m_dir);
     p->merge(m_textures);
@@ -297,7 +297,19 @@ sptr<Light> _RenderDescFromJSON::read_light(const rapidjson::Value &v) const
         p->insert("center", Value::vector3f(m_box.center()));
         p->insert("radius", Value::f32(m_box.diagonal().length() / 2.f));
     }
-    return Light::create(p);
+    else if (p->string("type") == "area") {
+        sptr<Shape> shape = p->shape("shape");
+        if (sptr<Group> grp = std::dynamic_pointer_cast<Group>(shape)) {
+            std::vector<sptr<Light>> lights;
+            auto faces = grp->faces();
+            for (const auto &s : faces) {
+                p->insert("shape", s);
+                lights.push_back(Light::create(p));
+            }
+            return lights;
+        }
+    }
+    return { Light::create(p) };
 }
 
 sptr<Material> _RenderDescFromJSON::read_material(const rapidjson::Value &v) const
@@ -387,13 +399,17 @@ void _RenderDescFromJSON::load_lights()
     if (section != m_doc.MemberEnd()) {
         size_t ix = 0;
         for (const auto &v : section->value.GetArray()) {
-            if (sptr<Light> light = read_light(v)) {
-                m_lights.push_back(light);
-                /* Area lights need to be added to the scene's primitives so it can be
-                 * part of the interesection test */
-                if (sptr<AreaLight> area = std::dynamic_pointer_cast<AreaLight>(light)) {
-                    m_primitives.push_back(
-                        Primitive::create(area->shape(), NullMaterial, area));
+            std::vector<sptr<Light>> lights = read_light(v);
+            if (!lights.empty()) {
+                for (const auto &light : lights) {
+                    m_lights.push_back(light);
+                    /* Area lights need to be added to the scene's primitives so it can be
+                     * part of the interesection test */
+                    if (sptr<AreaLight> area = std::dynamic_pointer_cast<AreaLight>(
+                            light)) {
+                        m_primitives.push_back(
+                            Primitive::create(area->shape(), NullMaterial, area));
+                    }
                 }
             }
             else {
