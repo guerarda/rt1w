@@ -221,7 +221,7 @@ static void RenderTile(const sptr<Object> &obj, const sptr<Object> &arg)
                 A += Asmp;
             } while (sampler->startNextSample());
 
-            if (!(N.x == .0f && N.y == .0f && N.z == .0f)) {
+            if (!(FloatEqual(N.x, .0f) && FloatEqual(N.y, .0f) && FloatEqual(N.z, .0f))) {
                 N *= ns_inv;
                 N += { 1.f, 1.f, 1.f };
                 N /= 2.f;
