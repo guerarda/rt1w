@@ -15,7 +15,7 @@ static float pExp(RNG &rng, float minExp = -8.f, float maxExp = 8.f)
 {
     float logu = Lerp(rng.f32(), minExp, maxExp);
     float sign = rng.f32() < .5 ? -1 : +1;
-    return sign * std::powf(10, logu);
+    return sign * std::pow(10.0f, logu);
 }
 
 static v3f RandomPoint(RNG &rng, float minExp = -8.f, float maxExp = 8)

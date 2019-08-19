@@ -24,7 +24,7 @@ static EFloat RandomEFloat(RNG &rng,
                            float maxExp = 6.f)
 {
     float logu = Lerp(rng.f32(), minExp, maxExp);
-    float val = std::powf(10, logu);
+    float val = std::pow(10, logu);
     float sign = rng.f32() < .5 ? -1. : 1.;
 
     if (mode == EFloatErrorMode::Typical) {

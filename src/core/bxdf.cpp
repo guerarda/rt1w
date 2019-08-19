@@ -386,7 +386,7 @@ static float schlick(float cos, float ri)
 {
     float r = (1.0f - ri) / (1.0f + ri);
     r = r * r;
-    return r + (1.0f - r) * powf((1.0f - cos), 5.0f);
+    return r + (1.0f - r) * std::pow((1.0f - cos), 5.0f);
 }
 
 Spectrum _FresnelSpecular::sample_f(const v3f &wo,
