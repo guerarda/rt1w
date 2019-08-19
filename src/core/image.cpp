@@ -6,6 +6,7 @@
 #include "rt1w/params.hpp"
 
 #include <atomic>
+#include <cstring>
 
 #pragma mark - Image File
 

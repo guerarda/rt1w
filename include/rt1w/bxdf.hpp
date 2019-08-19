@@ -3,6 +3,8 @@
 #include "rt1w/geometry.hpp"
 #include "rt1w/sptr.hpp"
 
+#include <vector>
+
 struct Interaction;
 struct Fresnel;
 struct Spectrum;

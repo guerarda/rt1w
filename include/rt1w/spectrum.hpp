@@ -3,6 +3,8 @@
 #include "rt1w/geometry.hpp"
 #include "rt1w/utils.hpp"
 
+#include <cstring>
+
 template <size_t N>
 struct SampledSpectrum {
     SampledSpectrum() = default;

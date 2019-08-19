@@ -4,6 +4,7 @@
 #include "integrators/whitted.hpp"
 
 #include "rt1w/bxdf.hpp"
+#include "rt1w/error.h"
 #include "rt1w/interaction.hpp"
 #include "rt1w/light.hpp"
 #include "rt1w/material.hpp"

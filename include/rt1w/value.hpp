@@ -4,6 +4,8 @@
 #include "rt1w/sptr.hpp"
 #include "rt1w/types.h"
 
+#include <cstring>
+
 typedef buffer_type_t vtype_t;
 
 // clang-format off

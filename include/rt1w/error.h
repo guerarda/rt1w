@@ -1,9 +1,11 @@
 #pragma once
 
 #ifdef __cplusplus
+#include <cstdarg>
 #include <cstdlib>
 
 #else
+#include <stdarg.h>
 #include <stdlib.h>
 #endif
 __BEGIN_DECLS
