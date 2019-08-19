@@ -38,7 +38,7 @@ struct _Params : Params {
     template <typename T>
     void insert(const std::string &k, const typename ptype<T>::type &v)
     {
-        pmap<T>().insert(std::make_pair(k, v));
+        pmap<T>()[k] = v;
     }
 
     template <typename T>
