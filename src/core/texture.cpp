@@ -71,7 +71,7 @@ Spectrum _Texture_img::value(float u, float v, const v3f &) const
 
     size_t pix_size = buf.format.size;
     uint8_t *sp = (uint8_t *)buf.data + (size_t)y * buf.bpr + (size_t)x * pix_size;
-    v3f color = { sp[0] / 255.0f, sp[1] / 255.0f, sp[2] / 255.0f };
+    v3f color = { (float)sp[0] / 255.0f, (float)sp[1] / 255.0f, (float)sp[2] / 255.0f };
 
     return Spectrum::fromRGB(color);
 }
