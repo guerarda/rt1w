@@ -143,9 +143,9 @@ int32_t _Event::wait()
 
 static void signal_event(const sptr<Object> &obj, const sptr<Object> &)
 {
-    sptr<Event> e = std::dynamic_pointer_cast<Event>(obj);
-    ASSERT(e);
-    e->signal();
+    if (sptr<Event> e = std::dynamic_pointer_cast<Event>(obj)) {
+        e->signal();
+    }
 }
 
 #pragma mark - Static constructor

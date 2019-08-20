@@ -23,6 +23,7 @@ static Spectrum EstimateDirect(const Interaction &isect,
                                const sptr<Scene> &scene)
 {
     ASSERT(light);
+    ASSERT(scene);
 
     BxDFType bsdfFlags = BSDF_ALL;
     Spectrum L = {};

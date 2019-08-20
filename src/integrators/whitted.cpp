@@ -30,6 +30,9 @@ Spectrum _WhittedIntegrator::Li(const Ray &ray,
                                 v3f *N,
                                 Spectrum *A) const
 {
+    ASSERT(scene);
+    ASSERT(sampler);
+
     Interaction isect;
     if (!scene->intersect(ray, isect)) {
         Spectrum L;

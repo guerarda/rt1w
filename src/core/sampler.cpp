@@ -147,6 +147,9 @@ bool _Sampler::startNextSample()
 
 sptr<Sampler> Sampler::create(uint32_t x, uint32_t y, uint32_t dim, bool jitter)
 {
+    ASSERT(x > 0);
+    ASSERT(y > 0);
+
     auto sampler = std::make_shared<_Sampler>(x, y, dim, jitter);
     sampler->init();
     return sampler;
