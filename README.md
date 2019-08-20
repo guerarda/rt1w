@@ -61,6 +61,18 @@ Each entry for the textures, shapes and materials have a mandatory
 field is *type*, then the rest of the key-value pairs are specific to
 the type of each object.
 
+It is also possible to create objects in place witout naming them.
+
+```json
+    "primitives": [
+        {
+            "shape": { "type": "sphere", "radius": 1, "tranform": { "translate": [ 0, 1, -5 ] } },
+            "material": { "type": "matte", "Kd": { "type": "constant", "color": [ 1, 0, 0] } }
+        }
+    ]
+```
+
+
 ### Shapes
 
 Currently, only Spheres and Triangles Meshes are supported so the
