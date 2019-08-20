@@ -259,6 +259,9 @@ struct _RenderDescFromJSON : RenderDescription {
 int32_t _RenderDescFromJSON::init()
 {
     FILE *fp = fopen(m_path.c_str(), "r");
+    if (!fp) {
+        return -1;
+    }
     char readBuffer[65536];
     rapidjson::FileReadStream is(fp, readBuffer, sizeof(readBuffer));
     rapidjson::ParseResult ok = m_doc.ParseStream<rapidjson::kParseCommentsFlag>(is);

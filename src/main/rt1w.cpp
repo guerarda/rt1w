@@ -59,7 +59,7 @@ static inline std::string RemoveExtensionJSON(const std::string &s)
 int main(int argc, char *argv[])
 {
     /* Process arguments */
-    struct options options = { "\0", 0, 0 };
+    struct options options = { "\0", 1, 0 };
 
     if (argc == 1) {
         usage();
