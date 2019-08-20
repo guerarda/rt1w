@@ -105,68 +105,51 @@
             "indices":[ 0, 1, 2, 0, 2, 3]
         }
     ],
-    "textures": [
+    "materials": [
         {
             "name": "red",
-            "type": "constant",
-            "color": [ 0.63, 0.065, 0.05 ]
+            "type": "matte",
+            "Kd": { "type": "constant", "color": [ 0.63, 0.065, 0.05 ] }
         },
         {
             "name": "green",
-            "type": "constant",
-            "color": [ 0.14, 0.45, 0.091 ]
+            "type": "matte",
+            "Kd": { "type": "constant", "color": [ 0.14, 0.45, 0.091 ] }
         },
         {
             "name": "grey",
-            "type": "constant",
-            "color": [ 0.0725, 0.071, 0.068 ]
-        }
-    ],
-    "materials": [
-        {
-            "name": "kred",
             "type": "matte",
-            "Kd": "red"
-        },
-        {
-            "name": "kgreen",
-            "type": "matte",
-            "Kd": "green"
-        },
-        {
-            "name": "kgrey",
-            "type": "matte",
-            "Kd": "grey"
+            "Kd":  { "type": "constant", "color": [ 0.725, 0.71, 0.68 ] }
         }
     ],
     "primitives": [
         {
             "shape": "floor",
-            "material": "kgrey"
+            "material": "grey"
         },
         {
             "shape": "top",
-            "material": "kgrey"
+            "material": "grey"
         },
         {
             "shape": "back",
-            "material": "kgrey"
+            "material": "grey"
         },
         {
             "shape": "left",
-            "material": "kred"
+            "material": "red"
         },
         {
             "shape": "right",
-            "material": "kgreen"
+            "material": "green"
         },
         {
             "shape": "shortbox",
-            "material": "kgrey"
+            "material": "grey"
         },
         {
             "shape": "tallbox",
-            "material": "kgrey"
+            "material": "grey"
         }
     ],
     "lights": [
