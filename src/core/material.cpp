@@ -56,7 +56,7 @@ sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
     if (sptr<Texture> Kd = p->texture("Kd")) {
         return Lambertian::create(Kd);
     }
-    warning("Matte parameter \"Kd\" not specified");
+    WARNING("Matte parameter \"Kd\" not specified");
     return nullptr;
 }
 
@@ -148,7 +148,7 @@ sptr<Dielectric> Dielectric::create(const sptr<Params> &p)
     if (ri) {
         return Dielectric::create(ri->f32());
     }
-    warning("Dielectric parameter \"refraction\" not specified");
+    WARNING("Dielectric parameter \"refraction\" not specified");
 
     return nullptr;
 }
@@ -167,7 +167,7 @@ sptr<Material> Material::create(const sptr<Params> &p)
     if (type == "metal") {
         return Metal::create(p);
     }
-    warning("Material parameter \"type\" not recognized");
+    WARNING("Material parameter \"type\" not recognized");
 
     return nullptr;
 }

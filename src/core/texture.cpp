@@ -119,11 +119,11 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
             rect_t rect = { { org.x, org.y }, { size.x, size.y } };
             return Texture::create_image(img, rect);
         }
-        warning("Texture parameter \"image\" not specified");
+        WARNING("Texture parameter \"image\" not specified");
 
         return nullptr;
     }
-    warning("Texture parameter \"type\" not recognized");
+    WARNING("Texture parameter \"type\" not recognized");
 
     return nullptr;
 }

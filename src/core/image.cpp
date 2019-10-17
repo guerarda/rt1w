@@ -37,7 +37,7 @@ ImageFile::ImageFile(const std::string &filename)
         m_size = { m_buffer.rect.size.x, m_buffer.rect.size.y };
     }
     else {
-        warning("Couldn't load image at \"%s\"", filename.c_str());
+        WARNING("Couldn't load image at \"%s\"", filename.c_str());
     }
 }
 
@@ -182,7 +182,7 @@ sptr<Image> Image::create(const sptr<Params> &p)
     if (!filename.empty()) {
         return Image::create(filename);
     }
-    warning("Image parameter \"filename\" is not specified");
+    WARNING("Image parameter \"filename\" is not specified");
 
     return nullptr;
 }

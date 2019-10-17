@@ -78,7 +78,7 @@ sptr<PointLight> PointLight::create(const sptr<Params> &p)
     if (pos) {
         return PointLight::create(pos->vector3f(), I);
     }
-    warning("Point Light parameter \"position\" not specified");
+    WARNING("Point Light parameter \"position\" not specified");
 
     return nullptr;
 }
@@ -290,7 +290,7 @@ sptr<Light> Light::create(const sptr<Params> &p)
     if (type == "environment") {
         return EnvironmentLight::create(p);
     }
-    warning("Light parameter \"type\" not recognized");
+    WARNING("Light parameter \"type\" not recognized");
 
     return nullptr;
 }

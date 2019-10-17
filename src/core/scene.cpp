@@ -79,10 +79,10 @@ static Transform read_transform_fromobj(const rapidjson::Value &v)
                                               itt->value[2].GetFloat() });
             }
         }
-        warning("Unrecognized Transform name");
+        WARNING("Unrecognized Transform name");
     }
     else {
-        warning("Transform object should only have one member");
+        WARNING("Transform object should only have one member");
     }
     return {};
 }
@@ -101,7 +101,7 @@ static Transform read_transform(const rapidjson::Value &v)
                         ((float *)&m.vx.x)[i] = v[i].GetFloat();
                     }
                     else {
-                        warning("Transform object should be an array of numbers");
+                        WARNING("Transform object should be an array of numbers");
                         return {};
                     }
                 }
@@ -114,7 +114,7 @@ static Transform read_transform(const rapidjson::Value &v)
         }
         return t;
     }
-    warning("Unrecognized Transform format");
+    WARNING("Unrecognized Transform format");
 
     return {};
 }
@@ -150,7 +150,7 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
                     }
                 }
                 else {
-                    warning("Unsuported array");
+                    WARNING("Unsuported array");
                 }
             }
             p->insert(name, Value::create(a.data(), a.size()));
@@ -175,7 +175,7 @@ static sptr<Params> read_params(const rapidjson::Value &v, const std::string &di
             p->insert(name, num);
         }
         else if (m.value.IsBool()) {
-            warning("Bool values are not supported");
+            WARNING("Bool values are not supported");
         }
         else if (m.value.IsObject()) {
             p->insert(name, read_params(m.value, dir));
@@ -269,7 +269,7 @@ int32_t _RenderDescFromJSON::init()
 
     /* Check that the file was parsed without error */
     if (!ok) {
-        error("JSON parse error: %s (%lu)\n", GetParseError_En(ok.Code()), ok.Offset());
+        ERROR("JSON parse error: %s (%lu)\n", GetParseError_En(ok.Code()), ok.Offset());
         return -1;
     }
     /* Get directory containing the json file that will be used to resolve
@@ -350,7 +350,7 @@ void _RenderDescFromJSON::load_textures()
                 WARNING_IF(!tex, "Couldn't create texture \"%s\"", k.c_str());
             }
             else {
-                warning("Found unamed texture, skipping");
+                WARNING("Found unamed texture, skipping");
             }
         }
     }
@@ -371,7 +371,7 @@ void _RenderDescFromJSON::load_materials()
                 m_materials.insert(std::make_pair(k, mat));
             }
             else {
-                warning("Found unamed material, skipping");
+                WARNING("Found unamed material, skipping");
             }
         }
     }
@@ -416,7 +416,7 @@ void _RenderDescFromJSON::load_lights()
                 }
             }
             else {
-                warning("Couldn't create light at index %lu", ix);
+                WARNING("Couldn't create light at index %lu", ix);
             }
         }
     }
@@ -430,7 +430,7 @@ void _RenderDescFromJSON::load_camera()
         m_box = Union(m_box, m_camera->position());
     }
     else {
-        error("Missing \"camera\"");
+        ERROR("Missing \"camera\"");
     }
 }
 
@@ -467,7 +467,7 @@ void _RenderDescFromJSON::load_primitives()
                         }
                     }
                     else {
-                        warning("Expected filename for primitive at index %lu", ix);
+                        WARNING("Expected filename for primitive at index %lu", ix);
                     }
                     continue;
                 }
@@ -523,19 +523,19 @@ void _RenderDescFromJSON::load_primitives()
                             }
                         }
                         else {
-                            warning("Couldnt create Primitive at index %lu", ix);
+                            WARNING("Couldnt create Primitive at index %lu", ix);
                         }
                     }
                 }
             }
             else {
-                warning("Primitive at index %lu must be an object", ix);
+                WARNING("Primitive at index %lu must be an object", ix);
             }
             ix++;
         }
     }
     if (m_primitives.empty()) {
-        error("Couldn't find a primitive");
+        ERROR("Couldn't find a primitive");
     }
 }
 
@@ -558,7 +558,7 @@ sptr<RenderDescription> RenderDescription::load(const std::string &path)
     if (!err) {
         return render;
     }
-    error("Couldn't extract a valid render description from %s", path.c_str());
+    ERROR("Couldn't extract a valid render description from %s", path.c_str());
     return nullptr;
 }
 

@@ -30,19 +30,13 @@ static void process_error(const char *fmt, va_list args, const char *type)
 
 #pragma clang diagnostic pop
 
-void warning(const char *fmt, ...)
-{
-    va_list args;
-    va_start(args, fmt);
-    process_error(fmt, args, "Warning");
-    va_end(args);
-}
+const char *prefix[LOG_LEVEL_NUM] = { "Info", "Warning", "Error" };
 
-void error(const char *fmt, ...)
+void log_msg(int severity, const char *fmt, ...)
 {
     va_list args;
     va_start(args, fmt);
-    process_error(fmt, args, "Error");
+    process_error(fmt, args, prefix[severity]);
     va_end(args);
 }
 

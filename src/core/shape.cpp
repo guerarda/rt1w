@@ -11,7 +11,7 @@ sptr<Shape> Shape::create(const sptr<Params> &p)
     std::string type = p->string("type");
 
     if (type.empty()) {
-        error("Unspecified shape type");
+        ERROR("Unspecified shape type");
         return nullptr;
     }
     if (type == "sphere") {
@@ -20,7 +20,7 @@ sptr<Shape> Shape::create(const sptr<Params> &p)
     if (type == "mesh") {
         return Mesh::create(p);
     }
-    error("Unknown shape : \"%s\"", type.c_str());
+    ERROR("Unknown shape : \"%s\"", type.c_str());
 
     return nullptr;
 }

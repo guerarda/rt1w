@@ -136,7 +136,7 @@ sptr<Camera> Camera::create(const sptr<Params> &p)
                                           znear,
                                           zfar);
     }
-    error("Unknown camera : \"%s\"", type.c_str());
+    ERROR("Unknown camera : \"%s\"", type.c_str());
     return nullptr;
 }
 
