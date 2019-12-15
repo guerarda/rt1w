@@ -1,4 +1,4 @@
-#include "rt1w/bvh.hpp"
+#include "rt1w/accelerator.hpp"
 #include "rt1w/camera.hpp"
 #include "rt1w/context.hpp"
 #include "rt1w/denoise.hpp"
@@ -99,7 +99,7 @@ int main(int argc, char *argv[])
     WARNING_IF(render->lights().empty(), "Scene has no light");
 
     /* Create BVH */
-    sptr<Primitive> bvh = BVHAccelerator::create(render->primitives());
+    sptr<Primitive> bvh = Accelerator::create("bvh", render->primitives());
 
     /* Create Scene */
     sptr<Scene> scene = Scene::create(bvh, render->lights());

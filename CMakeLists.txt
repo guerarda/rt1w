@@ -90,6 +90,18 @@ target_include_directories(shapes
     src
 )
 
+## Accelerators
+add_library(accelerators
+  OBJECT
+  src/accelerators/bvh.cpp
+)
+
+target_include_directories(accelerators
+  PRIVATE
+  include
+  src
+)
+
 ## Integrators
 add_library(integrators
   OBJECT
@@ -104,8 +116,8 @@ target_include_directories(integrators
 
 ## Core
 add_library(rt1w
+  src/core/accelerator.cpp
   src/core/arena.cpp
-  src/core/bvh.cpp
   src/core/bxdf.cpp
   src/core/camera.cpp
   src/core/context.cpp
@@ -138,6 +150,7 @@ add_library(rt1w
   src/core/value.cpp
   src/core/workq.cpp
   src/tools/loader_obj.cpp
+  $<TARGET_OBJECTS:accelerators>
   $<TARGET_OBJECTS:shapes>
   $<TARGET_OBJECTS:integrators>
 )

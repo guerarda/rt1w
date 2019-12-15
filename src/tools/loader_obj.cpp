@@ -1,12 +1,13 @@
 #include "shapes/mesh.hpp"
 
-#include "rt1w/bvh.hpp"
 #include "rt1w/material.hpp"
 #include "rt1w/primitive.hpp"
 #include "rt1w/spectrum.hpp"
 #include "rt1w/texture.hpp"
 #include "rt1w/transform.hpp"
 #include "rt1w/value.hpp"
+
+#include "accelerators/bvh.hpp"
 
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobjloader/tiny_obj_loader.h>

@@ -31,11 +31,3 @@ struct Aggregate : Primitive {
 
     virtual const std::vector<sptr<Primitive>> &primitives() const = 0;
 };
-
-struct Accelerator : Aggregate {
-    using Aggregate::intersect;
-    using Aggregate::qIntersect;
-
-    virtual sptr<Batch<Interaction>> intersect(const std::vector<Ray> &rays) const = 0;
-    virtual sptr<Batch<Interaction>> qIntersect(const std::vector<Ray> &rays) const = 0;
-};

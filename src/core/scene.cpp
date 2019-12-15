@@ -1,5 +1,6 @@
 #include "rt1w/scene.hpp"
 
+#include "rt1w/accelerator.hpp"
 #include "rt1w/camera.hpp"
 #include "rt1w/error.h"
 #include "rt1w/light.hpp"
@@ -593,7 +594,7 @@ struct _Scene : Scene {
 };
 
 struct _SceneAccel : Scene {
-    _SceneAccel(const sptr<Accelerator> &w, const std::vector<sptr<Light>> &l) :
+    _SceneAccel(const sptr<AcceleratorAsync> &w, const std::vector<sptr<Light>> &l) :
         m_world(w),
         m_lights(l)
     {}
@@ -616,7 +617,7 @@ struct _SceneAccel : Scene {
         return m_world->qIntersect(rays);
     }
 
-    sptr<Accelerator> m_world;
+    sptr<AcceleratorAsync> m_world;
     std::vector<sptr<Light>> m_lights;
 };
 
@@ -625,7 +626,7 @@ struct _SceneAccel : Scene {
 sptr<Scene> Scene::create(const sptr<Primitive> &world,
                           const std::vector<sptr<Light>> &lights)
 {
-    if (auto accel = std::dynamic_pointer_cast<Accelerator>(world)) {
+    if (auto accel = std::dynamic_pointer_cast<AcceleratorAsync>(world)) {
         return std::make_shared<_SceneAccel>(accel, lights);
     }
     return std::make_shared<_Scene>(world, lights);

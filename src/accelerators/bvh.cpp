@@ -1,4 +1,4 @@
-#include "rt1w/bvh.hpp"
+#include "accelerators/bvh.hpp"
 
 #include "rt1w/arena.hpp"
 #include "rt1w/interaction.hpp"
@@ -295,8 +295,15 @@ bool _BVHAccelerator::intersect(const Ray &r, Interaction &isect) const
                 index = next[--sp];
             }
             else {
-                next[sp++] = (size_t)m_nodes[index].secondChildOffset;
-                index += 1;
+                v3f d = r.dir();
+                if ((&d.x)[m_nodes[index].axis] < .0f) {
+                    next[sp++] = index + 1;
+                    index = (size_t)m_nodes[index].secondChildOffset;
+                }
+                else {
+                    next[sp++] = (size_t)m_nodes[index].secondChildOffset;
+                    index += 1;
+                }
             }
         }
         else {
