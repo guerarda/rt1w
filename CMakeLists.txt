@@ -216,8 +216,9 @@ if (RT1W_WITH_TESTS)
 
   add_executable(rt1w_test
     test/test.cpp
-    test/efloat.cpp
+    test/accelerator.cpp
     test/camera.cpp
+    test/efloat.cpp
     test/geometry.cpp
     test/ray-shape.cpp
     test/sampling.cpp
