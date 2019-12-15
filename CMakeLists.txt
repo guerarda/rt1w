@@ -93,13 +93,14 @@ target_include_directories(shapes
 ## Accelerators
 add_library(accelerators
   OBJECT
-  src/accelerators/bvh.cpp
+    src/accelerators/bvh.cpp
+    src/accelerators/bvhbuilder.cpp
 )
 
 target_include_directories(accelerators
   PRIVATE
-  include
-  src
+    include
+    src
 )
 
 ## Integrators
