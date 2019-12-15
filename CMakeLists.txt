@@ -95,6 +95,7 @@ add_library(accelerators
   OBJECT
     src/accelerators/bvh.cpp
     src/accelerators/bvhbuilder.cpp
+    src/accelerators/qbvh.cpp
 )
 
 target_include_directories(accelerators
