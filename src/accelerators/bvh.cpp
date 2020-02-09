@@ -1,6 +1,6 @@
-#include "accelerators/bvh.hpp"
+#include "bvh.hpp"
 
-#include "accelerators/bvhbuilder.hpp"
+#include "bvhbuilder.hpp"
 
 #include "rt1w/interaction.hpp"
 #include "rt1w/ray.hpp"

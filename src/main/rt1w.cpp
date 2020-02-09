@@ -99,10 +99,11 @@ int main(int argc, char *argv[])
     WARNING_IF(render->lights().empty(), "Scene has no light");
 
     /* Create BVH */
-    sptr<Primitive> bvh = Accelerator::create("bvh", render->primitives());
+    std::string accelerator = Params::string(render->options(), "accelerator", "bvh");
+    sptr<Primitive> accel = Accelerator::create(accelerator, render->primitives());
 
     /* Create Scene */
-    sptr<Scene> scene = Scene::create(bvh, render->lights());
+    sptr<Scene> scene = Scene::create(accel, render->lights());
 
     /* Get camera */
     sptr<Camera> camera = render->camera();

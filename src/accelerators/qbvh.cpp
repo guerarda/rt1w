@@ -1,6 +1,6 @@
-#include "accelerators/qbvh.hpp"
+#include "qbvh.hpp"
 
-#include "accelerators/bvhbuilder.hpp"
+#include "bvhbuilder.hpp"
 
 #include "rt1w/error.h"
 #include "rt1w/geometry.hpp"

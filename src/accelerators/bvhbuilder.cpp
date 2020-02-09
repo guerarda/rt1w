@@ -110,7 +110,7 @@ BVHBuildNode *BuildNode(Arena *arena,
                 b1 = Union(b1, buckets[j].bounds);
                 c1 += buckets[j].count;
             }
-            costs[i] = .125f + (c0 * b0.area() + c1 * b1.area()) / bounds.area();
+            costs[i] = 1.f + (c0 * b0.area() + c1 * b1.area()) / bounds.area();
         }
 
         /* Find the minimum cost for the split */
