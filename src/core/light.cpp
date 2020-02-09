@@ -72,10 +72,8 @@ sptr<PointLight> PointLight::create(const v3f &pos, const Spectrum &intensity)
 
 sptr<PointLight> PointLight::create(const sptr<Params> &p)
 {
-    sptr<Value> pos = p->value("position");
-    Spectrum I = Spectrum::fromRGB(Params::vector3f(p, "emit", { 1.f, 1.f, 1.f }));
-
-    if (pos) {
+    if (sptr<Value> pos = Params::value(p, "position")) {
+        auto I = Spectrum::fromRGB(Params::vector3f(p, "emit", { 1.f, 1.f, 1.f }));
         return PointLight::create(pos->vector3f(), I);
     }
     WARNING("Point Light parameter \"position\" not specified");
@@ -139,7 +137,7 @@ sptr<AreaLight> AreaLight::create(const sptr<Shape> &s, const Spectrum &Lemit)
 
 sptr<AreaLight> AreaLight::create(const sptr<Params> &p)
 {
-    sptr<Shape> shape = p->shape("shape");
+    sptr<Shape> shape = Params::shape(p, "shape");
     if (shape) {
         v3f c = Params::vector3f(p, "emit", { 1.0f, 1.0f, 1.0f });
         Spectrum s = Spectrum::fromRGB(c);
@@ -252,11 +250,11 @@ sptr<EnvironmentLight> EnvironmentLight::create(const v3f &center,
 
 sptr<EnvironmentLight> EnvironmentLight::create(const sptr<Params> &p)
 {
-    auto c = p->value("center");
-    auto r = p->value("radius");
+    auto c = Params::value(p, "center");
+    auto r = Params::value(p, "radius");
     if (c && r) {
         auto L = Spectrum::fromRGB(Params::vector3f(p, "scale", { 1.f, 1.f, 1.f }));
-        auto map = p->texture("radiance");
+        auto map = Params::texture(p, "radiance", {});
 
         return EnvironmentLight::create(c->vector3f(), r->f32(), L, map);
     }

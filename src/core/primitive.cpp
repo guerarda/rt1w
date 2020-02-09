@@ -2,6 +2,7 @@
 
 #include "rt1w/error.h"
 #include "rt1w/interaction.hpp"
+#include "rt1w/params.hpp"
 #include "rt1w/ray.hpp"
 #include "rt1w/shape.hpp"
 
@@ -47,6 +48,12 @@ bool _Primitive::qIntersect(const Ray &r) const
 }
 
 #pragma mark - Static constructor;
+
+sptr<Primitive> Primitive::create(const sptr<Params> &)
+{
+    // TODO: Create with Material, Shape and Transform
+    return {};
+}
 
 sptr<Primitive> Primitive::create(const sptr<Shape> &s,
                                   const sptr<Material> &m,

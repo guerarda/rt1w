@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+struct Material;
+struct Primitive;
 struct Shape;
 struct Texture;
 struct Value;
@@ -13,24 +15,15 @@ struct Value;
 struct Params : Object {
     static sptr<Params> create();
 
-    virtual void insert(const std::string &k, const sptr<Params> &v) = 0;
     virtual void insert(const std::string &k, const std::string &v) = 0;
-    virtual void insert(const std::string &k, const sptr<Shape> &v) = 0;
-    virtual void insert(const std::string &k, const sptr<Texture> &v) = 0;
-    virtual void insert(const std::string &k, const sptr<Value> &v) = 0;
+    virtual void insert(const std::string &k, const sptr<Object> &v) = 0;
 
     virtual void merge(const sptr<Params> &p) = 0;
-    virtual void merge(const std::map<std::string, sptr<Params>> &p) = 0;
     virtual void merge(const std::map<std::string, std::string> &p) = 0;
-    virtual void merge(const std::map<std::string, sptr<Shape>> &p) = 0;
-    virtual void merge(const std::map<std::string, sptr<Texture>> &p) = 0;
-    virtual void merge(const std::map<std::string, sptr<Value>> &p) = 0;
+    virtual void merge(const std::map<std::string, sptr<Object>> &p) = 0;
 
-    virtual sptr<Params> params(const std::string &k) const = 0;
-    virtual sptr<Shape> shape(const std::string &k) const = 0;
     virtual std::string string(const std::string &k) const = 0;
-    virtual sptr<Texture> texture(const std::string &k) const = 0;
-    virtual sptr<Value> value(const std::string &k) const = 0;
+    virtual sptr<Object> object(const std::string &k) const = 0;
 
     // clang-format off
     static int32_t i32(const sptr<const Params> &p, const std::string &k, int32_t v) { return scalarp<int32_t>(p, k, v); }
@@ -49,6 +42,13 @@ struct Params : Object {
     static m44f matrix44f(const sptr<const Params> &p, const std::string &k, m44f v) { return vectorp<float, m44f>(p, k, v); }
 
     static std::string string(const sptr<const Params> &p, const std::string &k, const std::string &v);
+
+    static sptr<Material> material(const sptr<const Params> &p, const std::string &k, const sptr<Material> &v = nullptr) { return object<Material>(p, k, v); }
+    static sptr<Primitive> primitive(const sptr<const Params> &p, const std::string &k, const sptr<Primitive> &v = nullptr) { return object<Primitive>(p, k, v); }
+    static sptr<Shape> shape(const sptr<const Params> &p, const std::string &k, const sptr<Shape> &v = nullptr) { return object<Shape>(p, k, v); }
+    static sptr<Texture> texture(const sptr<const Params> &p, const std::string &k, const sptr<Texture> &v = nullptr) { return object<Texture>(p, k, v); }
+    static sptr<Value> value(const sptr<const Params> &p, const std::string &k, const sptr<Value> &v = nullptr) { return object<Value>(p, k ,v); }
+
     // clang-format on
 protected:
     template <typename T>
@@ -56,4 +56,9 @@ protected:
 
     template <typename T, typename U>
     static U vectorp(const sptr<const Params> &p, const std::string &k, U v);
+
+    template <typename T>
+    static sptr<T> object(const sptr<const Params> &p,
+                          const std::string &k,
+                          const sptr<T> &v);
 };

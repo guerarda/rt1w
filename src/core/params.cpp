@@ -1,5 +1,10 @@
 #include "rt1w/params.hpp"
+#include <memory>
+#include <type_traits>
 
+#include "rt1w/material.hpp"
+#include "rt1w/primitive.hpp"
+#include "rt1w/shape.hpp"
 #include "rt1w/texture.hpp"
 #include "rt1w/value.hpp"
 
@@ -10,26 +15,18 @@ template <> struct ptype<Params> { typedef sptr<Params> type; };
 template <> struct ptype<Shape> { typedef sptr<Shape> type; };
 template <> struct ptype<Texture> { typedef sptr<Texture> type; };
 template <> struct ptype<Value> { typedef sptr<Value> type; };
+template <> struct ptype<Object> { typedef sptr<Object> type; };
 
 struct _Params : Params {
-    void insert(const std::string &k, const sptr<Params> &v) override { insert<Params>(k, v); }
-    void insert(const std::string &k, const sptr<Shape> &v) override { insert<Shape>(k, v); }
     void insert(const std::string &k, const std::string &v) override { insert<std::string>(k, v); }
-    void insert(const std::string &k, const sptr<Texture> &v) override { insert<Texture>(k, v); }
-    void insert(const std::string &k, const sptr<Value> &v) override { insert<Value>(k, v); }
+    void insert(const std::string &k, const sptr<Object> &v) override { insert<Object>(k,v); }
 
     void merge(const sptr<Params> &p) override;
-    void merge(const std::map<std::string, sptr<Params>> &m) override { merge<Params>(m); }
-    void merge(const std::map<std::string, sptr<Shape>> &m) override { merge<Shape>(m); }
     void merge(const std::map<std::string, std::string> &m) override  { merge<std::string>(m); }
-    void merge(const std::map<std::string, sptr<Texture>> &m) override { merge<Texture>(m); }
-    void merge(const std::map<std::string, sptr<Value>> &m) override  { merge<Value>(m); }
+    void merge(const std::map<std::string, sptr<Object>> &m) override { merge<Object>(m); }
 
-    sptr<Params> params(const std::string &k) const override { return find_recursive<Params>(k); }
-    sptr<Shape> shape(const std::string &k) const override { return find_recursive<Shape>(k); }
     std::string string(const std::string &k) const override  { return find<std::string>(k); }
-    sptr<Texture> texture(const std::string &k) const override { return find_create<Texture>(k); }
-    sptr<Value> value(const std::string &k) const override { return find_recursive<Value>(k); }
+    sptr<Object> object(const std::string &k) const override { return find_recursive<Object>(k); }
 
     template <typename T> std::map<std::string, typename ptype<T>::type> &pmap();
     template <typename T> const std::map<std::string, typename ptype<T>::type> &const_pmap() const;
@@ -73,39 +70,23 @@ struct _Params : Params {
         return {};
     }
 
-    template <typename T>
-    typename ptype<T>::type find_create(const std::string &k) const
+    sptr<Value> value(const std::string &k)
     {
-        if (auto v = find<T>(k)) {
+        if (auto v = std::dynamic_pointer_cast<Value>(object(k))) {
             return v;
         }
-        auto itp = m_params.find(k);
-        if (itp != std::end(m_params)) {
-            return T::create(itp->second);
-        }
-        auto it = m_strings.find(k);
-        if (it != std::end(m_strings)) {
-            return find_create<T>(it->second);
-        }
-        return {};
+        return nullptr;
     }
-
-    std::map<std::string, sptr<Params>> m_params;
-    std::map<std::string, sptr<Shape>> m_shapes;
     std::map<std::string, std::string> m_strings;
-    std::map<std::string, sptr<Texture>> m_textures;
-    std::map<std::string, sptr<Value>> m_values;
+    std::map<std::string, sptr<Object>> m_objects;
 };
 
 void _Params::merge(const sptr<Params> &p)
 {
     if (p) {
         if (sptr<_Params> other = std::static_pointer_cast<_Params>(p)) {
-            merge(other->m_params);
             merge(other->m_strings);
-            merge(other->m_shapes);
-            merge(other->m_textures);
-            merge(other->m_values);
+            merge(other->m_objects);
         }
     }
 }
@@ -123,7 +104,7 @@ template <typename T>
 T Params::scalarp(const sptr<const Params> &p, const std::string &k, T v)
 {
     ASSERT(p);
-    if (auto value = p->value(k)) {
+    if (auto value = std::dynamic_pointer_cast<Value>(p->object(k))) {
         T rv;
         value->value(&rv, 0, 1);
         return rv;
@@ -134,10 +115,53 @@ template <typename T, typename U>
 U Params::vectorp(const sptr<const Params> &p, const std::string &k, U v)
 {
     ASSERT(p);
-    if (auto value = p->value(k)) {
+    if (auto value = std::dynamic_pointer_cast<Value>(p->object(k))) {
         U rv;
         value->value((T *)&rv, 0, sizeof(U) / sizeof(T));
         return rv;
+    }
+    return v;
+}
+
+/* Enable a different template function for the type Value.
+ * Value doesn't have a constructor from a Params object, so the first version won't
+ * instantiate correctly */
+
+template <typename T, std::enable_if_t<!std::is_base_of<Value, T>::value> * = nullptr>
+sptr<T> fetch_object(const sptr<const Params> &p, const std::string &k)
+{
+    if (auto obj = p->object(k)) {
+        if (auto t = std::dynamic_pointer_cast<T>(obj)) {
+            return t;
+        }
+        if (auto tp = std::dynamic_pointer_cast<Params>(obj)) {
+            return T::create(tp);
+        }
+        ERROR("Params: Unexpected type when retrieving object named \"%s\"", k.c_str());
+    }
+    return nullptr;
+}
+
+template <typename T, std::enable_if_t<std::is_base_of<Value, T>::value> * = nullptr>
+sptr<T> fetch_object(const sptr<const Params> &p, const std::string &k)
+{
+    if (auto obj = p->object(k)) {
+        if (auto t = std::dynamic_pointer_cast<T>(obj)) {
+            return t;
+        }
+        ERROR("Params: Unexpected type when retrieving value named \"%s\"", k.c_str());
+    }
+    return nullptr;
+}
+
+template <typename T>
+sptr<T> Params::object(const sptr<const Params> &p,
+                       const std::string &k,
+                       const sptr<T> &v)
+{
+    ASSERT(p);
+    if (auto obj = fetch_object<T>(p, k)) {
+        return obj;
     }
     return v;
 }
@@ -154,16 +178,10 @@ std::string Params::string(const sptr<const Params> &p,
 #pragma mark - Explicit Template Instantiation
 // clang-format off
 template <> std::map<std::string, ptype<std::string>::type> &_Params::pmap<std::string>() { return m_strings; }
-template <> std::map<std::string, ptype<Params>::type>      &_Params::pmap<Params>()      { return m_params; }
-template <> std::map<std::string, ptype<Shape>::type>       &_Params::pmap<Shape>()       { return m_shapes; }
-template <> std::map<std::string, ptype<Texture>::type>     &_Params::pmap<Texture>()     { return m_textures; }
-template <> std::map<std::string, ptype<Value>::type>       &_Params::pmap<Value>()       { return m_values; }
+template <> std::map<std::string, ptype<Object>::type>      &_Params::pmap<Object>()      { return m_objects; }
 
 template <> const std::map<std::string, ptype<std::string>::type> &_Params::const_pmap<std::string>() const { return m_strings; }
-template <> const std::map<std::string, ptype<Params>::type>      &_Params::const_pmap<Params>() const      { return m_params; }
-template <> const std::map<std::string, ptype<Shape>::type>       &_Params::const_pmap<Shape>() const       { return m_shapes; }
-template <> const std::map<std::string, ptype<Texture>::type>     &_Params::const_pmap<Texture>() const     { return m_textures; }
-template <> const std::map<std::string, ptype<Value>::type>       &_Params::const_pmap<Value>() const       { return m_values; }
+template <> const std::map<std::string, ptype<Object>::type>      &_Params::const_pmap<Object>() const      { return m_objects; }
 
 template int32_t  Params::scalarp(const sptr<const Params> &p, const std::string &k, int32_t v);
 template int64_t  Params::scalarp(const sptr<const Params> &p, const std::string &k, int64_t v);
@@ -179,4 +197,10 @@ template v2d  Params::vectorp<double, v2d>(const sptr<const Params> &p, const st
 template v3f  Params::vectorp<float, v3f>(const sptr<const Params> &p, const std::string &k, v3f v);
 template v3d  Params::vectorp<double, v3d>(const sptr<const Params> &p, const std::string &k, v3d v);
 template m44f Params::vectorp<float, m44f>(const sptr<const Params> &p, const std::string &k, m44f v);
+
+template sptr<Material> Params::object(const sptr<const Params> &p, const std::string &k, const sptr<Material> &v);
+template sptr<Primitive> Params::object(const sptr<const Params> &p, const std::string &k, const sptr<Primitive> &v);
+template sptr<Shape> Params::object(const sptr<const Params> &p, const std::string &k, const sptr<Shape> &v);
+template sptr<Texture> Params::object(const sptr<const Params> &p, const std::string &k, const sptr<Texture> &v);
+template sptr<Value> Params::object(const sptr<const Params> &p, const std::string &k, const sptr<Value> &v);
 // clang-format on

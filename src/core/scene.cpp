@@ -20,6 +20,7 @@
 #include <libgen.h>
 
 #include <map>
+#include <memory>
 #include <vector>
 
 #pragma mark Utils
@@ -252,9 +253,9 @@ struct _RenderDescFromJSON : RenderDescription {
     sptr<Camera> m_camera;
     sptr<Params> m_options;
 
-    std::map<std::string, sptr<Texture>> m_textures;
-    std::map<std::string, sptr<Material>> m_materials;
-    std::map<std::string, sptr<Shape>> m_shapes;
+    std::map<std::string, sptr<Object>> m_textures;
+    std::map<std::string, sptr<Object>> m_materials;
+    std::map<std::string, sptr<Object>> m_shapes;
 };
 
 int32_t _RenderDescFromJSON::init()
@@ -302,7 +303,7 @@ std::vector<sptr<Light>> _RenderDescFromJSON::read_light(const rapidjson::Value 
         p->insert("radius", Value::f32(m_box.diagonal().length() / 2.f));
     }
     else if (p->string("type") == "area") {
-        sptr<Shape> shape = p->shape("shape");
+        sptr<Shape> shape = Params::shape(p, "shape");
         if (sptr<Group> grp = std::dynamic_pointer_cast<Group>(shape)) {
             std::vector<sptr<Light>> lights;
             auto faces = grp->faces();
@@ -490,7 +491,7 @@ void _RenderDescFromJSON::load_primitives()
                         }
                         else if (its->value.IsString()) {
                             std::string name = its->value.GetString();
-                            shape = m_shapes[name];
+                            shape = std::static_pointer_cast<Shape>(m_shapes[name]);
                             WARNING_IF(!shape,
                                        "Couldn't find shape named \"%s\"",
                                        name.c_str());
@@ -503,7 +504,7 @@ void _RenderDescFromJSON::load_primitives()
                         }
                         else if (itm->value.IsString()) {
                             std::string name = itm->value.GetString();
-                            mat = m_materials[name];
+                            mat = std::static_pointer_cast<Material>(m_materials[name]);
                             WARNING_IF(!mat,
                                        "Couldn't find material named \"%s\"",
                                        name.c_str());

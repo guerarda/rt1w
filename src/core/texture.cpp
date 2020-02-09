@@ -103,8 +103,8 @@ sptr<Texture> Texture::create(const sptr<Params> &p)
         return Texture::create_color(s);
     }
     if (type == "checker") {
-        sptr<Texture> even = p->texture("even");
-        sptr<Texture> odd = p->texture("odd");
+        sptr<Texture> even = Params::texture(p, "even");
+        sptr<Texture> odd = Params::texture(p, "odd");
 
         if (even && odd) {
             return Texture::create_checker(even, odd);

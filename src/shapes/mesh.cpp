@@ -462,13 +462,13 @@ sptr<Mesh> Mesh::create(size_t nt,
 
 sptr<Mesh> Mesh::create(const sptr<Params> &p)
 {
-    sptr<Value> vertices = p->value("vertices");
-    sptr<Value> indices = p->value("indices");
-    sptr<Value> count = p->value("count");
+    sptr<Value> vertices = Params::value(p, "vertices");
+    sptr<Value> indices = Params::value(p, "indices");
+    sptr<Value> count = Params::value(p, "count");
 
     if (count && vertices && indices) {
-        sptr<Value> normals = p->value("normals");
-        sptr<Value> texcoords = p->value("uv");
+        sptr<Value> normals = Params::value(p, "normals");
+        sptr<Value> texcoords = Params::value(p, "uv");
         Transform t = Transform(Params::matrix44f(p, "transform", m44f_identity()));
 
         size_t nt = count->u64();

@@ -53,7 +53,7 @@ sptr<Lambertian> Lambertian::create(const sptr<Texture> &Kd)
 
 sptr<Lambertian> Lambertian::create(const sptr<Params> &p)
 {
-    if (sptr<Texture> Kd = p->texture("Kd")) {
+    if (sptr<Texture> Kd = Params::texture(p, "Kd")) {
         return Lambertian::create(Kd);
     }
     WARNING("Matte parameter \"Kd\" not specified");
@@ -125,8 +125,8 @@ sptr<Metal> Metal::create(const sptr<Texture> &tex, float f)
 
 sptr<Metal> Metal::create(const sptr<Params> &p)
 {
-    sptr<Texture> tex = p->texture("texture");
-    sptr<Value> fuzz = p->value("fuzz");
+    sptr<Texture> tex = Params::texture(p, "texture");
+    sptr<Value> fuzz = Params::value(p, "fuzz");
 
     if (tex && fuzz) {
         return Metal::create(tex, fuzz->f32());
@@ -144,8 +144,7 @@ sptr<Dielectric> Dielectric::create(float ri)
 
 sptr<Dielectric> Dielectric::create(const sptr<Params> &p)
 {
-    sptr<Value> ri = p->value("refraction");
-    if (ri) {
+    if (sptr<Value> ri = Params::value(p, "refraction")) {
         return Dielectric::create(ri->f32());
     }
     WARNING("Dielectric parameter \"refraction\" not specified");
