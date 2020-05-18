@@ -42,7 +42,7 @@ struct equal_to<tinyobj::index_t> {
 };
 }
 
-sptr<Primitive> Primitive::load_obj(const std::string &path)
+sptr<Primitive> Primitive::load_obj(const std::string &path, const Transform &xform)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> obj_shapes;
@@ -121,7 +121,7 @@ sptr<Primitive> Primitive::load_obj(const std::string &path)
     sptr<Texture> tex = Texture::create_color(Spectrum::fromRGB({ .5f, .5f, .5f }));
     for (auto &indices_value : mesh_indices) {
         size_t nt = indices_value->size() / 3;
-        auto faces = Mesh::create(nt, vd, indices_value, Transform())->faces();
+        auto faces = Mesh::create(nt, vd, indices_value, xform)->faces();
 
         for (const auto &f : faces) {
             primitives.push_back(Primitive::create(f, Lambertian::create(tex)));

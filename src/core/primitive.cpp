@@ -49,9 +49,21 @@ bool _Primitive::qIntersect(const Ray &r) const
 
 #pragma mark - Static constructor;
 
-sptr<Primitive> Primitive::create(const sptr<Params> &)
+sptr<Primitive> Primitive::create(const sptr<Params> &p)
 {
-    // TODO: Create with Material, Shape and Transform
+    auto s = Params::shape(p, "shape");
+    auto m = Params::material(p, "material");
+
+    if (s && m) {
+        return Primitive::create(s, m, nullptr);
+    }
+
+    auto f = Params::string(p, "file");
+    auto t = Transform{ Params::matrix44f(p, "transform") };
+    if (!f.empty()) {
+        return load_obj(f, t);
+    }
+
     return {};
 }
 
@@ -60,12 +72,21 @@ sptr<Primitive> Primitive::create(const sptr<Shape> &s,
                                   const sptr<AreaLight> &l)
 {
     if (s && (m || l)) {
+        if (auto g = std::dynamic_pointer_cast<Group>(s)) {
+            std::vector<sptr<Primitive>> v;
+            v.reserve(g->faces().size());
+
+            for (const auto &f : g->faces()) {
+                v.push_back(Primitive::create(f, m, l));
+            }
+            return Aggregate::create(v);
+        }
         return std::make_shared<_Primitive>(s, m, l);
     }
     WARNING_IF(!s, "Primitive has no shape");
     WARNING_IF(!m, "Primitive has no material");
 
-    return nullptr;
+    return {};
 }
 
 #pragma mark - Aggregate

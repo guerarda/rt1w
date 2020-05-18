@@ -287,6 +287,11 @@ int32_t _RenderDescFromJSON::init()
     load_primitives();
     load_lights();
 
+    LOG("Loaded scene %s, %lu primitives, %lu lights",
+        resolve_path(m_dir, m_path).c_str(),
+        m_primitives.size(),
+        m_lights.size());
+
     if (!m_primitives.empty() && m_camera) {
         return 0;
     }
@@ -396,7 +401,7 @@ void _RenderDescFromJSON::load_shapes()
     }
 }
 
-sptr<Material> NullMaterial = Lambertian::create(Texture::create_color({}));
+sptr<Material> kNullMaterial = Lambertian::create(Texture::create_color({}));
 
 void _RenderDescFromJSON::load_lights()
 {
@@ -413,7 +418,7 @@ void _RenderDescFromJSON::load_lights()
                     if (sptr<AreaLight> area = std::dynamic_pointer_cast<AreaLight>(
                             light)) {
                         m_primitives.push_back(
-                            Primitive::create(area->shape(), NullMaterial, area));
+                            Primitive::create(area->shape(), kNullMaterial, area));
                     }
                 }
             }
@@ -449,92 +454,119 @@ void _RenderDescFromJSON::load_primitives()
     auto section = m_doc.FindMember("primitives");
     if (section != m_doc.MemberEnd()) {
         size_t ix = 0;
+        auto commons = Params::create(m_textures, m_materials, m_shapes);
+
         for (const auto &v : section->value.GetArray()) {
             if (v.IsObject()) {
-                auto itf = v.FindMember("file");
-                if (itf != v.MemberEnd()) {
-                    if (itf->value.IsString()) {
-                        std::string file = resolve_path(m_dir, itf->value.GetString());
-                        sptr<Primitive> obj = Primitive::load_obj(file);
-                        if (auto agg = std::dynamic_pointer_cast<Aggregate>(obj)) {
-                            auto prims = agg->primitives();
-                            m_primitives.insert(std::end(m_primitives),
-                                                std::begin(prims),
-                                                std::end(prims));
-                            m_box = Union(m_box, agg->bounds());
-                        }
-                        else {
-                            m_primitives.emplace_back(obj);
-                            m_box = Union(m_box, obj->bounds());
-                        }
+                auto p = Params::create(commons, read_params(v, m_dir));
+
+                if (auto prim = Primitive::create(p)) {
+                    if (auto agg = std::dynamic_pointer_cast<Aggregate>(prim)) {
+                        auto prims = agg->primitives();
+                        m_primitives.insert(std::end(m_primitives),
+                                            std::begin(prims),
+                                            std::end(prims));
+                        m_box = Union(m_box, agg->bounds());
                     }
                     else {
-                        WARNING("Expected filename for primitive at index %lu", ix);
+                        m_primitives.emplace_back(prim);
+                        m_box = Union(m_box, prim->bounds());
                     }
                     continue;
                 }
-
-                auto its = v.FindMember("shape");
-                auto itm = v.FindMember("material");
-                if (its != v.MemberEnd() || itm != v.MemberEnd()) {
-                    WARNING_IF(its == v.MemberEnd(),
-                               "Primitive at index %lu, no shape found",
-                               ix);
-                    WARNING_IF(itm == v.MemberEnd(),
-                               "Primitive at index %lu, no material found",
-                               ix);
-
-                    if (its != v.MemberEnd() && itm != v.MemberEnd()) {
-                        sptr<Shape> shape;
-                        if (its->value.IsObject()) {
-                            shape = read_shape(its->value);
-                        }
-                        else if (its->value.IsString()) {
-                            std::string name = its->value.GetString();
-                            shape = std::static_pointer_cast<Shape>(m_shapes[name]);
-                            WARNING_IF(!shape,
-                                       "Couldn't find shape named \"%s\"",
-                                       name.c_str());
-                        }
-                        WARNING_IF(!shape, "Primitive at index %lu, invalid shape", ix);
-
-                        sptr<Material> mat;
-                        if (itm->value.IsObject()) {
-                            mat = read_material(itm->value);
-                        }
-                        else if (itm->value.IsString()) {
-                            std::string name = itm->value.GetString();
-                            mat = std::static_pointer_cast<Material>(m_materials[name]);
-                            WARNING_IF(!mat,
-                                       "Couldn't find material named \"%s\"",
-                                       name.c_str());
-                        }
-                        WARNING_IF(!mat, "Primitive at index %lu, invalid material", ix);
-
-                        if (shape && mat) {
-                            if (auto g = std::dynamic_pointer_cast<Group>(shape)) {
-                                auto shapes = g->faces();
-                                for (const auto &s : shapes) {
-                                    m_primitives.emplace_back(Primitive::create(s, mat));
-                                    m_box = Union(m_box, s->bounds());
-                                }
-                            }
-                            else {
-                                m_primitives.emplace_back(Primitive::create(shape, mat));
-                                m_box = Union(m_box, shape->bounds());
-                            }
-                        }
-                        else {
-                            WARNING("Couldnt create Primitive at index %lu", ix);
-                        }
-                    }
-                }
+                WARNING("Couldn't create primitive at index %lu", ix);
             }
             else {
                 WARNING("Primitive at index %lu must be an object", ix);
             }
             ix++;
         }
+        // THE FOLLOWING GOES TO PRIMITIVE.CPP
+        // IN CASE OF SHAPE GROUP, RETURNS AN AGGREGATE
+        // HOE TO DEAL WITH MULTIPLE TRANSFORMS ?
+        // auto itf = v.FindMember("file");
+        // if (itf != v.MemberEnd()) {
+        //     if (itf->value.IsString()) {
+        //         std::string file = resolve_path(m_dir, itf->value.GetString());
+        //         sptr<Primitive> obj = Primitive::load_obj(file);
+        //         if (auto agg = std::dynamic_pointer_cast<Aggregate>(obj)) {
+        //             auto prims = agg->primitives();
+        //             m_primitives.insert(std::end(m_primitives),
+        //                                 std::begin(prims),
+        //                                 std::end(prims));
+        //             m_box = Union(m_box, agg->bounds());
+        //         }
+        //         else {
+        //             m_primitives.emplace_back(obj);
+        //             m_box = Union(m_box, obj->bounds());
+        //         }
+        //     }
+        //     else {
+        //         WARNING("Expected filename for primitive at index %lu", ix);
+        //     }
+        //     continue;
+        // }
+
+        // auto its = v.FindMember("shape");
+        // auto itm = v.FindMember("material");
+        // if (its != v.MemberEnd() || itm != v.MemberEnd()) {
+        //     WARNING_IF(its == v.MemberEnd(),
+        //                "Primitive at index %lu, no shape found",
+        //                ix);
+        //     WARNING_IF(itm == v.MemberEnd(),
+        //                "Primitive at index %lu, no material found",
+        //                ix);
+
+        //     if (its != v.MemberEnd() && itm != v.MemberEnd()) {
+        //         sptr<Shape> shape;
+        //         if (its->value.IsObject()) {
+        //             shape = read_shape(its->value);
+        //         }
+        //         else if (its->value.IsString()) {
+        //             std::string name = its->value.GetString();
+        //             shape = std::static_pointer_cast<Shape>(m_shapes[name]);
+        //             WARNING_IF(!shape, "Couldn't find shape named \"%s\"",
+        //             name.c_str());
+        //         }
+        //         WARNING_IF(!shape, "Primitive at index %lu, invalid shape", ix);
+
+        //         sptr<Material> mat;
+        //         if (itm->value.IsObject()) {
+        //             mat = read_material(itm->value);
+        //         }
+        //         else if (itm->value.IsString()) {
+        //             std::string name = itm->value.GetString();
+        //             mat = std::static_pointer_cast<Material>(m_materials[name]);
+        //             WARNING_IF(!mat, "Couldn't find material named \"%s\"",
+        //             name.c_str());
+        //         }
+        //         WARNING_IF(!mat, "Primitive at index %lu, invalid material", ix);
+
+        //         if (shape && mat) {
+        //             if (auto g = std::dynamic_pointer_cast<Group>(shape)) {
+        //                 auto shapes = g->faces();
+        //                 for (const auto &s : shapes) {
+        //                     m_primitives.emplace_back(Primitive::create(s, mat));
+        //                     m_box = Union(m_box, s->bounds());
+        //                 }
+        //             }
+        //             else {
+        //                 m_primitives.emplace_back(Primitive::create(shape, mat));
+        //                 m_box = Union(m_box, shape->bounds());
+        //             }
+        //         }
+        //         else {
+        //             WARNING("Couldnt create Primitive at index %lu", ix);
+        //         }
+        //     }
+        // }
+        // }
+        // else
+        // {
+        //     WARNING("Primitive at index %lu must be an object", ix);
+        // }
+        // ix++;
+        // }
     }
     if (m_primitives.empty()) {
         ERROR("Couldn't find a primitive");

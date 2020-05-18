@@ -2,9 +2,11 @@
 
 #include "rt1w/geometry.hpp"
 #include "rt1w/sptr.hpp"
+#include "rt1w/transform.hpp"
 
 #include <map>
 #include <string>
+#include <type_traits>
 
 struct Material;
 struct Primitive;
@@ -14,6 +16,17 @@ struct Value;
 
 struct Params : Object {
     static sptr<Params> create();
+
+    /* Returns a param set resulting from merging all the args together */
+    template <typename... Args>
+    static sptr<Params> create(Args... args)
+    {
+        auto p = Params::create();
+        for (const auto &a : { args... }) {
+            p->merge(a);
+        }
+        return p;
+    };
 
     virtual void insert(const std::string &k, const std::string &v) = 0;
     virtual void insert(const std::string &k, const sptr<Object> &v) = 0;
@@ -39,9 +52,9 @@ struct Params : Object {
     static v2d vector2d(const sptr<const Params> &p, const std::string &k, v2d v) { return vectorp<double, v2d>(p, k, v); }
     static v3f vector3f(const sptr<const Params> &p, const std::string &k, v3f v) { return vectorp<float, v3f>(p, k, v); }
     static v3d vector3d(const sptr<const Params> &p, const std::string &k, v3d v) { return vectorp<double, v3d>(p, k, v); }
-    static m44f matrix44f(const sptr<const Params> &p, const std::string &k, m44f v) { return vectorp<float, m44f>(p, k, v); }
+    static m44f matrix44f(const sptr<const Params> &p, const std::string &k, m44f v = m44f_identity()) { return vectorp<float, m44f>(p, k, v); }
 
-    static std::string string(const sptr<const Params> &p, const std::string &k, const std::string &v);
+    static std::string string(const sptr<const Params> &p, const std::string &k, const std::string &v = {});
 
     static sptr<Material> material(const sptr<const Params> &p, const std::string &k, const sptr<Material> &v = nullptr) { return object<Material>(p, k, v); }
     static sptr<Primitive> primitive(const sptr<const Params> &p, const std::string &k, const sptr<Primitive> &v = nullptr) { return object<Primitive>(p, k, v); }
