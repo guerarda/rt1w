@@ -35,7 +35,7 @@ static std::vector<Ray> CameraRays(const sptr<Camera> &camera)
 
 TEST_CASE("Accelerators", "[bvh][qbvh]")
 {
-    auto file = "../../scenes/cornell.json";
+    const auto file = std::string{ "../../scenes/cornell.json" };
     auto render = RenderDescription::load(file);
     auto rays = CameraRays(render->camera());
 

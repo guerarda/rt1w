@@ -37,31 +37,41 @@ set(WARNING_FLAGS
   -Wformat=2
   -Wmissing-declarations
   -Wmissing-noreturn
-  -Wmissing-prototypes
-  -Wnon-virtual-dtor
   -Wnull-dereference
-  -Woverloaded-virtual
   -Wshadow
   -Wsign-conversion
   -Wunreachable-code
   -Wunused
+
+  $<$<COMPILE_LANGUAGE:C>:
+    -Wmissing-prototypes>
+
+  $<$<COMPILE_LANGUAGE:CXX>:
+    -Woverloaded-virtual
+    -Wnon-virtual-dtor
+  >
 )
 set(NOWARNING_FLAGS
-  -Wno-old-style-cast
   $<$<CXX_COMPILER_ID:AppleClang>:
     -Wno-c++98-compat
+    -Wno-old-style-cast
     -Wno-pragma-once-outside-header
     -Wno-weak-vtables>
 
   $<$<CXX_COMPILER_ID:Clang>:
     -Wno-c++98-compat
+    -Wno-implicit-float-conversion
+    -Wno-old-style-cast
     -Wno-pragma-once-outside-header
     -Wno-weak-vtables>
 
   $<$<CXX_COMPILER_ID:GNU>:
     -Wno-unknown-pragmas
     -Wno-shadow
-    -Wno-conversion
+    -Wno-conversion>
+
+  $<$<COMPILE_LANG_AND_ID:CXX,GNU>:
+    -Wno-old-style-cast
     -Wno-class-memaccess>
 )
 
@@ -77,6 +87,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 ## Threads support
 find_package(Threads REQUIRED)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
+
+## SSE Support
+add_library(sse4_1 INTERFACE IMPORTED)
+target_compile_options(sse4_1 INTERFACE -msse4.1)
 
 ## Shapes
 add_library(shapes
@@ -102,6 +116,11 @@ target_include_directories(accelerators
   PRIVATE
     include
     src
+)
+
+target_link_libraries(accelerators
+  PRIVATE
+    sse4_1
 )
 
 ## Integrators

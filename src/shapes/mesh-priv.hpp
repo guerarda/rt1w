@@ -38,14 +38,6 @@ struct VertexData : Object {
     } m_data;
 };
 
-sptr<VertexData> CreateVertexData(size_t nv,
-                                  uptr<std::vector<v3f>> &v,
-                                  uptr<std::vector<v3f>> &n,
-                                  uptr<std::vector<v2f>> &uv)
-{
-    return VertexData::create(nv, v, n, uv);
-}
-
 #pragma mark - Mesh Data
 
 struct MeshData : Object {
@@ -80,11 +72,3 @@ struct MeshData : Object {
         uptr<std::vector<uint32_t>> i;
     } m_data;
 };
-
-sptr<MeshData> CreateMeshData(size_t np,
-                              const sptr<VertexData> &vd,
-                              uptr<std::vector<uint32_t>> &i,
-                              const Transform &worldToObj)
-{
-    return MeshData::create(np, vd, i, worldToObj);
-}

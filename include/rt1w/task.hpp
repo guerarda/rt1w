@@ -2,6 +2,8 @@
 
 #include "rt1w/sptr.hpp"
 
+#include <vector>
+
 struct Event;
 
 struct Task : Object {

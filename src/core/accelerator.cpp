@@ -3,7 +3,7 @@
 #include "rt1w/primitive.hpp"
 
 #include "accelerators/bvh.hpp"
-#include "accelerators/qbvh.cpp"
+#include "accelerators/qbvh.hpp"
 
 sptr<Accelerator> Accelerator::create(const std::string &name,
                                       const std::vector<sptr<Primitive>> &v)

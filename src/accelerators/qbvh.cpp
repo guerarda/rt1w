@@ -140,7 +140,7 @@ void _QBVHAccelerator::flattenBVH(const BVHBuildNode *root)
 
     queue.push(root);
     while (!queue.empty()) {
-        auto bnode = queue.front();
+        const auto *bnode = queue.front();
         queue.pop();
 
         bounds3f bounds[4] = {};
@@ -150,7 +150,7 @@ void _QBVHAccelerator::flattenBVH(const BVHBuildNode *root)
         qnode.axis[0] = bnode->axis;
 
         for (size_t i = 0; i < 2; ++i) {
-            auto bchild = bnode->children[i];
+            auto *bchild = bnode->children[i];
             if (bchild->size > 0) {
                 children[2 * i] = bchild;
             }
@@ -162,7 +162,7 @@ void _QBVHAccelerator::flattenBVH(const BVHBuildNode *root)
         }
 
         for (size_t i = 0; i < 4; ++i) {
-            if (auto child = children[i]) {
+            if (auto *child = children[i]) {
                 bounds[i] = child->bounds;
 
                 if (child->size > 0) {

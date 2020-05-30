@@ -158,7 +158,7 @@ sptr<Event> Event::create(int32_t n)
 sptr<Event> Event::create(const std::vector<sptr<Event>> &events)
 {
     auto re = Event::create((int32_t)events.size());
-    for (auto &e : events) {
+    for (const auto &e : events) {
         e->notify(nullptr, signal_event, re, {});
     }
     return re;

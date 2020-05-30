@@ -255,7 +255,7 @@ static void Progress(const sptr<Object> &obj, const sptr<Object> &)
     float p = (float)done / ctx->m_ntiles * 100.f;
     char buf[256];
     auto offset = (size_t)snprintf(buf, 256, "\r%.1f%% [", p);
-    int64_t n = lrint(floor(p)) / 2;
+    int64_t n = std::lrint(std::floor(p)) / 2;
     for (int32_t i = 0; i < 50; i++) {
         char c = i <= n ? '#' : ' ';
         snprintf(&buf[offset], 256 - offset, "%c", c);

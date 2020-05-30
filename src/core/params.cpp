@@ -70,7 +70,7 @@ struct _Params : Params {
         return {};
     }
 
-    sptr<Value> value(const std::string &k)
+    sptr<Value> value(const std::string &k) const
     {
         if (auto v = std::dynamic_pointer_cast<Value>(object(k))) {
             return v;

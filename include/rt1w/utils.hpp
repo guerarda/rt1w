@@ -20,10 +20,10 @@ constexpr double Infinity = std::numeric_limits<double>::infinity();
 constexpr double ShadowEpsilon = .0001;
 
 template <typename T>
-constexpr T Epsilon = std::numeric_limits<T>::epsilon();
+inline constexpr T Epsilon = std::numeric_limits<T>::epsilon();
 
 template <typename T>
-constexpr T MinReal = std::numeric_limits<T>::min();
+inline constexpr T MinReal = std::numeric_limits<T>::min();
 
 #pragma mark - Floating Point comparisons
 

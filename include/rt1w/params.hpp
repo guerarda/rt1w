@@ -26,7 +26,7 @@ struct Params : Object {
             p->merge(a);
         }
         return p;
-    };
+    }
 
     virtual void insert(const std::string &k, const std::string &v) = 0;
     virtual void insert(const std::string &k, const sptr<Object> &v) = 0;

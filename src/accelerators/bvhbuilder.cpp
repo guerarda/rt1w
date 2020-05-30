@@ -86,8 +86,8 @@ BVHBuildNode *BuildNode(Arena *arena,
         struct bucket buckets[nBuckets];
 
         for (size_t i = bgn; i < end; i++) {
-            size_t ix = (size_t)llrint(nBuckets
-                                       * Offset(centerBounds, info[i].center)[axis]);
+            size_t ix = (size_t)std::llrint(nBuckets
+                                            * Offset(centerBounds, info[i].center)[axis]);
             if (ix == nBuckets) {
                 ix -= 1;
             }
@@ -126,7 +126,8 @@ BVHBuildNode *BuildNode(Arena *arena,
         float leafCost = n;
         if (minCost < leafCost) {
             auto part_fn = [=](const auto &p) {
-                auto ix = (size_t)llrint(nBuckets * Offset(centerBounds, p.center)[axis]);
+                auto ix = (size_t)std::llrint(nBuckets
+                                              * Offset(centerBounds, p.center)[axis]);
                 if (ix == nBuckets) {
                     ix -= 1;
                 }

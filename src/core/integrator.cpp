@@ -100,7 +100,7 @@ Spectrum UniformSampleOneLight(const Interaction &isect,
     }
     /* Randomly pick one light */
     size_t n = lights.size();
-    auto ix = (size_t)floor(sampler->sample1D() * n);
+    auto ix = (size_t)std::floor(sampler->sample1D() * n);
 
     sptr<Light> light = lights[ix];
 

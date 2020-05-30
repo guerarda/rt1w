@@ -102,7 +102,10 @@ int32_t image_read_png(const char *filename, struct buffer *buf)
 
     /* Check signature */
     uint8_t sig[8];
-    fread(sig, 1, 8, fp);
+    if (fread(sig, 1, 8, fp) != 8) {
+        err = 1;
+        goto clean;
+    };
     if (!png_check_sig(sig, 8)) {
         err = 1;
         goto clean;

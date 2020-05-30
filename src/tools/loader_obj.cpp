@@ -32,8 +32,8 @@ struct hash<tinyobj::index_t> {
 };
 template <>
 struct equal_to<tinyobj::index_t> {
-    std::size_t operator()(const tinyobj::index_t &lhs, const tinyobj::index_t &rhs) const
-        noexcept
+    std::size_t operator()(const tinyobj::index_t &lhs,
+                           const tinyobj::index_t &rhs) const noexcept
     {
         return lhs.vertex_index == rhs.vertex_index
                && lhs.normal_index == rhs.normal_index

@@ -496,3 +496,19 @@ sptr<Mesh> Mesh::create(const sptr<Params> &p)
 
     return nullptr;
 }
+
+sptr<VertexData> CreateVertexData(size_t nv,
+                                  uptr<std::vector<v3f>> &v,
+                                  uptr<std::vector<v3f>> &n,
+                                  uptr<std::vector<v2f>> &uv)
+{
+    return VertexData::create(nv, v, n, uv);
+}
+
+sptr<MeshData> CreateMeshData(size_t np,
+                              const sptr<VertexData> &vd,
+                              uptr<std::vector<uint32_t>> &i,
+                              const Transform &worldToObj)
+{
+    return MeshData::create(np, vd, i, worldToObj);
+}

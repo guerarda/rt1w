@@ -8,7 +8,7 @@
 /* See http://xoshiro.di.unimi.it */
 static inline uint64_t splitmix64(uint64_t x)
 {
-    uint64_t z = (x += 0x9e3779b97f4a7c15);
+    uint64_t z = x + 0x9e3779b97f4a7c15;
     z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9;
     z = (z ^ (z >> 27)) * 0x94d049bb133111eb;
     return z ^ (z >> 31);
@@ -68,7 +68,7 @@ struct _RNG : RNG {
 uint32_t _RNG::u32()
 {
     uint32_t max = std::numeric_limits<uint32_t>::max();
-    return (uint32_t)floor(f32() * max);
+    return (uint32_t)std::floor(f32() * max);
 }
 
 float _RNG::f32()
@@ -83,7 +83,7 @@ float _RNG::f32()
 uint32_t _RNG::u32(uint32_t b)
 {
     float f = f32();
-    auto v = (uint32_t)floor(f * b);
+    auto v = (uint32_t)std::floor(f * b);
     ASSERT(v < b);
     return v;
 }
